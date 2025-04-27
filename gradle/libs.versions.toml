@@ -1,5 +1,5 @@
 [versions]
-agp = "8.8.2"
+agp = "8.9.0"
 converterGsonVersion = "2.9.0"
 hiltAndroid = "2.56.1"
 hiltAndroidGradlePlugin = "2.48"

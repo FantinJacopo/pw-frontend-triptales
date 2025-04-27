@@ -13,10 +13,9 @@ import kotlinx.coroutines.launch
 sealed class AuthState {
     object Idle : AuthState()
     object Loading : AuthState()
-    data class Success(val token: LoginResponse) : AuthState()
-    data class Error(val message: String) : AuthState()
+    data class SuccessLogin(val token: LoginResponse) : AuthState()
     object SuccessRegister : AuthState()
-
+    data class Error(val message: String) : AuthState()
 }
 
 class AuthViewModel(private val repository: AuthRepository) : ViewModel() {
@@ -30,7 +29,7 @@ class AuthViewModel(private val repository: AuthRepository) : ViewModel() {
             try {
                 val response = repository.login(LoginRequest(email, password))
                 if (response.isSuccessful) {
-                    _authState.value = AuthState.Success(response.body()!!)
+                    _authState.value = AuthState.SuccessLogin(response.body()!!)
                 } else {
                     _authState.value = AuthState.Error("Credenziali non valide")
                 }
@@ -56,4 +55,7 @@ class AuthViewModel(private val repository: AuthRepository) : ViewModel() {
         }
     }
 
+    fun resetState() {
+        _authState.value = AuthState.Idle
+    }
 }
