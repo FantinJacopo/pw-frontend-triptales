@@ -1,21 +1,25 @@
 package com.triptales.app
 
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
+import androidx.navigation.compose.rememberNavController
 import com.triptales.app.ui.auth.LoginScreen
 import com.triptales.app.ui.auth.RegisterScreen
 import com.triptales.app.ui.home.HomeScreen
 import com.triptales.app.viewmodel.AuthState
 import com.triptales.app.viewmodel.AuthViewModel
+import com.triptales.app.viewmodel.GroupViewModel
 
 @Composable
 fun NavGraph(
-    navController: NavHostController,
-    authViewModel: AuthViewModel
+    navController: NavHostController = rememberNavController(),
+    authViewModel: AuthViewModel,
+    groupViewModel: GroupViewModel
 ) {
     val authState by authViewModel.authState.collectAsState()
 
@@ -24,7 +28,16 @@ fun NavGraph(
         else -> "login"
     }
 
-    NavHost(navController = navController, startDestination = startDestination) {
+    LaunchedEffect(startDestination) {
+        navController.navigate(startDestination) {
+            popUpTo(0)
+        }
+    }
+
+    NavHost(
+        navController = navController,
+        startDestination = "loading" // temporaneo
+    ) {
         composable("login") {
             LoginScreen(viewModel = authViewModel, navController = navController)
         }
@@ -32,7 +45,10 @@ fun NavGraph(
             RegisterScreen(viewModel = authViewModel, navController = navController)
         }
         composable("home") {
-            HomeScreen()
+            HomeScreen(viewModel = groupViewModel, navController = navController)
+        }
+        composable("loading") {
+            // Schermata vuota, serve solo per aspettare di sapere quale sarà lo startDestination
         }
     }
 }
