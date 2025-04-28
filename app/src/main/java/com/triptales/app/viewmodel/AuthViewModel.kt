@@ -6,8 +6,10 @@ import com.triptales.app.data.AuthRepository
 import com.triptales.app.data.LoginRequest
 import com.triptales.app.data.LoginResponse
 import com.triptales.app.data.RegisterRequest
+import com.triptales.app.data.TokenManager
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 
 sealed class AuthState {
@@ -16,12 +18,27 @@ sealed class AuthState {
     data class SuccessLogin(val token: LoginResponse) : AuthState()
     object SuccessRegister : AuthState()
     data class Error(val message: String) : AuthState()
+    object Authenticated : AuthState()
+    object Unauthenticated : AuthState()
 }
 
-class AuthViewModel(private val repository: AuthRepository) : ViewModel() {
+class AuthViewModel(
+    private val repository: AuthRepository,
+    private val tokenManager: TokenManager
+) : ViewModel() {
 
     private val _authState = MutableStateFlow<AuthState>(AuthState.Idle)
     val authState: StateFlow<AuthState> = _authState
+
+    init {
+        viewModelScope.launch {
+            tokenManager.clearIfExpired()           // pulisce token se scaduto
+            refreshAccessTokenIfNeeded()            // rinnova access_token se necessario
+            tokenManager.accessToken.collect { token ->
+                _authState.value = if (token != null) AuthState.Authenticated else AuthState.Unauthenticated
+            }
+        }
+    }
 
     fun login(email: String, password: String) {
         viewModelScope.launch {
@@ -29,7 +46,9 @@ class AuthViewModel(private val repository: AuthRepository) : ViewModel() {
             try {
                 val response = repository.login(LoginRequest(email, password))
                 if (response.isSuccessful) {
-                    _authState.value = AuthState.SuccessLogin(response.body()!!)
+                    val tokens = response.body()!!
+                    tokenManager.saveTokens(tokens.access, tokens.refresh) // salva i token
+                    _authState.value = AuthState.SuccessLogin(tokens)
                 } else {
                     _authState.value = AuthState.Error("Credenziali non valide")
                 }
@@ -38,6 +57,7 @@ class AuthViewModel(private val repository: AuthRepository) : ViewModel() {
             }
         }
     }
+
     fun register(email: String, username: String, name: String, profileImageUrl: String, password: String) {
         viewModelScope.launch {
             _authState.value = AuthState.Loading
@@ -52,6 +72,39 @@ class AuthViewModel(private val repository: AuthRepository) : ViewModel() {
             } catch (e: Exception) {
                 _authState.value = AuthState.Error("Errore: ${e.message}")
             }
+        }
+    }
+
+    fun refreshAccessTokenIfNeeded() {
+        viewModelScope.launch {
+            val access = tokenManager.accessToken.first()
+            val refresh = tokenManager.refreshToken.first()
+
+            if (tokenManager.isTokenExpired(access)) {
+                if (!tokenManager.isTokenExpired(refresh)) {
+                    try {
+                        val response = repository.refreshToken(refresh!!)
+                        if (response.isSuccessful) {
+                            val newTokens = response.body()!!
+                            tokenManager.saveTokens(newTokens.access, refresh) // aggiorna solo access
+                            _authState.value = AuthState.Authenticated
+                        } else {
+                            logout() // refresh token non valido
+                        }
+                    } catch (e: Exception) {
+                        logout()
+                    }
+                } else {
+                    logout() // refresh token scaduto
+                }
+            }
+        }
+    }
+
+    fun logout() {
+        viewModelScope.launch {
+            tokenManager.clearTokens()
+            _authState.value = AuthState.Unauthenticated
         }
     }
 
