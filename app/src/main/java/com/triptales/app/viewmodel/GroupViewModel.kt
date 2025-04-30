@@ -28,7 +28,7 @@ class GroupViewModel(private val repository: TripGroupRepository) : ViewModel() 
                 if (response.isSuccessful) {
                     _groupState.value = GroupState.Success(response.body() ?: emptyList())
                 } else {
-                    _groupState.value = GroupState.Error("Errore caricamento gruppi")
+                    _groupState.value = GroupState.Error("Errore caricamento gruppi: ${response.code()}")
                 }
             } catch (e: Exception) {
                 _groupState.value = GroupState.Error("Errore: ${e.message}")
