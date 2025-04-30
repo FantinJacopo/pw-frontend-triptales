@@ -33,6 +33,10 @@ fun HomeScreen(viewModel: GroupViewModel, navController: NavController) {
             style = MaterialTheme.typography.headlineMedium,
             fontWeight = FontWeight.Bold
         )
+        Button(onClick = { navController.navigate("createGroup") }) {
+            Text("Crea nuovo gruppo")
+        }
+
 
         Spacer(modifier = Modifier.height(16.dp))
 

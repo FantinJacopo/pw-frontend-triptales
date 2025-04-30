@@ -10,6 +10,7 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.triptales.app.ui.auth.LoginScreen
 import com.triptales.app.ui.auth.RegisterScreen
+import com.triptales.app.ui.group.CreateGroupScreen
 import com.triptales.app.ui.home.HomeScreen
 import com.triptales.app.viewmodel.AuthState
 import com.triptales.app.viewmodel.AuthViewModel
@@ -50,5 +51,9 @@ fun NavGraph(
         composable("loading") {
             // Schermata vuota, serve solo per aspettare di sapere quale sarà lo startDestination
         }
+        composable("createGroup") {
+            CreateGroupScreen(viewModel = groupViewModel, navController = navController)
+        }
+
     }
 }
