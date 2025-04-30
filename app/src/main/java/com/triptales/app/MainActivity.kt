@@ -6,15 +6,9 @@ import androidx.activity.compose.setContent
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.ViewModelStoreOwner
 import androidx.navigation.compose.rememberNavController
-import com.triptales.app.data.AuthRepository
-import com.triptales.app.data.RetrofitInstance
-import com.triptales.app.data.TokenManager
-import com.triptales.app.data.TripGroupRepository
+import com.triptales.app.data.*
 import com.triptales.app.ui.theme.FrontendtriptalesTheme
-import com.triptales.app.viewmodel.AuthViewModel
-import com.triptales.app.viewmodel.AuthViewModelFactory
-import com.triptales.app.viewmodel.GroupViewModel
-import com.triptales.app.viewmodel.GroupViewModelFactory
+import com.triptales.app.viewmodel.*
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -22,19 +16,19 @@ class MainActivity : ComponentActivity() {
 
         setContent {
             FrontendtriptalesTheme {
-
-                // Istanza NavController
                 val navController = rememberNavController()
 
-                // Creazione delle dipendenze
-                val repository = AuthRepository(RetrofitInstance.api)
-                val tripGroupRepository = TripGroupRepository(RetrofitInstance.tripGroupApi)
                 val tokenManager = TokenManager(applicationContext)
 
-                // Creazione dei ViewModel manualmente
+                // Istanzia Retrofit con Interceptor
+                val retrofit = RetrofitProvider.create(tokenManager)
+
+                val authRepository = AuthRepository(retrofit.create(AuthApi::class.java))
+                val tripGroupRepository = TripGroupRepository(retrofit.create(TripGroupApi::class.java))
+
                 val authViewModel = ViewModelProvider(
                     this as ViewModelStoreOwner,
-                    AuthViewModelFactory(repository, tokenManager)
+                    AuthViewModelFactory(authRepository, tokenManager)
                 )[AuthViewModel::class.java]
 
                 val groupViewModel = ViewModelProvider(
@@ -42,7 +36,6 @@ class MainActivity : ComponentActivity() {
                     GroupViewModelFactory(tripGroupRepository)
                 )[GroupViewModel::class.java]
 
-                // Avvio della navigazione
                 NavGraph(
                     navController = navController,
                     authViewModel = authViewModel,
