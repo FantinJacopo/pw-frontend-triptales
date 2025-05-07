@@ -17,11 +17,10 @@ fun CreateGroupScreen(viewModel: GroupViewModel, navController: NavController) {
 
     val groupState by viewModel.groupState.collectAsState()
 
-    // Naviga indietro solo quando la creazione ha avuto successo
     LaunchedEffect(groupState) {
-        if (groupState is GroupState.Success) {
+        if (groupState is GroupState.SuccessCreate) {
             navController.popBackStack()
-            viewModel.resetState() // pulisce lo stato per evitare navigazioni ripetute
+            viewModel.resetState()
         }
     }
 
@@ -29,10 +28,7 @@ fun CreateGroupScreen(viewModel: GroupViewModel, navController: NavController) {
         .fillMaxSize()
         .padding(24.dp)) {
 
-        Text(
-            text = "Crea un nuovo gruppo",
-            style = MaterialTheme.typography.headlineSmall
-        )
+        Text("Crea un nuovo gruppo", style = MaterialTheme.typography.headlineSmall)
 
         Spacer(Modifier.height(16.dp))
 
@@ -45,8 +41,8 @@ fun CreateGroupScreen(viewModel: GroupViewModel, navController: NavController) {
 
         OutlinedTextField(
             value = imageUrl,
-            onValueChange = { imageUrl = it },
-            label = { Text("URL immagine (opzionale)") },
+            onValueChange = { imageUrl = it.take(200) },
+            label = { Text("URL Immagine (max 200 caratteri)") },
             modifier = Modifier.fillMaxWidth()
         )
 
@@ -80,3 +76,4 @@ fun CreateGroupScreen(viewModel: GroupViewModel, navController: NavController) {
         }
     }
 }
+

@@ -45,11 +45,11 @@ class GroupViewModel(private val repository: TripGroupRepository) : ViewModel() 
                 val request = CreateGroupRequest(name, imageUrl, description)
                 val response = repository.createGroup(request)
                 if (response.isSuccessful && response.body() != null) {
-                    val newGroup = response.body()!!
-                    _groupState.value = GroupState.SuccessCreate(newGroup)
-                    fetchGroups() // opzionale: aggiorna la lista dopo creazione
+                    _groupState.value = GroupState.SuccessCreate(response.body()!!)
                 } else {
-                    _groupState.value = GroupState.Error("Errore creazione gruppo: ${response.code()}")
+                    // Stampa l'errore dettagliato
+                    val errorBody = response.errorBody()?.string()
+                    _groupState.value = GroupState.Error("Errore creazione gruppo: ${response.code()} - $errorBody")
                 }
             } catch (e: Exception) {
                 _groupState.value = GroupState.Error("Errore: ${e.message}")
