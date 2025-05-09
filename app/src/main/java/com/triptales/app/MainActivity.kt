@@ -7,6 +7,7 @@ import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.ViewModelStoreOwner
 import androidx.navigation.compose.rememberNavController
 import com.triptales.app.data.*
+import com.triptales.app.data.post.PostRepository
 import com.triptales.app.ui.theme.FrontendtriptalesTheme
 import com.triptales.app.viewmodel.*
 
@@ -23,9 +24,12 @@ class MainActivity : ComponentActivity() {
                 // Istanzia Retrofit con Interceptor
                 val retrofit = RetrofitProvider.create(tokenManager)
 
+                // Repositories
                 val authRepository = AuthRepository(retrofit.create(AuthApi::class.java))
                 val tripGroupRepository = TripGroupRepository(retrofit.create(TripGroupApi::class.java))
+                val postRepository = PostRepository(retrofit.create(PostApi::class.java))  // Aggiunto
 
+                // ViewModels
                 val authViewModel = ViewModelProvider(
                     this as ViewModelStoreOwner,
                     AuthViewModelFactory(authRepository, tokenManager)
@@ -36,10 +40,17 @@ class MainActivity : ComponentActivity() {
                     GroupViewModelFactory(tripGroupRepository)
                 )[GroupViewModel::class.java]
 
+                val postViewModel = ViewModelProvider(  // Aggiunto
+                    this,
+                    PostViewModelFactory(postRepository)
+                )[PostViewModel::class.java]  // Corretto
+
+                // Avvio della navigazione
                 NavGraph(
                     navController = navController,
                     authViewModel = authViewModel,
-                    groupViewModel = groupViewModel
+                    groupViewModel = groupViewModel,
+                    postViewModel = postViewModel
                 )
             }
         }

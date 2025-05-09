@@ -79,4 +79,9 @@ class TokenManager(private val context: Context) {
             }
         }
     }
+    fun getToken(): String? {
+        val sharedPreferences = context.getSharedPreferences("prefs", Context.MODE_PRIVATE)
+        return sharedPreferences.getString("access_token", null)
+    }
+
 }

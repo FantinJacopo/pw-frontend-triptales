@@ -11,16 +11,19 @@ import androidx.navigation.compose.rememberNavController
 import com.triptales.app.ui.auth.LoginScreen
 import com.triptales.app.ui.auth.RegisterScreen
 import com.triptales.app.ui.group.CreateGroupScreen
+import com.triptales.app.ui.group.GroupScreen
 import com.triptales.app.ui.home.HomeScreen
 import com.triptales.app.viewmodel.AuthState
 import com.triptales.app.viewmodel.AuthViewModel
 import com.triptales.app.viewmodel.GroupViewModel
+import com.triptales.app.viewmodel.PostViewModel
 
 @Composable
 fun NavGraph(
     navController: NavHostController = rememberNavController(),
     authViewModel: AuthViewModel,
-    groupViewModel: GroupViewModel
+    groupViewModel: GroupViewModel,
+    postViewModel : PostViewModel
 ) {
     val authState by authViewModel.authState.collectAsState()
 
@@ -53,6 +56,14 @@ fun NavGraph(
         }
         composable("createGroup") {
             CreateGroupScreen(viewModel = groupViewModel, navController = navController)
+        }
+        composable("group/{groupId}") { backStackEntry ->
+            val groupId = backStackEntry.arguments?.getString("groupId")?.toInt() ?: -1
+            GroupScreen(groupId = groupId, viewModel = postViewModel, navController = navController)
+        }
+        composable("group/{groupId}") { backStackEntry ->
+            val groupId = backStackEntry.arguments?.getString("groupId")?.toInt() ?: -1
+            GroupScreen(groupId = groupId, viewModel = postViewModel, navController = navController)
         }
 
     }
