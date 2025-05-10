@@ -36,5 +36,4 @@ class PostViewModel(private val repository: PostRepository) : ViewModel() {
             }
         }
     }
-
 }

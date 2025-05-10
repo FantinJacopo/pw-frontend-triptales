@@ -8,5 +8,4 @@ import retrofit2.http.Path
 interface PostApi {
     @GET("groups/{group_id}/posts/")
     suspend fun getPosts(@Path("group_id") groupId: Int): Response<List<Post>>
-
 }

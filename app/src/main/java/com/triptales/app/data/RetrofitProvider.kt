@@ -5,6 +5,8 @@ import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
 
 object RetrofitProvider {
+    private const val IP_ADDRESS = "192.168.174.89"
+    private const val PORT = 8000
 
     fun create(tokenManager: TokenManager): Retrofit {
         val client = OkHttpClient.Builder()
@@ -12,7 +14,7 @@ object RetrofitProvider {
             .build()
 
         return Retrofit.Builder()
-            .baseUrl("http://172.17.5.150:8000/api/") // cambia con il tuo
+            .baseUrl("http:/$IP_ADDRESS:$PORT/api/")
             .client(client)
             .addConverterFactory(GsonConverterFactory.create())
             .build()
