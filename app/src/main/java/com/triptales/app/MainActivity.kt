@@ -5,9 +5,14 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.ViewModelStoreOwner
-import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.compose.rememberNavController
 import com.triptales.app.data.*
+import com.triptales.app.data.auth.AuthApi
+import com.triptales.app.data.auth.AuthRepository
+import com.triptales.app.data.auth.TokenManager
+import com.triptales.app.data.group.TripGroupApi
+import com.triptales.app.data.group.TripGroupRepository
+import com.triptales.app.data.post.PostApi
 import com.triptales.app.data.post.PostRepository
 import com.triptales.app.ui.theme.FrontendtriptalesTheme
 import com.triptales.app.viewmodel.*
@@ -27,8 +32,13 @@ class MainActivity : ComponentActivity() {
 
                 // Repositories
                 val authRepository = AuthRepository(retrofit.create(AuthApi::class.java))
-                val tripGroupRepository = TripGroupRepository(retrofit.create(TripGroupApi::class.java))
+                val tripGroupRepository =
+                    TripGroupRepository(retrofit.create(TripGroupApi::class.java))
                 val postRepository = PostRepository(retrofit.create(PostApi::class.java))  // Aggiunto
+
+                val postApi: PostApi by lazy {
+                    retrofit.create(PostApi::class.java)
+                }
 
                 // ViewModels
                 val authViewModel = ViewModelProvider(

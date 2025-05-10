@@ -2,8 +2,8 @@ package com.triptales.app.viewmodel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
-import com.triptales.app.data.AuthRepository
-import com.triptales.app.data.TokenManager
+import com.triptales.app.data.auth.AuthRepository
+import com.triptales.app.data.auth.TokenManager
 
 class AuthViewModelFactory(
     private val repository: AuthRepository,

@@ -1,5 +1,6 @@
 package com.triptales.app.ui.group
 
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -10,84 +11,118 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
-import com.triptales.app.viewmodel.PostViewModel
+import coil.compose.rememberAsyncImagePainter
+import com.triptales.app.ui.components.PostCard
+import com.triptales.app.viewmodel.GroupState
+import com.triptales.app.viewmodel.GroupViewModel
 import com.triptales.app.viewmodel.PostState
+import com.triptales.app.viewmodel.PostViewModel
 
 @Composable
-fun GroupScreen(groupId: Int, viewModel: PostViewModel, navController: NavController) {
-    val postState by viewModel.postState.collectAsState()
+fun GroupScreen(
+    groupId: Int,
+    groupViewModel: GroupViewModel,
+    postViewModel: PostViewModel,
+    navController: NavController
+) {
+    val groupState by groupViewModel.groupState.collectAsState()
+    val postState by postViewModel.postState.collectAsState()
 
-    LaunchedEffect(Unit) {
-        viewModel.fetchPosts(groupId)
+    var imageUrl by remember { mutableStateOf("") }
+    var caption by remember { mutableStateOf("") }
+
+    // Carica i gruppi e post
+    LaunchedEffect(groupId) {
+        groupViewModel.fetchGroups()
+        postViewModel.fetchPosts(groupId)
     }
 
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(16.dp)
-    ) {
-        Text(
-            text = "Post del Gruppo $groupId",
-            style = MaterialTheme.typography.headlineMedium,
-            fontWeight = FontWeight.Bold
-        )
-        Spacer(modifier = Modifier.height(16.dp))
+    // Trova il gruppo con l'id giusto
+    val group = (groupState as? GroupState.Success)?.groups?.find { it.id == groupId }
 
-        when (postState) {
-            is PostState.Loading -> {
-                CircularProgressIndicator(modifier = Modifier.align(Alignment.CenterHorizontally))
-            }
+    if (groupState is GroupState.Loading || group == null) {
+        Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+            CircularProgressIndicator()
+        }
+    } else {
+        Column(modifier = Modifier.fillMaxSize()) {
 
-            is PostState.Success -> {
-                val posts = (postState as PostState.Success).posts
+            // Copertina gruppo
+            Image(
+                painter = rememberAsyncImagePainter(group.group_image_url),
+                contentDescription = "Group Cover",
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(200.dp)
+            )
 
-                // Debug: Verifica il contenuto dei post
-                println("Numero di post ricevuti: ${posts.size}")
-                posts.forEachIndexed { index, post ->
-                    println("Post $index - ID: ${post.id}, Caption: ${post.smart_caption}, Data: ${post.created_at}")
-                }
+            // Titolo gruppo
+            Text(
+                text = group.group_name,
+                style = MaterialTheme.typography.headlineMedium,
+                fontWeight = FontWeight.Bold,
+                modifier = Modifier.padding(16.dp)
+            )
 
-                if (posts.isEmpty()) {
-                    Text(
-                        text = "Nessun post disponibile in questo gruppo.",
-                        style = MaterialTheme.typography.bodyMedium,
-                        modifier = Modifier.padding(8.dp)
+            // Sezione creazione post
+            Card(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp),
+                elevation = CardDefaults.cardElevation(4.dp)
+            ) {
+                Column(modifier = Modifier.padding(16.dp)) {
+                    OutlinedTextField(
+                        value = imageUrl,
+                        onValueChange = { imageUrl = it },
+                        label = { Text("URL immagine") },
+                        modifier = Modifier.fillMaxWidth()
                     )
-                } else {
-                    LazyColumn(
-                        modifier = Modifier.fillMaxSize()
+                    OutlinedTextField(
+                        value = caption,
+                        onValueChange = { caption = it },
+                        label = { Text("Didascalia") },
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                    Spacer(Modifier.height(8.dp))
+                    Button(
+                        onClick = {
+                            postViewModel.createPost(groupId, imageUrl, caption)
+                            imageUrl = ""
+                            caption = ""
+                        },
+                        modifier = Modifier.align(Alignment.End)
                     ) {
-                        items(posts) { post ->
-                            Card(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .padding(vertical = 4.dp, horizontal = 8.dp)
-                            ) {
-                                Column(modifier = Modifier.padding(16.dp)) {
-                                    Text(text = "Post ID: ${post.id}", fontWeight = FontWeight.Bold)
-                                    Text(text = "Descrizione: ${post.smart_caption}")
-                                    Text(text = "Creato il: ${post.created_at}")
-                                }
-                            }
-                        }
+                        Text("Pubblica")
                     }
                 }
             }
 
-            is PostState.Error -> {
-                Text(
-                    text = "Errore durante il caricamento: ${(postState as PostState.Error).message}",
-                    color = MaterialTheme.colorScheme.error,
-                    modifier = Modifier.padding(8.dp)
-                )
-            }
+            Spacer(Modifier.height(8.dp))
 
-            else -> {
-                Text(
-                    text = "Stato sconosciuto.",
-                    style = MaterialTheme.typography.bodyMedium,
-                    modifier = Modifier.padding(8.dp)
-                )
+            // Lista post
+            when (postState) {
+                PostState.Loading -> {
+                    Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                        CircularProgressIndicator()
+                    }
+                }
+                is PostState.Success -> {
+                    val successState = postState as PostState.Success
+                    LazyColumn(modifier = Modifier.fillMaxSize()) {
+                        items(successState.posts) {
+                            PostCard(it)
+                        }
+                    }
+                }
+                is PostState.Error -> {
+                    Text(
+                        text = (postState as PostState.Error).message,
+                        color = MaterialTheme.colorScheme.error,
+                        modifier = Modifier.padding(16.dp)
+                    )
+                }
+                PostState.Idle -> {}
             }
         }
     }

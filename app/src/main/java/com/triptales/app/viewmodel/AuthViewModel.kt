@@ -2,11 +2,11 @@ package com.triptales.app.viewmodel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.triptales.app.data.AuthRepository
-import com.triptales.app.data.LoginRequest
-import com.triptales.app.data.LoginResponse
-import com.triptales.app.data.RegisterRequest
-import com.triptales.app.data.TokenManager
+import com.triptales.app.data.auth.AuthRepository
+import com.triptales.app.data.auth.LoginRequest
+import com.triptales.app.data.auth.LoginResponse
+import com.triptales.app.data.auth.RegisterRequest
+import com.triptales.app.data.auth.TokenManager
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.first

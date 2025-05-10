@@ -1,4 +1,4 @@
-package com.triptales.app.data
+package com.triptales.app.data.group
 
 data class CreateGroupRequest(
     val group_name: String,

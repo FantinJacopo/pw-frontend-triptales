@@ -1,4 +1,4 @@
-package com.triptales.app.data
+package com.triptales.app.data.group
 
 class TripGroupRepository(private val api: TripGroupApi) {
     suspend fun getGroups() = api.getGroups()

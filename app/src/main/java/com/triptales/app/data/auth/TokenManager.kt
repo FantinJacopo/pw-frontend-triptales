@@ -1,4 +1,4 @@
-package com.triptales.app.data
+package com.triptales.app.data.auth
 
 import android.content.Context
 import android.util.Base64

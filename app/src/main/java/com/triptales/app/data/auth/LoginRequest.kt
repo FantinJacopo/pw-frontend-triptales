@@ -1,4 +1,4 @@
-package com.triptales.app.data
+package com.triptales.app.data.auth
 
 data class LoginRequest(
     val email: String,

@@ -58,13 +58,13 @@ fun NavGraph(
             CreateGroupScreen(viewModel = groupViewModel, navController = navController)
         }
         composable("group/{groupId}") { backStackEntry ->
-            val groupId = backStackEntry.arguments?.getString("groupId")?.toInt() ?: -1
-            GroupScreen(groupId = groupId, viewModel = postViewModel, navController = navController)
+            val groupId = backStackEntry.arguments?.getString("groupId")?.toIntOrNull() ?: return@composable
+            GroupScreen(
+                groupId = groupId,
+                groupViewModel = groupViewModel,
+                postViewModel = postViewModel,
+                navController = navController
+            )
         }
-        composable("group/{groupId}") { backStackEntry ->
-            val groupId = backStackEntry.arguments?.getString("groupId")?.toInt() ?: -1
-            GroupScreen(groupId = groupId, viewModel = postViewModel, navController = navController)
-        }
-
     }
 }

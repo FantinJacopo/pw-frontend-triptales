@@ -1,4 +1,4 @@
-package com.triptales.app.data
+package com.triptales.app.data.auth
 
 class AuthRepository(private val api: AuthApi) {
     suspend fun register(request: RegisterRequest) = api.register(request)

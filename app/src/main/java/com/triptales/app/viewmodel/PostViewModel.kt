@@ -3,10 +3,11 @@ package com.triptales.app.viewmodel
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.triptales.app.data.post.PostRepository
-import com.triptales.app.model.Post
+import com.triptales.app.data.post.Post
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
+import com.triptales.app.data.post.CreatePostRequest
 
 sealed class PostState {
     object Idle : PostState()
@@ -30,6 +31,27 @@ class PostViewModel(private val repository: PostRepository) : ViewModel() {
                 } else {
                     val errorBody = response.errorBody()?.string()
                     _postState.value = PostState.Error("Errore caricamento post: ${response.code()} - $errorBody")
+                }
+            } catch (e: Exception) {
+                _postState.value = PostState.Error("Errore: ${e.message}")
+            }
+        }
+    }
+
+    fun createPost(groupId: Int, imageUrl: String, caption: String) {
+        viewModelScope.launch {
+            _postState.value = PostState.Loading
+            try {
+                val request = CreatePostRequest(
+                    trip_group = groupId,
+                    image_url = imageUrl,
+                    smart_caption = caption
+                )
+                val response = repository.createPost(request)
+                if (response.isSuccessful) {
+                    fetchPosts(groupId)  // Ricarica post dopo l'inserimento
+                } else {
+                    _postState.value = PostState.Error("Errore creazione post")
                 }
             } catch (e: Exception) {
                 _postState.value = PostState.Error("Errore: ${e.message}")

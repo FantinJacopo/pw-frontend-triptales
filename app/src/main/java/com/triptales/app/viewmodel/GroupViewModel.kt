@@ -2,8 +2,8 @@ package com.triptales.app.viewmodel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.triptales.app.data.CreateGroupRequest
-import com.triptales.app.data.TripGroupRepository
+import com.triptales.app.data.group.CreateGroupRequest
+import com.triptales.app.data.group.TripGroupRepository
 import com.triptales.app.model.TripGroup
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow

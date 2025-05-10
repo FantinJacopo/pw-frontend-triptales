@@ -1,4 +1,4 @@
-package com.triptales.app.data
+package com.triptales.app.data.auth
 
 data class RegisterRequest(
     val email: String,

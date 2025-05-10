@@ -1,4 +1,4 @@
-package com.triptales.app.data
+package com.triptales.app.data.group
 
 import com.triptales.app.model.TripGroup
 import retrofit2.Response

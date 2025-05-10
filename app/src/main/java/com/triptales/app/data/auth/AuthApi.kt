@@ -1,4 +1,4 @@
-package com.triptales.app.data
+package com.triptales.app.data.auth
 
 import retrofit2.Response
 import retrofit2.http.Body
