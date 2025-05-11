@@ -17,6 +17,7 @@ import com.triptales.app.viewmodel.GroupState
 import com.triptales.app.viewmodel.GroupViewModel
 import com.triptales.app.viewmodel.PostState
 import com.triptales.app.viewmodel.PostViewModel
+import java.io.File
 
 @Composable
 fun GroupScreen(
@@ -87,7 +88,7 @@ fun GroupScreen(
                     Spacer(Modifier.height(8.dp))
                     Button(
                         onClick = {
-                            postViewModel.createPost(groupId, imageUrl, caption)
+                            postViewModel.createPost(groupId, caption, File(imageUrl))
                             imageUrl = ""
                             caption = ""
                         },

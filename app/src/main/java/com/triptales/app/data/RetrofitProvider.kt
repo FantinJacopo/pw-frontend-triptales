@@ -7,7 +7,7 @@ import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
 
 object RetrofitProvider {
-    private const val IP_ADDRESS = "192.168.174.89"
+    private const val IP_ADDRESS = "192.168.1.218"
     private const val PORT = 8000
 
     fun create(tokenManager: TokenManager): Retrofit {

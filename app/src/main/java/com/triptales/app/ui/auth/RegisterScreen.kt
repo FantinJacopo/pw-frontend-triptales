@@ -1,6 +1,8 @@
 package com.triptales.app.ui.auth
 
+import android.net.Uri
 import android.widget.Toast
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -10,8 +12,12 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
+import coil.compose.rememberAsyncImagePainter
+import com.triptales.app.data.utils.uriToFile
+import com.triptales.app.ui.components.ImagePicker
 import com.triptales.app.viewmodel.AuthViewModel
 import com.triptales.app.viewmodel.AuthState
+import java.io.File
 
 @Composable
 fun RegisterScreen(
@@ -25,7 +31,7 @@ fun RegisterScreen(
     var username by remember { mutableStateOf("") }
     var name by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
-    var profileImageUrl by remember { mutableStateOf("") }
+    var profileImageUri by remember { mutableStateOf<Uri?>(null) }
 
     Column(
         modifier = Modifier
@@ -41,7 +47,23 @@ fun RegisterScreen(
         OutlinedTextField(value = email, onValueChange = { email = it }, label = { Text("Email") })
         OutlinedTextField(value = username, onValueChange = { username = it }, label = { Text("Username") })
         OutlinedTextField(value = name, onValueChange = { name = it }, label = { Text("Nome Completo") })
-        OutlinedTextField(value = profileImageUrl, onValueChange = { profileImageUrl = it }, label = { Text("URL immagine profilo") })
+
+        Spacer(Modifier.height(8.dp))
+
+        profileImageUri?.let {
+            Image(
+                painter = rememberAsyncImagePainter(it),
+                contentDescription = null,
+                modifier = Modifier.size(100.dp)
+            )
+        }
+
+        ImagePicker { uri ->
+            profileImageUri = uri
+        }
+
+        Spacer(modifier = Modifier.height(8.dp))
+
         OutlinedTextField(
             value = password,
             onValueChange = { password = it },
@@ -56,8 +78,8 @@ fun RegisterScreen(
                 email,
                 username,
                 name,
-                profileImageUrl,
-                password
+                password,
+                profileImageUri?.let { uri -> uriToFile(uri, context) } ?: File("")
             )
         }) {
             Text(text = "Registrati")
@@ -72,7 +94,7 @@ fun RegisterScreen(
         when (authState) {
             is AuthState.Loading -> CircularProgressIndicator()
             is AuthState.SuccessRegister -> {
-                Toast.makeText(context, "Registrazione riuscita! Ora puoi fare il login.", Toast.LENGTH_SHORT).show()
+                Toast.makeText(context, "Registrazione riuscita!", Toast.LENGTH_SHORT).show()
                 LaunchedEffect(Unit) {
                     viewModel.resetState()
                     navController.navigate("login") {

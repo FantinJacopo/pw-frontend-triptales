@@ -65,7 +65,7 @@ class TokenManager(private val context: Context) {
             val now = System.currentTimeMillis() / 1000
 
             exp < now
-        } catch (e: Exception) {
+        } catch (_: Exception) {
             true
         }
     }

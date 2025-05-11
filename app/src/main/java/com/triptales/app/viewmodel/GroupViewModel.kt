@@ -2,12 +2,15 @@ package com.triptales.app.viewmodel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.triptales.app.data.group.CreateGroupRequest
 import com.triptales.app.data.group.TripGroupRepository
-import com.triptales.app.model.TripGroup
+import com.triptales.app.data.group.TripGroup
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
+import okhttp3.MediaType.Companion.toMediaTypeOrNull
+import okhttp3.MultipartBody
+import okhttp3.RequestBody.Companion.asRequestBody
+import java.io.File
 
 sealed class GroupState {
     object Idle : GroupState()
@@ -38,16 +41,17 @@ class GroupViewModel(private val repository: TripGroupRepository) : ViewModel() 
         }
     }
 
-    fun createGroup(name: String, imageUrl: String, description: String) {
+    fun createGroup(name: String, description: String, imageFile: File) {
         viewModelScope.launch {
             _groupState.value = GroupState.Loading
             try {
-                val request = CreateGroupRequest(name, imageUrl, description)
-                val response = repository.createGroup(request)
+                val requestFile = imageFile.asRequestBody("image/*".toMediaTypeOrNull())
+                val imagePart = MultipartBody.Part.createFormData("image", imageFile.name, requestFile)
+
+                val response = repository.createGroup(name, description, imagePart)
                 if (response.isSuccessful && response.body() != null) {
                     _groupState.value = GroupState.SuccessCreate(response.body()!!)
                 } else {
-                    // Stampa l'errore dettagliato
                     val errorBody = response.errorBody()?.string()
                     _groupState.value = GroupState.Error("Errore creazione gruppo: ${response.code()} - $errorBody")
                 }

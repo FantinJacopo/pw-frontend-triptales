@@ -1,19 +1,28 @@
+// CreateGroupScreen.kt
 package com.triptales.app.ui.group
 
+import android.net.Uri
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
+import coil.compose.rememberAsyncImagePainter
+import com.triptales.app.data.utils.uriToFile
+import com.triptales.app.ui.components.ImagePicker
 import com.triptales.app.viewmodel.GroupViewModel
 import com.triptales.app.viewmodel.GroupState
+import java.io.File
 
 @Composable
 fun CreateGroupScreen(viewModel: GroupViewModel, navController: NavController) {
     var name by remember { mutableStateOf("") }
-    var imageUrl by remember { mutableStateOf("") }
     var description by remember { mutableStateOf("") }
+    var imageUri by remember { mutableStateOf<Uri?>(null) }
+    val context = LocalContext.current
 
     val groupState by viewModel.groupState.collectAsState()
 
@@ -40,24 +49,31 @@ fun CreateGroupScreen(viewModel: GroupViewModel, navController: NavController) {
         )
 
         OutlinedTextField(
-            value = imageUrl,
-            onValueChange = { imageUrl = it.take(200) },
-            label = { Text("URL Immagine (max 200 caratteri)") },
-            modifier = Modifier.fillMaxWidth()
-        )
-
-        OutlinedTextField(
             value = description,
             onValueChange = { description = it },
             label = { Text("Descrizione") },
             modifier = Modifier.fillMaxWidth()
         )
 
+        Spacer(Modifier.height(8.dp))
+
+        imageUri?.let {
+            Image(
+                painter = rememberAsyncImagePainter(it),
+                contentDescription = null,
+                modifier = Modifier.size(100.dp)
+            )
+        }
+
+        ImagePicker { uri ->
+            imageUri = uri
+        }
+
         Spacer(Modifier.height(24.dp))
 
         Button(
             onClick = {
-                viewModel.createGroup(name, imageUrl, description)
+                viewModel.createGroup(name, description, imageUri?.let { uriToFile(it, context) } ?: File("") )
             },
             modifier = Modifier.fillMaxWidth()
         ) {
@@ -76,4 +92,3 @@ fun CreateGroupScreen(viewModel: GroupViewModel, navController: NavController) {
         }
     }
 }
-

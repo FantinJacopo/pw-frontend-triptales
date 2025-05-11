@@ -1,4 +1,4 @@
-package com.triptales.app.model
+package com.triptales.app.data.group
 
 data class TripGroup(
     val id: Int,

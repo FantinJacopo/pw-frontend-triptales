@@ -1,7 +1,18 @@
 package com.triptales.app.data.group
 
+import com.triptales.app.data.utils.toRequestBody
+import okhttp3.MultipartBody
+
 class TripGroupRepository(private val api: TripGroupApi) {
     suspend fun getGroups() = api.getGroups()
-    suspend fun createGroup(request: CreateGroupRequest) = api.createGroup(request)
 
+    suspend fun createGroup(
+        name: String,
+        description: String,
+        imagePart: MultipartBody.Part
+    ) = api.createGroup(
+        toRequestBody(name),
+        toRequestBody(description),
+        imagePart,
+    )
 }

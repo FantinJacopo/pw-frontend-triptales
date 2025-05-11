@@ -5,12 +5,15 @@ import androidx.lifecycle.viewModelScope
 import com.triptales.app.data.auth.AuthRepository
 import com.triptales.app.data.auth.LoginRequest
 import com.triptales.app.data.auth.LoginResponse
-import com.triptales.app.data.auth.RegisterRequest
 import com.triptales.app.data.auth.TokenManager
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
+import okhttp3.MediaType.Companion.toMediaTypeOrNull
+import okhttp3.MultipartBody
+import okhttp3.RequestBody.Companion.asRequestBody
+import java.io.File
 
 sealed class AuthState {
     object Idle : AuthState()
@@ -58,12 +61,14 @@ class AuthViewModel(
         }
     }
 
-    fun register(email: String, username: String, name: String, profileImageUrl: String, password: String) {
+    fun register(email: String, username: String, name: String, password: String, imageFile: File) {
         viewModelScope.launch {
             _authState.value = AuthState.Loading
             try {
-                val request = RegisterRequest(email, username, name, profileImageUrl, password)
-                val response = repository.register(request)
+                val requestFile = imageFile.asRequestBody("image/*".toMediaTypeOrNull())
+                val imagePart = MultipartBody.Part.createFormData("profile_image", imageFile.name, requestFile)
+
+                val response = repository.register(email, username, name, password, imagePart)
                 if (response.isSuccessful) {
                     _authState.value = AuthState.SuccessRegister
                 } else {
@@ -91,7 +96,7 @@ class AuthViewModel(
                         } else {
                             logout() // refresh token non valido
                         }
-                    } catch (e: Exception) {
+                    } catch (_: Exception) {
                         logout()
                     }
                 } else {

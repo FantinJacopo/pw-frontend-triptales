@@ -1,16 +1,23 @@
 package com.triptales.app.data.post
 
-import com.triptales.app.data.post.Post
+import okhttp3.MultipartBody
+import okhttp3.RequestBody
 import retrofit2.Response
-import retrofit2.http.Body
 import retrofit2.http.GET
+import retrofit2.http.Multipart
 import retrofit2.http.POST
+import retrofit2.http.Part
 import retrofit2.http.Path
 
 interface PostApi {
     @GET("groups/{group_id}/posts/")
     suspend fun getPosts(@Path("group_id") groupId: Int): Response<List<Post>>
 
+    @Multipart
     @POST("posts/")
-    suspend fun createPost(@Body request: CreatePostRequest): Response<Post>
+    suspend fun createPost(
+        @Part image: MultipartBody.Part,
+        @Part("trip_group") tripGroup: RequestBody,
+        @Part("smart_caption") smartCaption: RequestBody
+    ): Response<Post>
 }
