@@ -30,6 +30,7 @@
         </provider>
         <activity
             android:name=".MainActivity"
+
             android:exported="true"
             android:label="@string/app_name"
             android:theme="@style/Theme.Frontendtriptales">
@@ -39,6 +40,17 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+        <activity
+            android:name=".ui.qrcode.QRCodeActivity"
+            android:theme="@style/Theme.AppCompat.Light.NoActionBar"
+            android:exported="false"/>
+
+        <activity
+            android:name=".ui.qrcode.QRCodeScannerActivity"
+            android:theme="@style/Theme.AppCompat.Light.NoActionBar"
+            android:exported="false"/>
+
+
     </application>
 
 </manifest>
