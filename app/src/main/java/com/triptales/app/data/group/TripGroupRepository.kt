@@ -15,4 +15,12 @@ class TripGroupRepository(private val api: TripGroupApi) {
         toRequestBody(description),
         imagePart,
     )
+    suspend fun joinGroup(qrCode: String): JoinGroupResponse? {
+        val response = api.joinGroup(JoinGroupRequest(qrCode))
+        if (response.isSuccessful) {
+            return response.body()
+        } else {
+            throw Exception("Errore API: ${response.errorBody()?.string()}")
+        }
+    }
 }

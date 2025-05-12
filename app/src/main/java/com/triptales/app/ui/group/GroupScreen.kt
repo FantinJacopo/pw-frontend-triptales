@@ -17,6 +17,9 @@ import com.triptales.app.viewmodel.GroupState
 import com.triptales.app.viewmodel.GroupViewModel
 import com.triptales.app.viewmodel.PostState
 import com.triptales.app.viewmodel.PostViewModel
+import android.content.Intent
+import com.triptales.app.ui.qrcode.QRCodeActivity
+import com.triptales.app.ui.qrcode.QRCodeScannerActivity
 import java.io.File
 
 @Composable
@@ -64,6 +67,39 @@ fun GroupScreen(
                 fontWeight = FontWeight.Bold,
                 modifier = Modifier.padding(16.dp)
             )
+
+            // Pulsanti per QR Code
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp, vertical = 8.dp),
+                horizontalArrangement = Arrangement.SpaceEvenly
+            ) {
+                Button(
+                    onClick = {
+                        val context = navController.context
+                        val intent = Intent(context, QRCodeActivity::class.java)
+                        intent.putExtra("QR_DATA", group.invite_code)
+                        context.startActivity(intent)
+                    },
+                    modifier = Modifier.weight(1f)
+                ) {
+                    Text("Genera QR Code")
+                }
+
+                Spacer(modifier = Modifier.width(16.dp))
+
+                Button(
+                    onClick = {
+                        val context = navController.context
+                        val intent = Intent(context, QRCodeScannerActivity::class.java)
+                        context.startActivity(intent)
+                    },
+                    modifier = Modifier.weight(1f)
+                ) {
+                    Text("Scansiona QR Code")
+                }
+            }
 
             // Sezione creazione post
             Card(
