@@ -53,6 +53,9 @@ dependencies {
     implementation(libs.coil.kt.coil.compose)
     implementation(libs.coil.network.okhttp)
 
+    // image cropper
+    implementation("com.github.CanHub:Android-Image-Cropper:4.3.2")
+
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.lifecycle.runtime.ktx)
     implementation(libs.androidx.activity.compose)

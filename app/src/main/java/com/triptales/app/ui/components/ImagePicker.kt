@@ -1,6 +1,7 @@
 package com.triptales.app.ui.components
 
 import android.net.Uri
+import android.os.Build
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.Column
@@ -13,6 +14,9 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.triptales.app.data.utils.createImageUri
+import com.triptales.app.data.utils.hasCameraPermission
+import com.triptales.app.data.utils.hasStoragePermission
+import com.triptales.app.data.utils.requestCameraPermission
 import kotlinx.coroutines.launch
 
 @Composable
@@ -21,10 +25,8 @@ fun ImagePicker(
 ) {
     val context = LocalContext.current
     val coroutineScope = rememberCoroutineScope()
-
     var tempImageUri by remember { mutableStateOf<Uri?>(null) }
 
-    // Launcher per la fotocamera
     val cameraLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.TakePicture()
     ) { success ->
@@ -33,15 +35,30 @@ fun ImagePicker(
         }
     }
 
-    // Launcher per la galleria
     val galleryLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.GetContent()
     ) { uri: Uri? ->
         uri?.let { onImageSelected(it) }
     }
 
+    val cameraPermissionLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.RequestPermission()
+    ) { isGranted ->
+        if (isGranted) {
+            coroutineScope.launch {
+                val uri = createImageUri(context)
+                tempImageUri = uri
+                cameraLauncher.launch(uri)
+            }
+        }
+    }
+
     Column {
         Button(onClick = {
+            if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU && !hasStoragePermission(context)) {
+                // Se vuoi puoi anche mostrare un messaggio all'utente
+                return@Button
+            }
             galleryLauncher.launch("image/*")
         }) {
             Text("Seleziona dalla Galleria")
@@ -50,10 +67,16 @@ fun ImagePicker(
         Spacer(modifier = Modifier.height(8.dp))
 
         Button(onClick = {
-            coroutineScope.launch {
-                val uri = createImageUri(context)
-                tempImageUri = uri
-                cameraLauncher.launch(uri)
+            var granted = hasCameraPermission(context)
+
+            if(!granted) granted = requestCameraPermission(context, cameraPermissionLauncher)
+
+            if (granted) {
+                coroutineScope.launch {
+                    val uri = createImageUri(context)
+                    tempImageUri = uri
+                    cameraLauncher.launch(uri)
+                }
             }
         }) {
             Text("Scatta una Foto")
