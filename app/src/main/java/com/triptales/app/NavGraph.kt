@@ -7,9 +7,10 @@ import androidx.compose.runtime.getValue
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
-import androidx.navigation.compose.rememberNavController
+import com.triptales.app.data.auth.TokenManager
 import com.triptales.app.ui.auth.LoginScreen
 import com.triptales.app.ui.auth.RegisterScreen
+import com.triptales.app.ui.auth.SplashScreen
 import com.triptales.app.ui.group.CreateGroupScreen
 import com.triptales.app.ui.group.GroupScreen
 import com.triptales.app.ui.home.HomeScreen
@@ -22,12 +23,13 @@ import com.triptales.app.viewmodel.UserViewModel
 
 @Composable
 fun NavGraph(
-    navController: NavHostController = rememberNavController(),
+    navController: NavHostController,
     authViewModel: AuthViewModel,
     groupViewModel: GroupViewModel,
-    postViewModel : PostViewModel,
-    userViewModel : UserViewModel
-) {
+    postViewModel: PostViewModel,
+    userViewModel: UserViewModel,
+    tokenManager: TokenManager
+){
     val authState by authViewModel.authState.collectAsState()
 
     val startDestination = when (authState) {
@@ -37,14 +39,17 @@ fun NavGraph(
 
     LaunchedEffect(startDestination) {
         navController.navigate(startDestination) {
-            popUpTo(0)
+            launchSingleTop = true
         }
     }
 
     NavHost(
         navController = navController,
-        startDestination = "loading" // temporaneo
+        startDestination = "splash"
     ) {
+        composable("splash") {
+            SplashScreen(navController = navController, tokenManager = tokenManager)
+        }
         composable("login") {
             LoginScreen(viewModel = authViewModel, navController = navController)
         }
@@ -52,7 +57,11 @@ fun NavGraph(
             RegisterScreen(viewModel = authViewModel, navController = navController)
         }
         composable("home") {
-            HomeScreen(viewModel = groupViewModel, navController = navController)
+            HomeScreen(
+                viewModel = groupViewModel,
+                userViewModel = userViewModel,
+                navController = navController
+            )
         }
         composable("loading") {
             // Schermata vuota, serve solo per aspettare di sapere quale sarà lo startDestination

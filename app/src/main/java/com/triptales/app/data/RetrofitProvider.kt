@@ -1,5 +1,6 @@
 package com.triptales.app.data
 
+import com.triptales.app.data.auth.AuthApi
 import com.triptales.app.data.auth.AuthInterceptor
 import com.triptales.app.data.auth.TokenManager
 import okhttp3.OkHttpClient
@@ -16,8 +17,16 @@ object RetrofitProvider {
             .build()
 
         return Retrofit.Builder()
-            .baseUrl("http:/$IP_ADDRESS:$PORT/api/")
+            .baseUrl("http://$IP_ADDRESS:$PORT/api/")
             .client(client)
+            .addConverterFactory(GsonConverterFactory.create())
+            .build()
+    }
+
+    // Retrofit senza interceptor, usato solo per refresh
+    fun createUnauthenticated(): Retrofit {
+        return Retrofit.Builder()
+            .baseUrl("http://$IP_ADDRESS:$PORT/api/")
             .addConverterFactory(GsonConverterFactory.create())
             .build()
     }

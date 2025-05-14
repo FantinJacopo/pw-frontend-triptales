@@ -5,6 +5,7 @@ import android.util.Base64
 import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
+import com.triptales.app.data.RetrofitProvider
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
@@ -84,4 +85,24 @@ class TokenManager(private val context: Context) {
         return sharedPreferences.getString("access_token", null)
     }
 
+    suspend fun refreshAccessToken(): Boolean {
+        val refresh = refreshToken.first()
+        if (refresh.isNullOrBlank()) return false
+
+        val retrofit = RetrofitProvider.createUnauthenticated()
+        val authApi = retrofit.create(AuthApi::class.java)
+
+        return try {
+            val response = authApi.refreshToken(RefreshRequest(refresh))
+            if (response.isSuccessful && response.body() != null) {
+                val newAccess = response.body()!!.access
+                saveTokens(newAccess, refresh)
+                true
+            } else {
+                false
+            }
+        } catch (e: Exception) {
+            false
+        }
+    }
 }

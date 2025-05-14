@@ -4,9 +4,8 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.lifecycle.ViewModelProvider
-import androidx.lifecycle.ViewModelStoreOwner
 import androidx.navigation.compose.rememberNavController
-import com.triptales.app.data.*
+import com.triptales.app.data.RetrofitProvider
 import com.triptales.app.data.auth.AuthApi
 import com.triptales.app.data.auth.AuthRepository
 import com.triptales.app.data.auth.TokenManager
@@ -18,7 +17,6 @@ import com.triptales.app.data.user.UserApi
 import com.triptales.app.data.user.UserRepository
 import com.triptales.app.ui.theme.FrontendtriptalesTheme
 import com.triptales.app.viewmodel.*
-import retrofit2.create
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -27,26 +25,20 @@ class MainActivity : ComponentActivity() {
         setContent {
             FrontendtriptalesTheme {
                 val navController = rememberNavController()
-
                 val tokenManager = TokenManager(applicationContext)
 
-                // Istanzia Retrofit con Interceptor
+                // Retrofit configurato con interceptor
                 val retrofit = RetrofitProvider.create(tokenManager)
 
                 // Repositories
                 val authRepository = AuthRepository(retrofit.create(AuthApi::class.java))
-                val tripGroupRepository =
-                    TripGroupRepository(retrofit.create(TripGroupApi::class.java))
-                val postRepository = PostRepository(retrofit.create(PostApi::class.java))  // Aggiunto
+                val tripGroupRepository = TripGroupRepository(retrofit.create(TripGroupApi::class.java))
+                val postRepository = PostRepository(retrofit.create(PostApi::class.java))
                 val userRepository = UserRepository(retrofit.create(UserApi::class.java))
-
-                val postApi: PostApi by lazy {
-                    retrofit.create(PostApi::class.java)
-                }
 
                 // ViewModels
                 val authViewModel = ViewModelProvider(
-                    this as ViewModelStoreOwner,
+                    this,
                     AuthViewModelFactory(authRepository, tokenManager)
                 )[AuthViewModel::class.java]
 
@@ -55,21 +47,24 @@ class MainActivity : ComponentActivity() {
                     GroupViewModelFactory(tripGroupRepository)
                 )[GroupViewModel::class.java]
 
-                val postViewModel = ViewModelProvider(  // Aggiunto
+                val postViewModel = ViewModelProvider(
                     this,
                     PostViewModelFactory(postRepository)
-                )[PostViewModel::class.java]  // Corretto
-                val userViewModel = ViewModelProvider(this, UserViewModelFactory(userRepository)
-                    )[UserViewModel::class.java]
+                )[PostViewModel::class.java]
 
+                val userViewModel = ViewModelProvider(
+                    this,
+                    UserViewModelFactory(userRepository)
+                )[UserViewModel::class.java]
 
-                // Avvio della navigazione
+                // Avvio navigazione
                 NavGraph(
                     navController = navController,
                     authViewModel = authViewModel,
                     groupViewModel = groupViewModel,
                     postViewModel = postViewModel,
-                    userViewModel = userViewModel
+                    userViewModel = userViewModel,
+                    tokenManager = tokenManager
                 )
             }
         }
