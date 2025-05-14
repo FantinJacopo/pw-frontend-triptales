@@ -5,12 +5,16 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.navigation.NavController
 import coil.compose.rememberAsyncImagePainter
 import com.triptales.app.viewmodel.GroupViewModel
@@ -29,23 +33,38 @@ fun HomeScreen(viewModel: GroupViewModel, navController: NavController) {
             .fillMaxSize()
             .padding(16.dp)
     ) {
-        Text(
-            text = "I tuoi gruppi",
-            style = MaterialTheme.typography.headlineMedium,
-            fontWeight = FontWeight.Bold
-        )
+        // Header
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(8.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.SpaceBetween
+        ) {
+            Text(
+                text = "TripTales",
+                style = MaterialTheme.typography.headlineLarge,
+                fontWeight = FontWeight.Bold,
+                textAlign = TextAlign.Start,
+                modifier = Modifier.weight(1f)
+            )
+            IconButton(
+                    onClick = { navController.navigate("profile") }
+                    ) {
+                Image(
+                    painter = rememberAsyncImagePainter("https://images2.gazzettaobjects.it/assets-mc/tennis/giocatori/high/jannik_sinner.png"),
+                    contentDescription = "Profile",
+                    modifier = Modifier
+                        .size(48.dp)
+                        .clip(CircleShape)
+                )
+            }
+
+        }
 
         Spacer(modifier = Modifier.height(8.dp))
 
-        Button(
-            onClick = { navController.navigate("createGroup") },
-            modifier = Modifier.align(Alignment.End)
-        ) {
-            Text("Crea nuovo gruppo")
-        }
-
-        Spacer(modifier = Modifier.height(16.dp))
-
+        // Lista dei gruppi
         when (state) {
             is GroupState.Loading -> {
                 CircularProgressIndicator(modifier = Modifier.align(Alignment.CenterHorizontally))
@@ -64,25 +83,32 @@ fun HomeScreen(viewModel: GroupViewModel, navController: NavController) {
                             Card(
                                 modifier = Modifier
                                     .fillMaxWidth()
-                                    .padding(8.dp)
+                                    .padding(vertical = 8.dp)
                                     .clickable {
                                         navController.navigate("group/${group.id}")
-                                    }
+                                    },
+                                elevation = CardDefaults.cardElevation(4.dp)
                             ) {
-                                Row(
-                                    verticalAlignment = Alignment.CenterVertically,
-                                    modifier = Modifier.padding(8.dp)
+                                Column(
+                                    modifier = Modifier
+                                        .padding(16.dp)
+                                        .fillMaxWidth()
                                 ) {
-                                    Image(
-                                        painter = rememberAsyncImagePainter(group.group_image_url),
-                                        contentDescription = "Group Image",
-                                        modifier = Modifier.size(64.dp)
+                                    Text(
+                                        text = group.group_name,
+                                        style = MaterialTheme.typography.titleMedium,
+                                        fontWeight = FontWeight.Bold
                                     )
-                                    Spacer(modifier = Modifier.width(8.dp))
-                                    Column {
-                                        Text(group.group_name, fontWeight = FontWeight.Bold)
-                                        Text(group.description)
-                                    }
+                                    Text(
+                                        text = group.description,
+                                        style = MaterialTheme.typography.bodySmall,
+                                        color = Color.Gray
+                                    )
+                                    Text(
+                                        text = "Codice d'invito: ${group.invite_code}",
+                                        style = MaterialTheme.typography.bodySmall,
+                                        color = Color.Gray
+                                    )
                                 }
                             }
                         }

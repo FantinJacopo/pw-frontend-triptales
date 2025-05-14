@@ -13,17 +13,20 @@ import com.triptales.app.ui.auth.RegisterScreen
 import com.triptales.app.ui.group.CreateGroupScreen
 import com.triptales.app.ui.group.GroupScreen
 import com.triptales.app.ui.home.HomeScreen
+import com.triptales.app.ui.profile.ProfileScreen
 import com.triptales.app.viewmodel.AuthState
 import com.triptales.app.viewmodel.AuthViewModel
 import com.triptales.app.viewmodel.GroupViewModel
 import com.triptales.app.viewmodel.PostViewModel
+import com.triptales.app.viewmodel.UserViewModel
 
 @Composable
 fun NavGraph(
     navController: NavHostController = rememberNavController(),
     authViewModel: AuthViewModel,
     groupViewModel: GroupViewModel,
-    postViewModel : PostViewModel
+    postViewModel : PostViewModel,
+    userViewModel : UserViewModel
 ) {
     val authState by authViewModel.authState.collectAsState()
 
@@ -65,6 +68,9 @@ fun NavGraph(
                 postViewModel = postViewModel,
                 navController = navController
             )
+        }
+        composable("profile") {
+            ProfileScreen(viewModel = userViewModel, navController = navController)
         }
     }
 }

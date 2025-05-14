@@ -14,8 +14,11 @@ import com.triptales.app.data.group.TripGroupApi
 import com.triptales.app.data.group.TripGroupRepository
 import com.triptales.app.data.post.PostApi
 import com.triptales.app.data.post.PostRepository
+import com.triptales.app.data.user.UserApi
+import com.triptales.app.data.user.UserRepository
 import com.triptales.app.ui.theme.FrontendtriptalesTheme
 import com.triptales.app.viewmodel.*
+import retrofit2.create
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -35,6 +38,7 @@ class MainActivity : ComponentActivity() {
                 val tripGroupRepository =
                     TripGroupRepository(retrofit.create(TripGroupApi::class.java))
                 val postRepository = PostRepository(retrofit.create(PostApi::class.java))  // Aggiunto
+                val userRepository = UserRepository(retrofit.create(UserApi::class.java))
 
                 val postApi: PostApi by lazy {
                     retrofit.create(PostApi::class.java)
@@ -55,13 +59,17 @@ class MainActivity : ComponentActivity() {
                     this,
                     PostViewModelFactory(postRepository)
                 )[PostViewModel::class.java]  // Corretto
+                val userViewModel = ViewModelProvider(this, UserViewModelFactory(userRepository)
+                    )[UserViewModel::class.java]
+
 
                 // Avvio della navigazione
                 NavGraph(
                     navController = navController,
                     authViewModel = authViewModel,
                     groupViewModel = groupViewModel,
-                    postViewModel = postViewModel
+                    postViewModel = postViewModel,
+                    userViewModel = userViewModel
                 )
             }
         }

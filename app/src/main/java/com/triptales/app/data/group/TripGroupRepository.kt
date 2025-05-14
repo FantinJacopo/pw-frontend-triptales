@@ -23,4 +23,6 @@ class TripGroupRepository(private val api: TripGroupApi) {
             throw Exception("Errore API: ${response.errorBody()?.string()}")
         }
     }
+    suspend fun getUserGroups() = api.getUserGroups()
+
 }

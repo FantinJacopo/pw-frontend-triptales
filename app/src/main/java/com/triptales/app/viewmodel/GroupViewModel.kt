@@ -29,7 +29,7 @@ class GroupViewModel(private val repository: TripGroupRepository) : ViewModel() 
         viewModelScope.launch {
             _groupState.value = GroupState.Loading
             try {
-                val response = repository.getGroups()
+                val response = repository.getUserGroups()
                 if (response.isSuccessful) {
                     _groupState.value = GroupState.Success(response.body() ?: emptyList())
                 } else {
@@ -40,6 +40,7 @@ class GroupViewModel(private val repository: TripGroupRepository) : ViewModel() 
             }
         }
     }
+
 
     fun createGroup(name: String, description: String, imageFile: File) {
         viewModelScope.launch {

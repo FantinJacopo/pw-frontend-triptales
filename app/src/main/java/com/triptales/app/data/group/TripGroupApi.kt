@@ -23,5 +23,7 @@ interface TripGroupApi {
 
     @POST("groups/join/")
     suspend fun joinGroup(@Body request: JoinGroupRequest): Response<JoinGroupResponse>
+    @GET("groups/my_groups/")
+    suspend fun getUserGroups(): Response<List<TripGroup>>
 
 }
