@@ -48,13 +48,17 @@ dependencies {
     implementation(libs.androidx.datastore.preferences)
 
     implementation(libs.androidx.navigation.compose)
+    implementation(libs.material3)
+    implementation(libs.material)
+
+
 
     // coil
     implementation(libs.coil.kt.coil.compose)
     implementation(libs.coil.network.okhttp)
 
     // image cropper
-    implementation("com.github.CanHub:Android-Image-Cropper:4.3.2")
+    implementation("com.vanniktech:android-image-cropper:4.6.0")
 
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.lifecycle.runtime.ktx)
