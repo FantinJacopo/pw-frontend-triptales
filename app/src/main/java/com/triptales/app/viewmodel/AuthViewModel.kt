@@ -125,6 +125,11 @@ class AuthViewModel(
     fun logout() {
         viewModelScope.launch {
             Log.d("AuthViewModel", "Logging out...")
+            _authState.value = AuthState.Loading // Mostra loading durante logout
+
+            // Piccola pausa per feedback visivo
+            kotlinx.coroutines.delay(500)
+
             tokenManager.clearTokens()
             _authState.value = AuthState.Unauthenticated
         }

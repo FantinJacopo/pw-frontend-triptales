@@ -16,9 +16,12 @@ import com.triptales.app.ui.group.GroupScreen
 import com.triptales.app.ui.group.GroupActionScreen
 import com.triptales.app.ui.group.JoinGroupScreen
 import com.triptales.app.ui.home.HomeScreen
+import com.triptales.app.ui.post.CreatePostScreen
+import com.triptales.app.ui.post.CommentsScreen
 import com.triptales.app.ui.profile.ProfileScreen
 import com.triptales.app.viewmodel.AuthState
 import com.triptales.app.viewmodel.AuthViewModel
+import com.triptales.app.viewmodel.CommentViewModel
 import com.triptales.app.viewmodel.GroupViewModel
 import com.triptales.app.viewmodel.PostViewModel
 import com.triptales.app.viewmodel.UserViewModel
@@ -30,6 +33,7 @@ fun NavGraph(
     groupViewModel: GroupViewModel,
     postViewModel: PostViewModel,
     userViewModel: UserViewModel,
+    commentViewModel: CommentViewModel,
     tokenManager: TokenManager
 ){
     val authState by authViewModel.authState.collectAsState()
@@ -77,6 +81,22 @@ fun NavGraph(
         composable("joinGroup") {
             JoinGroupScreen(navController = navController)
         }
+        composable("createPost/{groupId}") { backStackEntry ->
+            val groupId = backStackEntry.arguments?.getString("groupId")?.toIntOrNull() ?: return@composable
+            CreatePostScreen(
+                groupId = groupId,
+                postViewModel = postViewModel,
+                navController = navController
+            )
+        }
+        composable("post/{postId}/comments") { backStackEntry ->
+            val postId = backStackEntry.arguments?.getString("postId")?.toIntOrNull() ?: return@composable
+            CommentsScreen(
+                postId = postId,
+                commentViewModel = commentViewModel,
+                navController = navController
+            )
+        }
         composable("group/{groupId}") { backStackEntry ->
             val groupId = backStackEntry.arguments?.getString("groupId")?.toIntOrNull() ?: return@composable
             GroupScreen(
@@ -87,7 +107,11 @@ fun NavGraph(
             )
         }
         composable("profile") {
-            ProfileScreen(viewModel = userViewModel, navController = navController)
+            ProfileScreen(
+                viewModel = userViewModel,
+                authViewModel = authViewModel,
+                navController = navController
+            )
         }
     }
 }

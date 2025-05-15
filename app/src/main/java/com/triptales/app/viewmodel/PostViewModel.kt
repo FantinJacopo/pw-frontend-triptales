@@ -87,4 +87,7 @@ class PostViewModel(private val repository: PostRepository) : ViewModel() {
         }
     }
 
+    fun resetState() {
+        _postState.value = PostState.Idle
+    }
 }

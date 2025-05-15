@@ -4,7 +4,6 @@ import android.annotation.SuppressLint
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
-import androidx.compose.material3.Scaffold
 import androidx.lifecycle.ViewModelProvider
 import androidx.navigation.compose.rememberNavController
 import com.triptales.app.data.RetrofitProvider
@@ -17,6 +16,8 @@ import com.triptales.app.data.post.PostApi
 import com.triptales.app.data.post.PostRepository
 import com.triptales.app.data.user.UserApi
 import com.triptales.app.data.user.UserRepository
+import com.triptales.app.data.comment.CommentApi
+import com.triptales.app.data.comment.CommentRepository
 import com.triptales.app.ui.theme.FrontendtriptalesTheme
 import com.triptales.app.viewmodel.*
 
@@ -38,6 +39,7 @@ class MainActivity : ComponentActivity() {
                 val tripGroupRepository = TripGroupRepository(retrofit.create(TripGroupApi::class.java))
                 val postRepository = PostRepository(retrofit.create(PostApi::class.java))
                 val userRepository = UserRepository(retrofit.create(UserApi::class.java))
+                val commentRepository = CommentRepository(retrofit.create(CommentApi::class.java))
 
                 // ViewModels
                 val authViewModel = ViewModelProvider(
@@ -60,6 +62,11 @@ class MainActivity : ComponentActivity() {
                     UserViewModelFactory(userRepository)
                 )[UserViewModel::class.java]
 
+                val commentViewModel = ViewModelProvider(
+                    this,
+                    CommentViewModelFactory(commentRepository)
+                )[CommentViewModel::class.java]
+
                 // Avvio navigazione
                 NavGraph(
                     navController = navController,
@@ -67,6 +74,7 @@ class MainActivity : ComponentActivity() {
                     groupViewModel = groupViewModel,
                     postViewModel = postViewModel,
                     userViewModel = userViewModel,
+                    commentViewModel = commentViewModel,
                     tokenManager = tokenManager
                 )
             }
