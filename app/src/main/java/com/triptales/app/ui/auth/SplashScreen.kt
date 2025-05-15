@@ -18,35 +18,52 @@ fun SplashScreen(
     navController: NavController,
     tokenManager: TokenManager
 ) {
-    val scope = rememberCoroutineScope()
     LaunchedEffect(true) {
-        val refresh = tokenManager.refreshToken.first()
+        // Piccola pausa per mostrare lo splash
+        delay(1000)
 
-        if (!refresh.isNullOrBlank() && !tokenManager.isTokenExpired(refresh)) {
-            val success = tokenManager.refreshAccessToken()
+        val accessToken = tokenManager.accessToken.first()
+        val refreshToken = tokenManager.refreshToken.first()
 
-            // 🔁 ASPETTA che il nuovo access token sia disponibile nel DataStore
-            val newToken = tokenManager.accessToken.first {
-                !it.isNullOrBlank() && !tokenManager.isTokenExpired(it)
-            }
-
-            if (success && newToken != null) {
-                delay(200) // piccola pausa extra per sicurezza
+        when {
+            // Ha un access token valido
+            !accessToken.isNullOrBlank() && !tokenManager.isTokenExpired(accessToken) -> {
                 navController.navigate("home") {
                     popUpTo("splash") { inclusive = true }
                 }
-            } else {
+            }
+            // Ha un refresh token valido, prova a rinnovare
+            !refreshToken.isNullOrBlank() && !tokenManager.isTokenExpired(refreshToken) -> {
+                val refreshSuccess = tokenManager.refreshAccessToken()
+
+                if (refreshSuccess) {
+                    // Aspetta che il nuovo token sia disponibile
+                    val newToken = tokenManager.accessToken.first()
+                    if (!newToken.isNullOrBlank() && !tokenManager.isTokenExpired(newToken)) {
+                        navController.navigate("home") {
+                            popUpTo("splash") { inclusive = true }
+                        }
+                    } else {
+                        // Se non riesce, pulisce e va al login
+                        tokenManager.clearTokens()
+                        navController.navigate("login") {
+                            popUpTo("splash") { inclusive = true }
+                        }
+                    }
+                } else {
+                    // Refresh fallito, vai al login
+                    tokenManager.clearTokens()
+                    navController.navigate("login") {
+                        popUpTo("splash") { inclusive = true }
+                    }
+                }
+            }
+            // Nessun token valido, vai al login
+            else -> {
                 tokenManager.clearTokens()
                 navController.navigate("login") {
                     popUpTo("splash") { inclusive = true }
                 }
-            }
-
-        } else {
-            // No token → login obbligato
-            tokenManager.clearTokens()
-            navController.navigate("login") {
-                popUpTo("splash") { inclusive = true }
             }
         }
     }
@@ -61,6 +78,12 @@ fun SplashScreen(
                 Text("TripTales", style = MaterialTheme.typography.headlineLarge)
                 Spacer(modifier = Modifier.height(24.dp))
                 CircularProgressIndicator()
+                Spacer(modifier = Modifier.height(16.dp))
+                Text(
+                    text = "Verifica autenticazione...",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
             }
         }
     }

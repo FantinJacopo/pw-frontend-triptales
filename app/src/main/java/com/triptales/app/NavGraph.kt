@@ -13,6 +13,8 @@ import com.triptales.app.ui.auth.RegisterScreen
 import com.triptales.app.ui.auth.SplashScreen
 import com.triptales.app.ui.group.CreateGroupScreen
 import com.triptales.app.ui.group.GroupScreen
+import com.triptales.app.ui.group.GroupActionScreen
+import com.triptales.app.ui.group.JoinGroupScreen
 import com.triptales.app.ui.home.HomeScreen
 import com.triptales.app.ui.profile.ProfileScreen
 import com.triptales.app.viewmodel.AuthState
@@ -66,8 +68,14 @@ fun NavGraph(
         composable("loading") {
             // Schermata vuota, serve solo per aspettare di sapere quale sarà lo startDestination
         }
+        composable("groupAction") {
+            GroupActionScreen(navController = navController)
+        }
         composable("createGroup") {
             CreateGroupScreen(viewModel = groupViewModel, navController = navController)
+        }
+        composable("joinGroup") {
+            JoinGroupScreen(navController = navController)
         }
         composable("group/{groupId}") { backStackEntry ->
             val groupId = backStackEntry.arguments?.getString("groupId")?.toIntOrNull() ?: return@composable

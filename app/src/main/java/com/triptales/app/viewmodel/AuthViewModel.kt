@@ -1,5 +1,6 @@
 package com.triptales.app.viewmodel
 
+import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.triptales.app.data.auth.AuthRepository
@@ -35,10 +36,43 @@ class AuthViewModel(
 
     init {
         viewModelScope.launch {
-            tokenManager.clearIfExpired()           // pulisce token se scaduto
-            refreshAccessTokenIfNeeded()            // rinnova access_token se necessario
+            tokenManager.clearIfExpired()
+            checkAuthStatus()
+
+            // Monitora i cambiamenti dei token
             tokenManager.accessToken.collect { token ->
-                _authState.value = if (token != null) AuthState.Authenticated else AuthState.Unauthenticated
+                if (token != null && !tokenManager.isTokenExpired(token)) {
+                    Log.d("AuthViewModel", "User is authenticated with valid token")
+                    _authState.value = AuthState.Authenticated
+                } else {
+                    Log.d("AuthViewModel", "User is not authenticated")
+                    _authState.value = AuthState.Unauthenticated
+                }
+            }
+        }
+    }
+
+    private suspend fun checkAuthStatus() {
+        val accessToken = tokenManager.accessToken.first()
+        val refreshToken = tokenManager.refreshToken.first()
+
+        when {
+            !accessToken.isNullOrBlank() && !tokenManager.isTokenExpired(accessToken) -> {
+                Log.d("AuthViewModel", "Valid access token found")
+                _authState.value = AuthState.Authenticated
+            }
+            !refreshToken.isNullOrBlank() && !tokenManager.isTokenExpired(refreshToken) -> {
+                Log.d("AuthViewModel", "Attempting to refresh token...")
+                val refreshSuccess = tokenManager.refreshAccessToken()
+                if (refreshSuccess) {
+                    _authState.value = AuthState.Authenticated
+                } else {
+                    _authState.value = AuthState.Unauthenticated
+                }
+            }
+            else -> {
+                Log.d("AuthViewModel", "No valid tokens found")
+                _authState.value = AuthState.Unauthenticated
             }
         }
     }
@@ -50,12 +84,16 @@ class AuthViewModel(
                 val response = repository.login(LoginRequest(email, password))
                 if (response.isSuccessful) {
                     val tokens = response.body()!!
-                    tokenManager.saveTokens(tokens.access, tokens.refresh) // salva i token
+                    tokenManager.saveTokens(tokens.access, tokens.refresh)
+                    Log.d("AuthViewModel", "Login successful, tokens saved")
                     _authState.value = AuthState.SuccessLogin(tokens)
                 } else {
+                    val errorBody = response.errorBody()?.string()
+                    Log.e("AuthViewModel", "Login failed: ${response.code()} - $errorBody")
                     _authState.value = AuthState.Error("Credenziali non valide")
                 }
             } catch (e: Exception) {
+                Log.e("AuthViewModel", "Login error", e)
                 _authState.value = AuthState.Error("Errore: ${e.message}")
             }
         }
@@ -70,44 +108,23 @@ class AuthViewModel(
 
                 val response = repository.register(email, username, name, password, imagePart)
                 if (response.isSuccessful) {
+                    Log.d("AuthViewModel", "Registration successful")
                     _authState.value = AuthState.SuccessRegister
                 } else {
+                    val errorBody = response.errorBody()?.string()
+                    Log.e("AuthViewModel", "Registration failed: ${response.code()} - $errorBody")
                     _authState.value = AuthState.Error("Registrazione fallita")
                 }
             } catch (e: Exception) {
+                Log.e("AuthViewModel", "Registration error", e)
                 _authState.value = AuthState.Error("Errore: ${e.message}")
-            }
-        }
-    }
-
-    fun refreshAccessTokenIfNeeded() {
-        viewModelScope.launch {
-            val access = tokenManager.accessToken.first()
-            val refresh = tokenManager.refreshToken.first()
-
-            if (tokenManager.isTokenExpired(access)) {
-                if (!tokenManager.isTokenExpired(refresh)) {
-                    try {
-                        val response = repository.refreshToken(refresh!!)
-                        if (response.isSuccessful) {
-                            val newTokens = response.body()!!
-                            tokenManager.saveTokens(newTokens.access, refresh) // aggiorna solo access
-                            _authState.value = AuthState.Authenticated
-                        } else {
-                            logout() // refresh token non valido
-                        }
-                    } catch (_: Exception) {
-                        logout()
-                    }
-                } else {
-                    logout() // refresh token scaduto
-                }
             }
         }
     }
 
     fun logout() {
         viewModelScope.launch {
+            Log.d("AuthViewModel", "Logging out...")
             tokenManager.clearTokens()
             _authState.value = AuthState.Unauthenticated
         }
