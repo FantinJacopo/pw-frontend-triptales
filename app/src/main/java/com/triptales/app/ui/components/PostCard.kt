@@ -91,8 +91,8 @@ fun PostCard(
 
             Spacer(modifier = Modifier.height(12.dp))
 
-            // Immagine del post (solo se disponibile e non vuota)
-            if (post.image_url.isNotBlank()) {
+            // Immagine del post (gestione identica a group_image_url)
+            if (!post.image_url.isNullOrBlank()) {
                 AsyncImage(
                     model = post.image_url,
                     contentDescription = "Post image",
@@ -106,8 +106,8 @@ fun PostCard(
                 Spacer(modifier = Modifier.height(12.dp))
             }
 
-            // Caption/Smart caption (solo se disponibile e non vuota)
-            if (post.smart_caption.isNotBlank()) {
+            // Caption/Smart caption (solo se disponibile e non null/vuota)
+            if (!post.smart_caption.isNullOrBlank()) {
                 Text(
                     text = post.smart_caption,
                     style = MaterialTheme.typography.bodyLarge,
@@ -117,7 +117,7 @@ fun PostCard(
             }
 
             // OCR Text se disponibile
-            if (post.ocr_text.isNotBlank()) {
+            if (!post.ocr_text.isNullOrBlank()) {
                 Card(
                     colors = CardDefaults.cardColors(
                         containerColor = MaterialTheme.colorScheme.surfaceVariant
