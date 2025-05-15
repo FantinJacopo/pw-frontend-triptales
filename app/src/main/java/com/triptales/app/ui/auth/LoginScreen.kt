@@ -26,59 +26,62 @@ fun LoginScreen(
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
 
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(24.dp)
-    ) {
-        Text("Login", fontSize = 24.sp, fontWeight = FontWeight.Bold)
+    Scaffold {
+        padding ->
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(24.dp)
+        ) {
+            Text("Login", fontSize = 24.sp, fontWeight = FontWeight.Bold)
 
-        Spacer(modifier = Modifier.height(16.dp))
+            Spacer(modifier = Modifier.height(16.dp))
 
-        OutlinedTextField(
-            value = email,
-            onValueChange = { email = it },
-            label = { Text("Email") }
-        )
-
-        OutlinedTextField(
-            value = password,
-            onValueChange = { password = it },
-            label = { Text("Password") },
-            visualTransformation = PasswordVisualTransformation()
-        )
-
-        Spacer(modifier = Modifier.height(16.dp))
-
-        Button(onClick = { viewModel.login(email, password) }) {
-            Text("Login")
-        }
-
-        Spacer(modifier = Modifier.height(12.dp))
-
-        TextButton(onClick = { navController.navigate("register") }) {
-            Text("Non hai un account? Registrati"
+            OutlinedTextField(
+                value = email,
+                onValueChange = { email = it },
+                label = { Text("Email") }
             )
-        }
 
-        when (state) {
-            is AuthState.Loading -> CircularProgressIndicator()
-            is AuthState.SuccessLogin -> {
-                Toast.makeText(context, "Login riuscito!", Toast.LENGTH_SHORT).show()
-                LaunchedEffect(Unit) {
-                    viewModel.resetState()
-                    navController.navigate("home") {
-                        popUpTo("login") { inclusive = true }
-                    }
-                }
+            OutlinedTextField(
+                value = password,
+                onValueChange = { password = it },
+                label = { Text("Password") },
+                visualTransformation = PasswordVisualTransformation()
+            )
+
+            Spacer(modifier = Modifier.height(16.dp))
+
+            Button(onClick = { viewModel.login(email, password) }) {
+                Text("Login")
             }
-            is AuthState.Error -> {
-                Text(
-                    text = (state as AuthState.Error).message,
-                    color = Color.Red
+
+            Spacer(modifier = Modifier.height(12.dp))
+
+            TextButton(onClick = { navController.navigate("register") }) {
+                Text("Non hai un account? Registrati"
                 )
             }
-            else -> {}
+
+            when (state) {
+                is AuthState.Loading -> CircularProgressIndicator()
+                is AuthState.SuccessLogin -> {
+                    Toast.makeText(context, "Login riuscito!", Toast.LENGTH_SHORT).show()
+                    LaunchedEffect(Unit) {
+                        viewModel.resetState()
+                        navController.navigate("home") {
+                            popUpTo("login") { inclusive = true }
+                        }
+                    }
+                }
+                is AuthState.Error -> {
+                    Text(
+                        text = (state as AuthState.Error).message,
+                        color = Color.Red
+                    )
+                }
+                else -> {}
+            }
         }
     }
 }

@@ -2,65 +2,45 @@ package com.triptales.app.ui.qrcode
 
 import android.os.Bundle
 import android.widget.Toast
-import androidx.appcompat.app.AppCompatActivity
-import com.journeyapps.barcodescanner.BarcodeCallback
-import com.journeyapps.barcodescanner.BarcodeResult
-import com.journeyapps.barcodescanner.BarcodeView
+import androidx.activity.ComponentActivity
+import androidx.activity.compose.setContent
+import androidx.compose.foundation.layout.*
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
+import androidx.lifecycle.lifecycleScope
 import com.triptales.app.data.RetrofitProvider
 import com.triptales.app.data.auth.TokenManager
+import com.triptales.app.data.group.TripGroupApi
 import com.triptales.app.data.group.TripGroupRepository
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
+import com.triptales.app.ui.theme.FrontendtriptalesTheme
 import kotlinx.coroutines.launch
 
-class QRCodeScannerActivity : AppCompatActivity() {
-
-    private lateinit var barcodeView: BarcodeView
-    private lateinit var repository: TripGroupRepository
-    private var isScanning = true
-
+class QRCodeScannerActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        barcodeView = BarcodeView(this)
-        setContentView(barcodeView)
 
-        // Crea repository usando RetrofitProvider
-        val tokenManager = TokenManager(this) // adatta questa riga se TokenManager è fornito diversamente
-        repository = TripGroupRepository(RetrofitProvider.create(tokenManager).create(com.triptales.app.data.group.TripGroupApi::class.java))
+        val tokenManager = TokenManager(this)
 
-        barcodeView.decodeContinuous(object : BarcodeCallback {
-            override fun barcodeResult(result: BarcodeResult?) {
-                result?.let {
-                    if (isScanning) {
-                        isScanning = false
-                        joinGroup(it.text)
-                    }
-                }
+        setContent {
+            FrontendtriptalesTheme {
+                QRCodeScannerScreen(
+                    onQRCodeScanned = { qrCode ->
+                        // Gestisci il QR code scansionato
+                        joinGroup(qrCode)
+                    },
+                    onBackClick = { finish() }
+                )
             }
-
-            override fun possibleResultPoints(resultPoints: MutableList<com.google.zxing.ResultPoint>?) {}
-        })
-        // Solo per debug headless:
-        val debugResult = QRCodeUtils.decodeTestQr(this)
-        Toast.makeText(
-            this,
-            debugResult?.let { "DEBUG QR: $it" } ?: "DEBUG QR: decodifica fallita",
-            Toast.LENGTH_LONG
-        ).show()
-    }
-
-    override fun onResume() {
-        super.onResume()
-        barcodeView.resume()
-    }
-
-    override fun onPause() {
-        super.onPause()
-        barcodeView.pause()
+        }
     }
 
     private fun joinGroup(qrCode: String) {
-        CoroutineScope(Dispatchers.Main).launch {
+        val tokenManager = TokenManager(this)
+        val repository = TripGroupRepository(
+            RetrofitProvider.create(tokenManager).create(TripGroupApi::class.java)
+        )
+
+        lifecycleScope.launch {
             try {
                 val response = repository.joinGroup(qrCode)
                 Toast.makeText(
@@ -75,7 +55,6 @@ class QRCodeScannerActivity : AppCompatActivity() {
                     "Errore: ${e.message}",
                     Toast.LENGTH_LONG
                 ).show()
-                isScanning = true
             }
         }
     }

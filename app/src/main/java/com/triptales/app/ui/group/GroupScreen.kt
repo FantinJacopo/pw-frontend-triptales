@@ -1,5 +1,6 @@
 package com.triptales.app.ui.group
 
+import android.annotation.SuppressLint
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -22,6 +23,7 @@ import com.triptales.app.ui.qrcode.QRCodeActivity
 import com.triptales.app.ui.qrcode.QRCodeScannerActivity
 import java.io.File
 
+@SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
 @Composable
 fun GroupScreen(
     groupId: Int,
@@ -44,122 +46,124 @@ fun GroupScreen(
     // Trova il gruppo con l'id giusto
     val group = (groupState as? GroupState.Success)?.groups?.find { it.id == groupId }
 
-    if (groupState is GroupState.Loading || group == null) {
-        Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-            CircularProgressIndicator()
-        }
-    } else {
-        Column(modifier = Modifier.fillMaxSize()) {
-
-            // Copertina gruppo
-            Image(
-                painter = rememberAsyncImagePainter(group.group_image_url),
-                contentDescription = "Group Cover",
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(200.dp)
-            )
-
-            // Titolo gruppo
-            Text(
-                text = group.group_name,
-                style = MaterialTheme.typography.headlineMedium,
-                fontWeight = FontWeight.Bold,
-                modifier = Modifier.padding(16.dp)
-            )
-
-            // Pulsanti per QR Code
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 16.dp, vertical = 8.dp),
-                horizontalArrangement = Arrangement.SpaceEvenly
-            ) {
-                Button(
-                    onClick = {
-                        val context = navController.context
-                        val intent = Intent(context, QRCodeActivity::class.java)
-                        intent.putExtra("QR_DATA", group.invite_code)
-                        context.startActivity(intent)
-                    },
-                    modifier = Modifier.weight(1f)
-                ) {
-                    Text("Genera QR Code")
-                }
-
-                Spacer(modifier = Modifier.width(16.dp))
-
-                Button(
-                    onClick = {
-                        val context = navController.context
-                        val intent = Intent(context, QRCodeScannerActivity::class.java)
-                        context.startActivity(intent)
-                    },
-                    modifier = Modifier.weight(1f)
-                ) {
-                    Text("Scansiona QR Code")
-                }
+    Scaffold {
+        if (groupState is GroupState.Loading || group == null) {
+            Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                CircularProgressIndicator()
             }
+        } else {
+            Column(modifier = Modifier.fillMaxSize()) {
 
-            // Sezione creazione post
-            Card(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 16.dp),
-                elevation = CardDefaults.cardElevation(4.dp)
-            ) {
-                Column(modifier = Modifier.padding(16.dp)) {
-                    OutlinedTextField(
-                        value = imageUrl,
-                        onValueChange = { imageUrl = it },
-                        label = { Text("URL immagine") },
-                        modifier = Modifier.fillMaxWidth()
-                    )
-                    OutlinedTextField(
-                        value = caption,
-                        onValueChange = { caption = it },
-                        label = { Text("Didascalia") },
-                        modifier = Modifier.fillMaxWidth()
-                    )
-                    Spacer(Modifier.height(8.dp))
+                // Copertina gruppo
+                Image(
+                    painter = rememberAsyncImagePainter(group.group_image_url),
+                    contentDescription = "Group Cover",
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(200.dp)
+                )
+
+                // Titolo gruppo
+                Text(
+                    text = group.group_name,
+                    style = MaterialTheme.typography.headlineMedium,
+                    fontWeight = FontWeight.Bold,
+                    modifier = Modifier.padding(16.dp)
+                )
+
+                // Pulsanti per QR Code
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 16.dp, vertical = 8.dp),
+                    horizontalArrangement = Arrangement.SpaceEvenly
+                ) {
                     Button(
                         onClick = {
-                            postViewModel.createPost(groupId, caption, File(imageUrl))
-                            imageUrl = ""
-                            caption = ""
+                            val context = navController.context
+                            val intent = Intent(context, QRCodeActivity::class.java)
+                            intent.putExtra("QR_DATA", group.invite_code)
+                            context.startActivity(intent)
                         },
-                        modifier = Modifier.align(Alignment.End)
+                        modifier = Modifier.weight(1f)
                     ) {
-                        Text("Pubblica")
+                        Text("Genera QR Code")
+                    }
+
+                    Spacer(modifier = Modifier.width(16.dp))
+
+                    Button(
+                        onClick = {
+                            val context = navController.context
+                            val intent = Intent(context, QRCodeScannerActivity::class.java)
+                            context.startActivity(intent)
+                        },
+                        modifier = Modifier.weight(1f)
+                    ) {
+                        Text("Scansiona QR Code")
                     }
                 }
-            }
 
-            Spacer(Modifier.height(8.dp))
-
-            // Lista post
-            when (postState) {
-                PostState.Loading -> {
-                    Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                        CircularProgressIndicator()
-                    }
-                }
-                is PostState.Success -> {
-                    val successState = postState as PostState.Success
-                    LazyColumn(modifier = Modifier.fillMaxSize()) {
-                        items(successState.posts) {
-                            PostCard(it)
+                // Sezione creazione post
+                Card(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 16.dp),
+                    elevation = CardDefaults.cardElevation(4.dp)
+                ) {
+                    Column(modifier = Modifier.padding(16.dp)) {
+                        OutlinedTextField(
+                            value = imageUrl,
+                            onValueChange = { imageUrl = it },
+                            label = { Text("URL immagine") },
+                            modifier = Modifier.fillMaxWidth()
+                        )
+                        OutlinedTextField(
+                            value = caption,
+                            onValueChange = { caption = it },
+                            label = { Text("Didascalia") },
+                            modifier = Modifier.fillMaxWidth()
+                        )
+                        Spacer(Modifier.height(8.dp))
+                        Button(
+                            onClick = {
+                                postViewModel.createPost(groupId, caption, File(imageUrl))
+                                imageUrl = ""
+                                caption = ""
+                            },
+                            modifier = Modifier.align(Alignment.End)
+                        ) {
+                            Text("Pubblica")
                         }
                     }
                 }
-                is PostState.Error -> {
-                    Text(
-                        text = (postState as PostState.Error).message,
-                        color = MaterialTheme.colorScheme.error,
-                        modifier = Modifier.padding(16.dp)
-                    )
+
+                Spacer(Modifier.height(8.dp))
+
+                // Lista post
+                when (postState) {
+                    PostState.Loading -> {
+                        Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                            CircularProgressIndicator()
+                        }
+                    }
+                    is PostState.Success -> {
+                        val successState = postState as PostState.Success
+                        LazyColumn(modifier = Modifier.fillMaxSize()) {
+                            items(successState.posts) {
+                                PostCard(it)
+                            }
+                        }
+                    }
+                    is PostState.Error -> {
+                        Text(
+                            text = (postState as PostState.Error).message,
+                            color = MaterialTheme.colorScheme.error,
+                            modifier = Modifier.padding(16.dp)
+                        )
+                    }
+                    PostState.Idle -> {}
                 }
-                PostState.Idle -> {}
             }
         }
     }

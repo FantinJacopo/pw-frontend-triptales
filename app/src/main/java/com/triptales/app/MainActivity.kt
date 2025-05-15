@@ -1,8 +1,10 @@
 package com.triptales.app
 
+import android.annotation.SuppressLint
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.compose.material3.Scaffold
 import androidx.lifecycle.ViewModelProvider
 import androidx.navigation.compose.rememberNavController
 import com.triptales.app.data.RetrofitProvider
@@ -19,6 +21,7 @@ import com.triptales.app.ui.theme.FrontendtriptalesTheme
 import com.triptales.app.viewmodel.*
 
 class MainActivity : ComponentActivity() {
+    @SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 

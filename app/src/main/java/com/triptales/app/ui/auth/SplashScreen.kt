@@ -1,5 +1,6 @@
 package com.triptales.app.ui.auth
 
+import android.annotation.SuppressLint
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -11,13 +12,13 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.first
 import androidx.compose.ui.unit.dp
 
+@SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
 @Composable
 fun SplashScreen(
     navController: NavController,
     tokenManager: TokenManager
 ) {
     val scope = rememberCoroutineScope()
-
     LaunchedEffect(true) {
         val refresh = tokenManager.refreshToken.first()
 
@@ -50,16 +51,17 @@ fun SplashScreen(
         }
     }
 
-
     // UI base: logo + loading
-    Box(
-        modifier = Modifier.fillMaxSize(),
-        contentAlignment = Alignment.Center
-    ) {
-        Column(horizontalAlignment = Alignment.CenterHorizontally) {
-            Text("TripTales", style = MaterialTheme.typography.headlineLarge)
-            Spacer(modifier = Modifier.height(24.dp))
-            CircularProgressIndicator()
+    Scaffold {
+        Box(
+            modifier = Modifier.fillMaxSize(),
+            contentAlignment = Alignment.Center
+        ) {
+            Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                Text("TripTales", style = MaterialTheme.typography.headlineLarge)
+                Spacer(modifier = Modifier.height(24.dp))
+                CircularProgressIndicator()
+            }
         }
     }
 }

@@ -1,6 +1,7 @@
 // CreateGroupScreen.kt
 package com.triptales.app.ui.group
 
+import android.annotation.SuppressLint
 import android.net.Uri
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.*
@@ -17,6 +18,7 @@ import com.triptales.app.viewmodel.GroupViewModel
 import com.triptales.app.viewmodel.GroupState
 import java.io.File
 
+@SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
 @Composable
 fun CreateGroupScreen(viewModel: GroupViewModel, navController: NavController) {
     var name by remember { mutableStateOf("") }
@@ -33,62 +35,64 @@ fun CreateGroupScreen(viewModel: GroupViewModel, navController: NavController) {
         }
     }
 
-    Column(modifier = Modifier
-        .fillMaxSize()
-        .padding(24.dp)) {
+    Scaffold {
+        Column(modifier = Modifier
+            .fillMaxSize()
+            .padding(24.dp)) {
 
-        Text("Crea un nuovo gruppo", style = MaterialTheme.typography.headlineSmall)
+            Text("Crea un nuovo gruppo", style = MaterialTheme.typography.headlineSmall)
 
-        Spacer(Modifier.height(16.dp))
+            Spacer(Modifier.height(16.dp))
 
-        OutlinedTextField(
-            value = name,
-            onValueChange = { name = it },
-            label = { Text("Nome del gruppo") },
-            modifier = Modifier.fillMaxWidth()
-        )
-
-        OutlinedTextField(
-            value = description,
-            onValueChange = { description = it },
-            label = { Text("Descrizione") },
-            modifier = Modifier.fillMaxWidth()
-        )
-
-        Spacer(Modifier.height(8.dp))
-
-        imageUri?.let {
-            Image(
-                painter = rememberAsyncImagePainter(it),
-                contentDescription = null,
-                modifier = Modifier.size(100.dp)
+            OutlinedTextField(
+                value = name,
+                onValueChange = { name = it },
+                label = { Text("Nome del gruppo") },
+                modifier = Modifier.fillMaxWidth()
             )
-        }
 
-        ImagePicker { uri ->
-            imageUri = uri
-        }
-
-        Spacer(Modifier.height(24.dp))
-
-        Button(
-            onClick = {
-                viewModel.createGroup(name, description, imageUri?.let { uriToFile(it, context) } ?: File("") )
-            },
-            modifier = Modifier.fillMaxWidth()
-        ) {
-            Text("Crea gruppo")
-        }
-
-        Spacer(Modifier.height(16.dp))
-
-        when (groupState) {
-            is GroupState.Loading -> CircularProgressIndicator()
-            is GroupState.Error -> Text(
-                text = (groupState as GroupState.Error).message,
-                color = MaterialTheme.colorScheme.error
+            OutlinedTextField(
+                value = description,
+                onValueChange = { description = it },
+                label = { Text("Descrizione") },
+                modifier = Modifier.fillMaxWidth()
             )
-            else -> {}
+
+            Spacer(Modifier.height(8.dp))
+
+            imageUri?.let {
+                Image(
+                    painter = rememberAsyncImagePainter(it),
+                    contentDescription = null,
+                    modifier = Modifier.size(100.dp)
+                )
+            }
+
+            ImagePicker { uri ->
+                imageUri = uri
+            }
+
+            Spacer(Modifier.height(24.dp))
+
+            Button(
+                onClick = {
+                    viewModel.createGroup(name, description, imageUri?.let { uriToFile(it, context) } ?: File("") )
+                },
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Text("Crea gruppo")
+            }
+
+            Spacer(Modifier.height(16.dp))
+
+            when (groupState) {
+                is GroupState.Loading -> CircularProgressIndicator()
+                is GroupState.Error -> Text(
+                    text = (groupState as GroupState.Error).message,
+                    color = MaterialTheme.colorScheme.error
+                )
+                else -> {}
+            }
         }
     }
 }
