@@ -1,5 +1,6 @@
 package com.triptales.app.viewmodel
 
+import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.triptales.app.data.group.TripGroupRepository
@@ -41,28 +42,33 @@ class GroupViewModel(private val repository: TripGroupRepository) : ViewModel() 
         }
     }
 
-
     fun createGroup(name: String, description: String, imageFile: File) {
         viewModelScope.launch {
             _groupState.value = GroupState.Loading
             try {
+                Log.d("GroupViewModel", "Creating group: $name")
                 val requestFile = imageFile.asRequestBody("image/*".toMediaTypeOrNull())
-                val imagePart = MultipartBody.Part.createFormData("image", imageFile.name, requestFile)
+                val imagePart = MultipartBody.Part.createFormData("group_image", imageFile.name, requestFile)
 
                 val response = repository.createGroup(name, description, imagePart)
                 if (response.isSuccessful && response.body() != null) {
-                    _groupState.value = GroupState.SuccessCreate(response.body()!!)
+                    val newGroup = response.body()!!
+                    Log.d("GroupViewModel", "Group created successfully: ${newGroup.id}")
+                    _groupState.value = GroupState.SuccessCreate(newGroup)
                 } else {
                     val errorBody = response.errorBody()?.string()
+                    Log.e("GroupViewModel", "Error creating group: ${response.code()} - $errorBody")
                     _groupState.value = GroupState.Error("Errore creazione gruppo: ${response.code()} - $errorBody")
                 }
             } catch (e: Exception) {
+                Log.e("GroupViewModel", "Exception creating group", e)
                 _groupState.value = GroupState.Error("Errore: ${e.message}")
             }
         }
     }
 
     fun resetState() {
+        Log.d("GroupViewModel", "Resetting state")
         _groupState.value = GroupState.Idle
     }
 }
