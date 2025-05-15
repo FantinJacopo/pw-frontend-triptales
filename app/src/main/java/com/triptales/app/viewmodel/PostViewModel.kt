@@ -2,6 +2,7 @@ package com.triptales.app.viewmodel
 
 import android.content.Context
 import android.net.Uri
+import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.triptales.app.data.post.Post
@@ -19,6 +20,7 @@ sealed class PostState {
     object Idle : PostState()
     object Loading : PostState()
     data class Success(val posts: List<Post>) : PostState()
+    object PostCreated : PostState()
     data class Error(val message: String) : PostState()
 }
 
@@ -28,17 +30,28 @@ class PostViewModel(private val repository: PostRepository) : ViewModel() {
 
     fun fetchPosts(groupId: Int) {
         viewModelScope.launch {
+            Log.d("PostViewModel", "Fetching posts for group: $groupId")
             _postState.value = PostState.Loading
             try {
                 val response = repository.getPosts(groupId)
+                Log.d("PostViewModel", "Response code: ${response.code()}")
+
                 if (response.isSuccessful && response.body() != null) {
                     val posts = response.body()!!
+                    Log.d("PostViewModel", "Received ${posts.size} posts")
+                    posts.forEach { post ->
+                        Log.d("PostViewModel", "Post ${post.id}: ${post.smart_caption}")
+                        Log.d("PostViewModel", "  - image_url: ${post.image_url}")
+                        Log.d("PostViewModel", "  - created_at: ${post.created_at}")
+                    }
                     _postState.value = PostState.Success(posts)
                 } else {
                     val errorBody = response.errorBody()?.string()
+                    Log.e("PostViewModel", "Error response: $errorBody")
                     _postState.value = PostState.Error("Errore caricamento post: ${response.code()} - $errorBody")
                 }
             } catch (e: Exception) {
+                Log.e("PostViewModel", "Exception fetching posts", e)
                 _postState.value = PostState.Error("Errore: ${e.message}")
             }
         }
@@ -46,48 +59,32 @@ class PostViewModel(private val repository: PostRepository) : ViewModel() {
 
     fun createPost(groupId: Int, caption: String, imageFile: File) {
         viewModelScope.launch {
+            Log.d("PostViewModel", "Creating post for group: $groupId, caption: $caption")
             _postState.value = PostState.Loading
             try {
                 val requestFile = imageFile.asRequestBody("image/*".toMediaTypeOrNull())
                 val imagePart = MultipartBody.Part.createFormData("image", imageFile.name, requestFile)
 
                 val response = repository.createPost(groupId, caption, imagePart)
+                Log.d("PostViewModel", "Create post response code: ${response.code()}")
+
                 if (response.isSuccessful) {
-                    fetchPosts(groupId)
+                    Log.d("PostViewModel", "Post created successfully")
+                    _postState.value = PostState.PostCreated
                 } else {
-                    _postState.value = PostState.Error("Errore creazione post")
+                    val errorBody = response.errorBody()?.string()
+                    Log.e("PostViewModel", "Error creating post: $errorBody")
+                    _postState.value = PostState.Error("Errore creazione post: ${response.code()} - $errorBody")
                 }
             } catch (e: Exception) {
+                Log.e("PostViewModel", "Exception creating post", e)
                 _postState.value = PostState.Error("Errore: ${e.message}")
             }
         }
     }
 
-    fun createPostConImmagine(
-        uri: Uri,
-        groupId: Int,
-        caption: String,
-        context: Context
-    ) {
-        viewModelScope.launch {
-            val file = uriToFile(uri, context)
-            val requestBody = file.asRequestBody("image/*".toMediaTypeOrNull())
-            val multipartBody = MultipartBody.Part.createFormData("image", file.name, requestBody)
-
-            try {
-                val response = repository.createPost(
-                    tripGroupId = groupId,
-                    smartCaption = caption,
-                    imagePart = multipartBody
-                )
-                // TODO: Gestisci il successo
-            } catch (e: Exception) {
-                // TODO: Gestisci l'errore
-            }
-        }
-    }
-
     fun resetState() {
+        Log.d("PostViewModel", "Resetting state")
         _postState.value = PostState.Idle
     }
 }

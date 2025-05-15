@@ -43,10 +43,10 @@ fun CreatePostScreen(
     // Gestisce la navigazione quando il post viene creato con successo
     LaunchedEffect(postState) {
         when (postState) {
-            is PostState.Success -> {
+            is PostState.PostCreated -> {
                 Toast.makeText(context, "Post creato con successo!", Toast.LENGTH_SHORT).show()
-                navController.popBackStack()
                 postViewModel.resetState()
+                navController.popBackStack()
             }
             is PostState.Error -> {
                 Toast.makeText(context, (postState as PostState.Error).message, Toast.LENGTH_LONG).show()

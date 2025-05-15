@@ -91,7 +91,7 @@ fun PostCard(
 
             Spacer(modifier = Modifier.height(12.dp))
 
-            // Immagine del post
+            // Immagine del post (solo se disponibile e non vuota)
             if (post.image_url.isNotBlank()) {
                 AsyncImage(
                     model = post.image_url,
@@ -106,7 +106,7 @@ fun PostCard(
                 Spacer(modifier = Modifier.height(12.dp))
             }
 
-            // Caption/Smart caption
+            // Caption/Smart caption (solo se disponibile e non vuota)
             if (post.smart_caption.isNotBlank()) {
                 Text(
                     text = post.smart_caption,
@@ -232,10 +232,32 @@ fun PostCard(
 
 private fun formatDate(dateString: String): String {
     return try {
-        val inputFormat = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSSSS'Z'", Locale.getDefault())
-        val outputFormat = SimpleDateFormat("dd MMM HH:mm", Locale.getDefault())
-        val date = inputFormat.parse(dateString)
-        outputFormat.format(date ?: Date())
+        // Prova diversi formati di data
+        val possibleFormats = listOf(
+            "yyyy-MM-dd'T'HH:mm:ss.SSSSSS'Z'",
+            "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'",
+            "yyyy-MM-dd'T'HH:mm:ss'Z'",
+            "yyyy-MM-dd HH:mm:ss",
+            "yyyy-MM-dd"
+        )
+
+        var date: Date? = null
+        for (format in possibleFormats) {
+            try {
+                val inputFormat = SimpleDateFormat(format, Locale.getDefault())
+                date = inputFormat.parse(dateString)
+                if (date != null) break
+            } catch (e: Exception) {
+                // Continua con il prossimo formato
+            }
+        }
+
+        if (date != null) {
+            val outputFormat = SimpleDateFormat("dd MMM HH:mm", Locale.getDefault())
+            outputFormat.format(date)
+        } else {
+            dateString
+        }
     } catch (e: Exception) {
         dateString
     }

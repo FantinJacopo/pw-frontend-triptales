@@ -51,6 +51,18 @@ fun GroupScreen(
         postViewModel.fetchPosts(groupId)
     }
 
+    // Ricarica i post quando si torna dalla CreatePostScreen
+    LaunchedEffect(navController.currentBackStackEntry) {
+        postViewModel.fetchPosts(groupId)
+    }
+
+    // Gestione dello stato PostCreated
+    LaunchedEffect(postState) {
+        if (postState is PostState.PostCreated) {
+            postViewModel.fetchPosts(groupId)
+        }
+    }
+
     // Trova il gruppo con l'id giusto
     val group = (groupState as? GroupState.Success)?.groups?.find { it.id == groupId }
 
@@ -303,7 +315,6 @@ fun GroupScreen(
                                     },
                                     onLocationClick = if (post.latitude != null && post.longitude != null) {
                                         {
-                                            // TODO: Implementare navigazione alla mappa
                                             Toast.makeText(context, "Mappa non ancora implementata", Toast.LENGTH_SHORT).show()
                                         }
                                     } else null
@@ -321,16 +332,36 @@ fun GroupScreen(
                                     containerColor = MaterialTheme.colorScheme.errorContainer
                                 )
                             ) {
-                                Text(
-                                    text = (postState as PostState.Error).message,
-                                    color = MaterialTheme.colorScheme.onErrorContainer,
-                                    modifier = Modifier.padding(16.dp),
-                                    style = MaterialTheme.typography.bodyMedium
-                                )
+                                Column(modifier = Modifier.padding(16.dp)) {
+                                    Text(
+                                        text = "Errore nel caricamento dei post",
+                                        style = MaterialTheme.typography.titleMedium,
+                                        fontWeight = FontWeight.Bold,
+                                        color = MaterialTheme.colorScheme.onErrorContainer
+                                    )
+                                    Text(
+                                        text = (postState as PostState.Error).message,
+                                        color = MaterialTheme.colorScheme.onErrorContainer,
+                                        style = MaterialTheme.typography.bodyMedium,
+                                        modifier = Modifier.padding(top = 4.dp)
+                                    )
+                                    Spacer(modifier = Modifier.height(8.dp))
+                                    Button(
+                                        onClick = { postViewModel.fetchPosts(groupId) },
+                                        colors = ButtonDefaults.buttonColors(
+                                            containerColor = MaterialTheme.colorScheme.primary
+                                        )
+                                    ) {
+                                        Text("Riprova")
+                                    }
+                                }
                             }
                         }
                     }
                     PostState.Idle -> {}
+                    PostState.PostCreated -> {
+                        // Questo caso viene gestito dal LaunchedEffect sopra
+                    }
                 }
 
                 // Spazio per il FAB
