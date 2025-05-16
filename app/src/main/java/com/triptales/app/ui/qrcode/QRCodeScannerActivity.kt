@@ -4,9 +4,6 @@ import android.os.Bundle
 import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
-import androidx.compose.foundation.layout.*
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
 import androidx.lifecycle.lifecycleScope
 import com.triptales.app.data.RetrofitProvider
 import com.triptales.app.data.auth.TokenManager
@@ -25,7 +22,6 @@ class QRCodeScannerActivity : ComponentActivity() {
             FrontendtriptalesTheme {
                 QRCodeScannerScreen(
                     onQRCodeScanned = { qrCode ->
-                        // Gestisci il QR code scansionato
                         joinGroup(qrCode)
                     },
                     onBackClick = { finish() }
