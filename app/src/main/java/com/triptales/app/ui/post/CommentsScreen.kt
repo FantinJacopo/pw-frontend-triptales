@@ -88,16 +88,22 @@ fun CommentsScreen(
             when (commentState) {
                 is CommentState.CommentCreated -> {
                     Toast.makeText(context, "Commento aggiunto! 🎉", Toast.LENGTH_SHORT).show()
-                    // Aggiorna il conteggio commenti nei post
-                    postViewModel.refreshPosts()
+
+                    // Aggiorna il conteggio commenti nel PostViewModel in tempo reale
+                    postViewModel.updatePostCommentCount(
+                        postId = (commentState as CommentState.CommentCreated).postId,
+                        newCount = (commentState as CommentState.CommentCreated).newCommentCount
+                    )
+
                     // Scorri verso il basso per mostrare il nuovo commento
-                    if ((commentState as? CommentState.Success)?.comments?.isNotEmpty() == true) {
-                        coroutineScope.launch {
-                            listState.animateScrollToItem(
-                                (commentState as CommentState.Success).comments.size - 1
-                            )
-                        }
+                    coroutineScope.launch {
+                        listState.animateScrollToItem((commentState as CommentState.CommentCreated).newCommentCount - 1)
                     }
+                }
+                is CommentState.Success -> {
+                    // Aggiorna sempre il conteggio quando riceviamo i commenti
+                    val comments = (commentState as CommentState.Success).comments
+                    postViewModel.updatePostCommentCount(postId, comments.size)
                 }
                 is CommentState.Error -> {
                     Toast.makeText(context, (commentState as CommentState.Error).message, Toast.LENGTH_LONG).show()
@@ -274,6 +280,16 @@ fun CommentsScreen(
                                     Text("Riprova")
                                 }
                             }
+                        }
+                    }
+                    is CommentState.CommentCreated -> {
+                        // Questo stato viene gestito nel LaunchedEffect sopra
+                        // Mostriamo un loading temporaneo mentre aggiorniamo i commenti
+                        Box(
+                            modifier = Modifier.fillMaxSize(),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            CircularProgressIndicator()
                         }
                     }
                     else -> {}

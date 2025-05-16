@@ -35,7 +35,7 @@ class PostViewModel(private val repository: PostRepository) : ViewModel() {
         viewModelScope.launch {
             Log.d("PostViewModel", "Fetching posts for group: $groupId (force: $forceRefresh)")
 
-            // Se non è un force refresh e stiamo già mostrando i post di questo gruppo, non ricaricare
+            // Se è lo stesso gruppo e non è un force refresh, evita il reload
             if (!forceRefresh && _postState.value is PostState.Success && lastGroupId == groupId) {
                 Log.d("PostViewModel", "Already showing posts for group $groupId, skipping")
                 return@launch
@@ -93,6 +93,39 @@ class PostViewModel(private val repository: PostRepository) : ViewModel() {
                 Log.e("PostViewModel", "Exception creating post", e)
                 _postState.value = PostState.Error("Errore: ${e.message}")
             }
+        }
+    }
+
+    // Metodo per aggiornare il conteggio commenti di un singolo post
+    fun updatePostCommentCount(postId: Int, newCount: Int) {
+        val currentState = _postState.value
+        if (currentState is PostState.Success) {
+            val updatedPosts = currentState.posts.map { post ->
+                if (post.id == postId) {
+                    post.copy(comments_count = newCount)
+                } else {
+                    post
+                }
+            }
+            _postState.value = PostState.Success(updatedPosts)
+            Log.d("PostViewModel", "Updated comment count for post $postId to $newCount")
+        }
+    }
+
+    // Metodo per incrementare il conteggio commenti di un singolo post
+    fun incrementPostCommentCount(postId: Int) {
+        val currentState = _postState.value
+        if (currentState is PostState.Success) {
+            val updatedPosts = currentState.posts.map { post ->
+                if (post.id == postId) {
+                    val newCount = (post.comments_count ?: 0) + 1
+                    Log.d("PostViewModel", "Incrementing comment count for post $postId to $newCount")
+                    post.copy(comments_count = newCount)
+                } else {
+                    post
+                }
+            }
+            _postState.value = PostState.Success(updatedPosts)
         }
     }
 

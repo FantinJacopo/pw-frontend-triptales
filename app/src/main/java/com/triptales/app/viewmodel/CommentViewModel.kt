@@ -13,7 +13,7 @@ sealed class CommentState {
     object Loading : CommentState()
     data class Success(val comments: List<Comment>) : CommentState()
     data class Error(val message: String) : CommentState()
-    object CommentCreated : CommentState()
+    data class CommentCreated(val postId: Int, val newCommentCount: Int) : CommentState()
 }
 
 class CommentViewModel(private val repository: CommentRepository) : ViewModel() {
@@ -41,10 +41,16 @@ class CommentViewModel(private val repository: CommentRepository) : ViewModel() 
             try {
                 val response = repository.createComment(postId, content)
                 if (response.isSuccessful) {
-                    // Segnala che il commento è stato creato
-                    _commentState.value = CommentState.CommentCreated
-                    // Ricarica i commenti dopo aver creato uno nuovo
-                    fetchComments(postId)
+                    // Ricarica i commenti per ottenere la lista aggiornata
+                    val commentsResponse = repository.getCommentsByPost(postId)
+                    if (commentsResponse.isSuccessful && commentsResponse.body() != null) {
+                        val comments = commentsResponse.body()!!
+                        _commentState.value = CommentState.Success(comments)
+                        // Notifica il nuovo conteggio commenti
+                        _commentState.value = CommentState.CommentCreated(postId, comments.size)
+                    } else {
+                        fetchComments(postId) // Fallback
+                    }
                 } else {
                     _commentState.value = CommentState.Error("Errore nella creazione del commento: ${response.code()}")
                 }
