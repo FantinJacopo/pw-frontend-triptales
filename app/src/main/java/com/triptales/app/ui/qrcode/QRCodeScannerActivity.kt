@@ -44,6 +44,9 @@ class QRCodeScannerActivity : ComponentActivity() {
                     response?.message ?: "Unito con successo!",
                     Toast.LENGTH_LONG
                 ).show()
+
+                // Imposta il risultato per indicare che l'utente si è unito a un gruppo
+                setResult(RESULT_OK)
                 finish()
             } catch (e: Exception) {
                 Toast.makeText(

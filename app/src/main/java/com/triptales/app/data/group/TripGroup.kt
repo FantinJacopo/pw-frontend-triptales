@@ -6,5 +6,9 @@ data class TripGroup(
     val group_image_url: String,
     val description: String,
     val invite_code: String,
-    val created_at: String
+    val created_at: String,
+    val creator: Int? = null,
+    val creator_name: String? = null,
+    val is_creator: Boolean = false,
+    val members_count: Int = 0
 )

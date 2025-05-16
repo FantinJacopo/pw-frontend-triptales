@@ -58,6 +58,9 @@ dependencies {
     implementation(libs.coil.kt.coil.compose)
     implementation(libs.coil.network.okhttp)
 
+    //pull to refresh
+    implementation(libs.androidx.material3.window.size.class1)
+
     // image cropper
     implementation("com.vanniktech:android-image-cropper:4.6.0")
 

@@ -30,9 +30,12 @@ class GroupViewModel(private val repository: TripGroupRepository) : ViewModel() 
         viewModelScope.launch {
             _groupState.value = GroupState.Loading
             try {
+                // Usa getUserGroups per ottenere solo i gruppi dell'utente
                 val response = repository.getUserGroups()
                 if (response.isSuccessful) {
-                    _groupState.value = GroupState.Success(response.body() ?: emptyList())
+                    val groups = response.body() ?: emptyList()
+                    Log.d("GroupViewModel", "Fetched ${groups.size} user groups")
+                    _groupState.value = GroupState.Success(groups)
                 } else {
                     _groupState.value = GroupState.Error("Errore caricamento gruppi: ${response.code()}")
                 }
@@ -70,5 +73,23 @@ class GroupViewModel(private val repository: TripGroupRepository) : ViewModel() 
     fun resetState() {
         Log.d("GroupViewModel", "Resetting state")
         _groupState.value = GroupState.Idle
+    }
+
+    // Metodo per verificare se l'utente è creator di un gruppo
+    fun isUserCreator(groupId: Int): Boolean {
+        val currentState = _groupState.value
+        if (currentState is GroupState.Success) {
+            return currentState.groups.find { it.id == groupId }?.is_creator ?: false
+        }
+        return false
+    }
+
+    // Metodo per ottenere un gruppo specifico
+    fun getGroup(groupId: Int): TripGroup? {
+        val currentState = _groupState.value
+        if (currentState is GroupState.Success) {
+            return currentState.groups.find { it.id == groupId }
+        }
+        return null
     }
 }
