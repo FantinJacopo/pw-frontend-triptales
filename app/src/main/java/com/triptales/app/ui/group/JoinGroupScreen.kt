@@ -1,6 +1,8 @@
 package com.triptales.app.ui.group
 
 import android.content.Intent
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -17,12 +19,29 @@ import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import com.triptales.app.ui.qrcode.QRCodeScannerActivity
 import com.triptales.app.ui.theme.FrontendtriptalesTheme
+import com.triptales.app.viewmodel.GroupViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun JoinGroupScreen(navController: NavController) {
+fun JoinGroupScreen(
+    groupViewModel: GroupViewModel,
+    navController: NavController
+) {
     FrontendtriptalesTheme {
         val context = LocalContext.current
+
+        // Launcher per l'activity del scanner QR
+        val qrScannerLauncher = rememberLauncherForActivityResult(
+            contract = ActivityResultContracts.StartActivityForResult()
+        ) { result ->
+            if (result.resultCode == android.app.Activity.RESULT_OK) {
+                // QR code scansionato con successo, aggiorna i gruppi e torna alla home
+                groupViewModel.fetchGroups()
+                navController.navigate("home") {
+                    popUpTo("groupAction") { inclusive = true }
+                }
+            }
+        }
 
         Scaffold(
             topBar = {
@@ -77,7 +96,7 @@ fun JoinGroupScreen(navController: NavController) {
                 Button(
                     onClick = {
                         val intent = Intent(context, QRCodeScannerActivity::class.java)
-                        context.startActivity(intent)
+                        qrScannerLauncher.launch(intent)
                     },
                     modifier = Modifier
                         .fillMaxWidth()

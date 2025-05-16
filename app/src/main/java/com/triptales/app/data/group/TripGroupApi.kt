@@ -21,6 +21,7 @@ interface TripGroupApi {
         @Part group_image: MultipartBody.Part?
     ): Response<TripGroup>
 
+    // Proviamo l'endpoint esatto dal backend Django
     @POST("groups/join/")
     suspend fun joinGroup(@Body request: JoinGroupRequest): Response<JoinGroupResponse>
 

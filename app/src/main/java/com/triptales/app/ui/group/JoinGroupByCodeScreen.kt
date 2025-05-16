@@ -27,10 +27,11 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -39,34 +40,57 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
-import com.triptales.app.data.RetrofitProvider
-import com.triptales.app.data.auth.TokenManager
-import com.triptales.app.data.group.TripGroupApi
-import com.triptales.app.data.group.TripGroupRepository
 import com.triptales.app.ui.theme.FrontendtriptalesTheme
-import kotlinx.coroutines.launch
+import com.triptales.app.viewmodel.GroupState
+import com.triptales.app.viewmodel.GroupViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun JoinGroupByCodeScreen(navController: NavController) {
+fun JoinGroupByCodeScreen(
+    groupViewModel: GroupViewModel,
+    navController: NavController
+) {
     FrontendtriptalesTheme {
         val context = LocalContext.current
         var groupCode by remember { mutableStateOf("") }
-        var isLoading by remember { mutableStateOf(false) }
-        val scope = rememberCoroutineScope()
+        val groupState by groupViewModel.groupState.collectAsState()
 
-        // Crea il repository per unirsi al gruppo
-        val tokenManager = TokenManager(context)
-        val repository = TripGroupRepository(
-            RetrofitProvider.create(tokenManager).create(TripGroupApi::class.java)
-        )
+        // Gestisce la risposta del join
+        LaunchedEffect(groupState) {
+            when (groupState) {
+                is GroupState.SuccessJoin -> {
+                    Toast.makeText(
+                        context,
+                        "Unito al gruppo con successo!",
+                        Toast.LENGTH_LONG
+                    ).show()
+
+                    // Refresh dei gruppi e navigazione alla home
+                    groupViewModel.fetchGroups()
+                    navController.navigate("home") {
+                        popUpTo("groupAction") { inclusive = true }
+                    }
+                }
+                is GroupState.Error -> {
+                    Toast.makeText(
+                        context,
+                        (groupState as GroupState.Error).message,
+                        Toast.LENGTH_LONG
+                    ).show()
+                }
+                else -> {}
+            }
+        }
 
         Scaffold(
             topBar = {
                 TopAppBar(
                     title = { Text("Inserisci codice gruppo") },
                     navigationIcon = {
-                        IconButton(onClick = { navController.popBackStack() }) {
+                        IconButton(onClick = {
+                            groupViewModel.resetState()
+                            navController.popBackStack()
+                        }) {
                             Icon(
                                 imageVector = Icons.AutoMirrored.Filled.ArrowBack,
                                 contentDescription = "Indietro"
@@ -118,7 +142,7 @@ fun JoinGroupByCodeScreen(navController: NavController) {
                     modifier = Modifier.fillMaxWidth(),
                     singleLine = true,
                     shape = RoundedCornerShape(12.dp),
-                    enabled = !isLoading
+                    enabled = groupState !is GroupState.Loading
                 )
 
                 Spacer(modifier = Modifier.height(24.dp))
@@ -126,28 +150,7 @@ fun JoinGroupByCodeScreen(navController: NavController) {
                 Button(
                     onClick = {
                         if (groupCode.isNotBlank()) {
-                            scope.launch {
-                                isLoading = true
-                                try {
-                                    val response = repository.joinGroup(groupCode.trim())
-                                    Toast.makeText(
-                                        context,
-                                        response?.message ?: "Unito al gruppo con successo!",
-                                        Toast.LENGTH_LONG
-                                    ).show()
-                                    navController.navigate("home") {
-                                        popUpTo("groupAction") { inclusive = true }
-                                    }
-                                } catch (e: Exception) {
-                                    Toast.makeText(
-                                        context,
-                                        "Errore: ${e.message}",
-                                        Toast.LENGTH_LONG
-                                    ).show()
-                                } finally {
-                                    isLoading = false
-                                }
-                            }
+                            groupViewModel.joinGroup(groupCode.trim())
                         } else {
                             Toast.makeText(
                                 context,
@@ -160,9 +163,9 @@ fun JoinGroupByCodeScreen(navController: NavController) {
                         .fillMaxWidth()
                         .height(56.dp),
                     shape = RoundedCornerShape(12.dp),
-                    enabled = !isLoading
+                    enabled = groupState !is GroupState.Loading
                 ) {
-                    if (isLoading) {
+                    if (groupState is GroupState.Loading) {
                         CircularProgressIndicator(
                             modifier = Modifier.size(20.dp),
                             strokeWidth = 2.dp
@@ -170,7 +173,7 @@ fun JoinGroupByCodeScreen(navController: NavController) {
                         Spacer(modifier = Modifier.width(8.dp))
                     }
                     Text(
-                        text = if (isLoading) "Accesso in corso..." else "Unisciti al gruppo",
+                        text = if (groupState is GroupState.Loading) "Accesso in corso..." else "Unisciti al gruppo",
                         style = MaterialTheme.typography.titleMedium,
                         fontWeight = FontWeight.SemiBold
                     )
@@ -199,6 +202,23 @@ fun JoinGroupByCodeScreen(navController: NavController) {
                             text = "Il codice gruppo è una stringa di 10 caratteri che puoi trovare nella pagina del gruppo o copiare dal QR code.",
                             style = MaterialTheme.typography.bodyMedium,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
+                }
+
+                // Mostra errore se presente
+                if (groupState is GroupState.Error) {
+                    Spacer(modifier = Modifier.height(16.dp))
+                    Card(
+                        colors = CardDefaults.cardColors(
+                            containerColor = MaterialTheme.colorScheme.errorContainer
+                        )
+                    ) {
+                        Text(
+                            text = (groupState as GroupState.Error).message,
+                            color = MaterialTheme.colorScheme.onErrorContainer,
+                            modifier = Modifier.padding(16.dp),
+                            style = MaterialTheme.typography.bodyMedium
                         )
                     }
                 }

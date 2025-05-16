@@ -74,10 +74,16 @@ fun NavGraph(
                 CreateGroupScreen(viewModel = groupViewModel, navController = navController)
             }
             composable("joinGroup") {
-                JoinGroupScreen(navController = navController)
+                JoinGroupScreen(
+                    navController = navController,
+                    groupViewModel = groupViewModel
+                )
             }
             composable("joinGroupByCode") {
-                JoinGroupByCodeScreen(navController = navController)
+                JoinGroupByCodeScreen(
+                    groupViewModel = groupViewModel,
+                    navController = navController
+                )
             }
             composable("createPost/{groupId}") { backStackEntry ->
                 val groupId = backStackEntry.arguments?.getString("groupId")?.toIntOrNull() ?: return@composable

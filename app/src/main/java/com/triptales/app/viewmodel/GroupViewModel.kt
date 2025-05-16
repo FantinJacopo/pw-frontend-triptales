@@ -18,6 +18,7 @@ sealed class GroupState {
     object Loading : GroupState()
     data class Success(val groups: List<TripGroup>) : GroupState()
     data class SuccessCreate(val newGroup: TripGroup) : GroupState()
+    data class SuccessJoin(val message: String) : GroupState()
     data class Error(val message: String) : GroupState()
 }
 
@@ -66,6 +67,31 @@ class GroupViewModel(private val repository: TripGroupRepository) : ViewModel() 
             } catch (e: Exception) {
                 Log.e("GroupViewModel", "Exception creating group", e)
                 _groupState.value = GroupState.Error("Errore: ${e.message}")
+            }
+        }
+    }
+
+    fun joinGroup(qrCode: String) {
+        viewModelScope.launch {
+            _groupState.value = GroupState.Loading
+            try {
+                Log.d("GroupViewModel", "Joining group with code: $qrCode")
+                val response = repository.joinGroup(qrCode)
+                if (response != null) {
+                    Log.d("GroupViewModel", "Successfully joined group: ${response.message}")
+                    _groupState.value = GroupState.SuccessJoin(response.message)
+                } else {
+                    _groupState.value = GroupState.Error("Errore durante l'unione al gruppo")
+                }
+            } catch (e: Exception) {
+                Log.e("GroupViewModel", "Exception joining group", e)
+                val errorMessage = when {
+                    e.message?.contains("400") == true -> "Codice gruppo non valido"
+                    e.message?.contains("404") == true -> "Gruppo non trovato"
+                    e.message?.contains("409") == true -> "Sei già membro di questo gruppo"
+                    else -> "Errore: ${e.message}"
+                }
+                _groupState.value = GroupState.Error(errorMessage)
             }
         }
     }
