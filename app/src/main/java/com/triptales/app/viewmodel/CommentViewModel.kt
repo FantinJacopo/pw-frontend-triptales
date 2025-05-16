@@ -4,6 +4,8 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.triptales.app.data.comment.Comment
 import com.triptales.app.data.comment.CommentRepository
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
@@ -20,8 +22,14 @@ class CommentViewModel(private val repository: CommentRepository) : ViewModel() 
     private val _commentState = MutableStateFlow<CommentState>(CommentState.Idle)
     val commentState: StateFlow<CommentState> = _commentState
 
+    // Teniamo traccia del job corrente per cancellare operazioni in corso se necessario
+    private var currentJob: Job? = null
+
     fun fetchComments(postId: Int) {
-        viewModelScope.launch {
+        // Cancella eventuali job in corso
+        currentJob?.cancel()
+
+        currentJob = viewModelScope.launch {
             _commentState.value = CommentState.Loading
             try {
                 val response = repository.getCommentsByPost(postId)
@@ -37,19 +45,29 @@ class CommentViewModel(private val repository: CommentRepository) : ViewModel() 
     }
 
     fun createComment(postId: Int, content: String) {
-        viewModelScope.launch {
+        // Cancella eventuali job in corso
+        currentJob?.cancel()
+
+        currentJob = viewModelScope.launch {
             try {
+                // Impostiamo lo stato di loading per mostrare feedback all'utente
+                _commentState.value = CommentState.Loading
+
                 val response = repository.createComment(postId, content)
                 if (response.isSuccessful) {
                     // Ricarica i commenti per ottenere la lista aggiornata
                     val commentsResponse = repository.getCommentsByPost(postId)
                     if (commentsResponse.isSuccessful && commentsResponse.body() != null) {
                         val comments = commentsResponse.body()!!
-                        _commentState.value = CommentState.Success(comments)
-                        // Notifica il nuovo conteggio commenti
+
+                        // Emetti solo l'evento CommentCreated (che mostrerà brevemente il loading)
                         _commentState.value = CommentState.CommentCreated(postId, comments.size)
+
+                        // Dopo un breve ritardo, torna allo stato Success con i dati aggiornati
+                        delay(500) // Breve ritardo per permettere all'UI di reagire
+                        _commentState.value = CommentState.Success(comments)
                     } else {
-                        fetchComments(postId) // Fallback
+                        _commentState.value = CommentState.Error("Errore nel caricamento commenti aggiornati")
                     }
                 } else {
                     _commentState.value = CommentState.Error("Errore nella creazione del commento: ${response.code()}")
@@ -61,6 +79,12 @@ class CommentViewModel(private val repository: CommentRepository) : ViewModel() 
     }
 
     fun resetState() {
+        currentJob?.cancel()
         _commentState.value = CommentState.Idle
+    }
+
+    override fun onCleared() {
+        super.onCleared()
+        currentJob?.cancel()
     }
 }

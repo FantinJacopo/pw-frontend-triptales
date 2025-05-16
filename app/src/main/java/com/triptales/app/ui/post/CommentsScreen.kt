@@ -84,24 +84,23 @@ fun CommentsScreen(
         }
 
         // Gestisci feedback quando commento è creato
+        // Nel blocco LaunchedEffect che monitora commentState
         LaunchedEffect(commentState) {
             when (commentState) {
                 is CommentState.CommentCreated -> {
                     Toast.makeText(context, "Commento aggiunto! 🎉", Toast.LENGTH_SHORT).show()
 
-                    // Aggiorna il conteggio commenti nel PostViewModel in tempo reale
+                    // Aggiorna il conteggio commenti nel PostViewModel
                     postViewModel.updatePostCommentCount(
                         postId = (commentState as CommentState.CommentCreated).postId,
                         newCount = (commentState as CommentState.CommentCreated).newCommentCount
                     )
 
-                    // Scorri verso il basso per mostrare il nuovo commento
-                    coroutineScope.launch {
-                        listState.animateScrollToItem((commentState as CommentState.CommentCreated).newCommentCount - 1)
-                    }
+                    // Non facciamo nient'altro qui, lo stato tornerà automaticamente a Success
+                    // grazie alla delay() nel ViewModel
                 }
                 is CommentState.Success -> {
-                    // Aggiorna sempre il conteggio quando riceviamo i commenti
+                    // Aggiorna il conteggio dei commenti quando riceviamo una lista aggiornata
                     val comments = (commentState as CommentState.Success).comments
                     postViewModel.updatePostCommentCount(postId, comments.size)
                 }
