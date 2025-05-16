@@ -1,7 +1,6 @@
 package com.triptales.app.ui.components
 
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ChatBubbleOutline
@@ -27,7 +26,6 @@ fun PostCard(
     modifier: Modifier = Modifier,
     isLiked: Boolean = false,
     likesCount: Int = 0,
-    commentsCount: Int = 0,
     onLikeClick: () -> Unit = {},
     onCommentClick: () -> Unit = {},
     onLocationClick: (() -> Unit)? = null
@@ -45,28 +43,18 @@ fun PostCard(
                 verticalAlignment = Alignment.CenterVertically,
                 modifier = Modifier.fillMaxWidth()
             ) {
-                // Placeholder avatar
-                Surface(
-                    modifier = Modifier.size(40.dp),
-                    shape = CircleShape,
-                    color = MaterialTheme.colorScheme.primary
-                ) {
-                    Box(
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Text(
-                            text = "U",
-                            color = MaterialTheme.colorScheme.onPrimary,
-                            style = MaterialTheme.typography.titleMedium
-                        )
-                    }
-                }
+                // Avatar utente usando ProfileImage
+                ProfileImage(
+                    profileImage = null, // Post non ha image utente, puoi estenderlo se necessario
+                    size = 40,
+                    contentDescription = "Profilo utente"
+                )
 
                 Spacer(modifier = Modifier.width(12.dp))
 
                 Column(modifier = Modifier.weight(1f)) {
                     Text(
-                        text = "Utente ${post.user_id}",
+                        text = post.user_name?.ifBlank { "Utente ${post.user_id}" } ?: "Utente ${post.user_id}",
                         style = MaterialTheme.typography.titleSmall,
                         fontWeight = FontWeight.Bold
                     )
@@ -91,7 +79,7 @@ fun PostCard(
 
             Spacer(modifier = Modifier.height(12.dp))
 
-            // Immagine del post (gestione identica a group_image_url)
+            // Immagine del post
             if (!post.image_url.isNullOrBlank()) {
                 AsyncImage(
                     model = post.image_url,
@@ -106,7 +94,7 @@ fun PostCard(
                 Spacer(modifier = Modifier.height(12.dp))
             }
 
-            // Caption/Smart caption (solo se disponibile e non null/vuota)
+            // Caption/Smart caption
             if (!post.smart_caption.isNullOrBlank()) {
                 Text(
                     text = post.smart_caption,
@@ -217,6 +205,8 @@ fun PostCard(
                             tint = MaterialTheme.colorScheme.onSurfaceVariant
                         )
                     }
+                    // Usa comments_count dal post se disponibile
+                    val commentsCount = post.comments_count ?: 0
                     if (commentsCount > 0) {
                         Text(
                             text = "$commentsCount",

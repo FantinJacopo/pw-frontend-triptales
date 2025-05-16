@@ -1,7 +1,6 @@
 package com.triptales.app.ui.components
 
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -29,22 +28,12 @@ fun CommentItem(
             modifier = Modifier.padding(12.dp),
             horizontalArrangement = Arrangement.spacedBy(12.dp)
         ) {
-            // Avatar placeholder
-            Surface(
-                modifier = Modifier.size(36.dp),
-                shape = CircleShape,
-                color = MaterialTheme.colorScheme.primary
-            ) {
-                Box(
-                    contentAlignment = Alignment.Center
-                ) {
-                    Text(
-                        text = "U",
-                        color = MaterialTheme.colorScheme.onPrimary,
-                        style = MaterialTheme.typography.titleSmall
-                    )
-                }
-            }
+            // Avatar utente
+            ProfileImage(
+                profileImage = comment.user_profile_image,
+                size = 36,
+                contentDescription = "Profilo di ${comment.user_name}"
+            )
 
             // Content
             Column(
@@ -56,7 +45,7 @@ fun CommentItem(
                     verticalAlignment = Alignment.Top
                 ) {
                     Text(
-                        text = "Utente ${comment.user_id}",
+                        text = comment.user_name.ifBlank { "Utente ${comment.user_id}" },
                         style = MaterialTheme.typography.labelLarge,
                         fontWeight = FontWeight.Bold,
                         color = MaterialTheme.colorScheme.primary
@@ -82,10 +71,30 @@ fun CommentItem(
 
 private fun formatCommentDate(dateString: String): String {
     return try {
-        val inputFormat = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSSSS'Z'", Locale.getDefault())
-        val outputFormat = SimpleDateFormat("dd MMM HH:mm", Locale.getDefault())
-        val date = inputFormat.parse(dateString)
-        outputFormat.format(date ?: Date())
+        val inputFormats = listOf(
+            "yyyy-MM-dd'T'HH:mm:ss.SSSSSS'Z'",
+            "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'",
+            "yyyy-MM-dd'T'HH:mm:ss'Z'",
+            "yyyy-MM-dd HH:mm:ss"
+        )
+
+        var date: Date? = null
+        for (format in inputFormats) {
+            try {
+                val inputFormat = SimpleDateFormat(format, Locale.getDefault())
+                date = inputFormat.parse(dateString)
+                if (date != null) break
+            } catch (e: Exception) {
+                // Continua con il prossimo formato
+            }
+        }
+
+        if (date != null) {
+            val outputFormat = SimpleDateFormat("dd MMM HH:mm", Locale.getDefault())
+            outputFormat.format(date)
+        } else {
+            dateString
+        }
     } catch (e: Exception) {
         dateString
     }

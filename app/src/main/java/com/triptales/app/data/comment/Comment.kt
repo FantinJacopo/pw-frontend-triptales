@@ -4,6 +4,8 @@ data class Comment(
     val id: Int,
     val post: Int,
     val user: Int,
+    val user_name: String,
+    val user_profile_image: String? = null,
     val content: String,
     val created_at: String
 ) {

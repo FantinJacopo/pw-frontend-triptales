@@ -75,7 +75,7 @@ fun SplashScreen(
                     handleLoginRedirect(tokenManager, navController)
                 }
             }
-        } catch (e: Exception) {
+        } catch (_: Exception) {
             // In caso di errore, vai al login
             statusMessage = "Errore autenticazione..."
             delay(500)

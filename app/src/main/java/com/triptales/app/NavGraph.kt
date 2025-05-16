@@ -92,7 +92,8 @@ fun NavGraph(
                 CommentsScreen(
                     postId = postId,
                     commentViewModel = commentViewModel,
-                    navController = navController
+                    navController = navController,
+                    postViewModel = postViewModel
                 )
             }
             composable("group/{groupId}") { backStackEntry ->

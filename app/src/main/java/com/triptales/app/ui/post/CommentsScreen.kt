@@ -1,6 +1,7 @@
 package com.triptales.app.ui.post
 
 import android.annotation.SuppressLint
+import android.widget.Toast
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -39,6 +40,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
@@ -46,6 +48,7 @@ import com.triptales.app.ui.components.CommentItem
 import com.triptales.app.ui.theme.FrontendtriptalesTheme
 import com.triptales.app.viewmodel.CommentState
 import com.triptales.app.viewmodel.CommentViewModel
+import com.triptales.app.viewmodel.PostViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
@@ -53,14 +56,31 @@ import com.triptales.app.viewmodel.CommentViewModel
 fun CommentsScreen(
     postId: Int,
     commentViewModel: CommentViewModel,
+    postViewModel: PostViewModel,
     navController: NavController
 ) {
     FrontendtriptalesTheme {
         val commentState by commentViewModel.commentState.collectAsState()
         var newComment by remember { mutableStateOf("") }
+        val context = LocalContext.current
 
         LaunchedEffect(postId) {
             commentViewModel.fetchComments(postId)
+        }
+
+        // Gestisci feedback quando commento è creato
+        LaunchedEffect(commentState) {
+            when (commentState) {
+                is CommentState.CommentCreated -> {
+                    Toast.makeText(context, "Commento aggiunto!", Toast.LENGTH_SHORT).show()
+                    // Aggiorna il conteggio commenti nei post
+                    postViewModel.refreshPosts()
+                }
+                is CommentState.Error -> {
+                    Toast.makeText(context, (commentState as CommentState.Error).message, Toast.LENGTH_LONG).show()
+                }
+                else -> {}
+            }
         }
 
         Scaffold(

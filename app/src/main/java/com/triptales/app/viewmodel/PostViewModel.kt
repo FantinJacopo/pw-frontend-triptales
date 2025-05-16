@@ -28,10 +28,22 @@ class PostViewModel(private val repository: PostRepository) : ViewModel() {
     private val _postState = MutableStateFlow<PostState>(PostState.Idle)
     val postState: StateFlow<PostState> = _postState
 
-    fun fetchPosts(groupId: Int) {
+    // Mantieni traccia dell'ultimo gruppo caricato per il refresh automatico
+    private var lastGroupId: Int? = null
+
+    fun fetchPosts(groupId: Int, forceRefresh: Boolean = false) {
         viewModelScope.launch {
-            Log.d("PostViewModel", "Fetching posts for group: $groupId")
+            Log.d("PostViewModel", "Fetching posts for group: $groupId (force: $forceRefresh)")
+
+            // Se non è un force refresh e stiamo già mostrando i post di questo gruppo, non ricaricare
+            if (!forceRefresh && _postState.value is PostState.Success && lastGroupId == groupId) {
+                Log.d("PostViewModel", "Already showing posts for group $groupId, skipping")
+                return@launch
+            }
+
+            lastGroupId = groupId
             _postState.value = PostState.Loading
+
             try {
                 val response = repository.getPosts(groupId)
                 Log.d("PostViewModel", "Response code: ${response.code()}")
@@ -41,8 +53,7 @@ class PostViewModel(private val repository: PostRepository) : ViewModel() {
                     Log.d("PostViewModel", "Received ${posts.size} posts")
                     posts.forEach { post ->
                         Log.d("PostViewModel", "Post ${post.id}: ${post.smart_caption}")
-                        Log.d("PostViewModel", "  - image_url: ${post.image_url}")
-                        Log.d("PostViewModel", "  - created_at: ${post.created_at}")
+                        Log.d("PostViewModel", "  - comments_count: ${post.comments_count}")
                     }
                     _postState.value = PostState.Success(posts)
                 } else {
@@ -71,6 +82,8 @@ class PostViewModel(private val repository: PostRepository) : ViewModel() {
                 if (response.isSuccessful) {
                     Log.d("PostViewModel", "Post created successfully")
                     _postState.value = PostState.PostCreated
+                    // Ricarica automaticamente i post del gruppo
+                    fetchPosts(groupId, forceRefresh = true)
                 } else {
                     val errorBody = response.errorBody()?.string()
                     Log.e("PostViewModel", "Error creating post: $errorBody")
@@ -80,6 +93,14 @@ class PostViewModel(private val repository: PostRepository) : ViewModel() {
                 Log.e("PostViewModel", "Exception creating post", e)
                 _postState.value = PostState.Error("Errore: ${e.message}")
             }
+        }
+    }
+
+    // Metodo per refreshare i post quando un commento viene aggiunto
+    fun refreshPosts() {
+        lastGroupId?.let { groupId ->
+            Log.d("PostViewModel", "Refreshing posts for group $groupId")
+            fetchPosts(groupId, forceRefresh = true)
         }
     }
 

@@ -3,6 +3,7 @@ package com.triptales.app.data.post
 data class Post(
     val id: Int,
     val user_id: Int,
+    val user_name: String? = null,
     val trip_group: Int,
     val image_url: String,
     val smart_caption: String,
@@ -10,5 +11,6 @@ data class Post(
     val longitude: Double? = null,
     val created_at: String,
     val ocr_text: String = "",
-    val object_tags: List<String> = emptyList()
+    val object_tags: List<String> = emptyList(),
+    val comments_count: Int? = 0
 )
