@@ -11,10 +11,12 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
@@ -37,10 +39,15 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
+import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
@@ -49,6 +56,7 @@ import com.triptales.app.ui.theme.FrontendtriptalesTheme
 import com.triptales.app.viewmodel.CommentState
 import com.triptales.app.viewmodel.CommentViewModel
 import com.triptales.app.viewmodel.PostViewModel
+import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
 @SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
@@ -63,6 +71,13 @@ fun CommentsScreen(
         val commentState by commentViewModel.commentState.collectAsState()
         var newComment by remember { mutableStateOf("") }
         val context = LocalContext.current
+        val keyboardController = LocalSoftwareKeyboardController.current
+        val focusRequester = remember { FocusRequester() }
+        val listState = rememberLazyListState()
+        val coroutineScope = rememberCoroutineScope()
+
+        // Variabile per tracciare se il campo testo ha il focus
+        var isTextFieldFocused by remember { mutableStateOf(false) }
 
         LaunchedEffect(postId) {
             commentViewModel.fetchComments(postId)
@@ -72,9 +87,17 @@ fun CommentsScreen(
         LaunchedEffect(commentState) {
             when (commentState) {
                 is CommentState.CommentCreated -> {
-                    Toast.makeText(context, "Commento aggiunto!", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(context, "Commento aggiunto! 🎉", Toast.LENGTH_SHORT).show()
                     // Aggiorna il conteggio commenti nei post
                     postViewModel.refreshPosts()
+                    // Scorri verso il basso per mostrare il nuovo commento
+                    if ((commentState as? CommentState.Success)?.comments?.isNotEmpty() == true) {
+                        coroutineScope.launch {
+                            listState.animateScrollToItem(
+                                (commentState as CommentState.Success).comments.size - 1
+                            )
+                        }
+                    }
                 }
                 is CommentState.Error -> {
                     Toast.makeText(context, (commentState as CommentState.Error).message, Toast.LENGTH_LONG).show()
@@ -83,7 +106,21 @@ fun CommentsScreen(
             }
         }
 
+        // Scorri automaticamente quando la tastiera si apre e il campo ha il focus
+        LaunchedEffect(isTextFieldFocused) {
+            if (isTextFieldFocused && commentState is CommentState.Success) {
+                val comments = (commentState as CommentState.Success).comments
+                if (comments.isNotEmpty()) {
+                    // Scorri verso gli ultimi commenti quando il campo ottiene il focus
+                    coroutineScope.launch {
+                        listState.animateScrollToItem(comments.size - 1)
+                    }
+                }
+            }
+        }
+
         Scaffold(
+            modifier = Modifier.imePadding(), // Aggiunge padding automatico per la tastiera
             topBar = {
                 TopAppBar(
                     title = { Text("Commenti") },
@@ -112,10 +149,18 @@ fun CommentsScreen(
                         OutlinedTextField(
                             value = newComment,
                             onValueChange = { newComment = it },
-                            placeholder = { Text("Scrivi un commento...") },
-                            modifier = Modifier.weight(1f),
+                            placeholder = { Text("Scrivi un commento... 💭") },
+                            modifier = Modifier
+                                .weight(1f)
+                                .focusRequester(focusRequester)
+                                .onFocusChanged { focusState ->
+                                    isTextFieldFocused = focusState.isFocused
+                                },
                             shape = RoundedCornerShape(20.dp),
-                            maxLines = 3
+                            maxLines = 3,
+                            supportingText = if (newComment.isNotBlank()) {
+                                { Text("${newComment.length} caratteri", style = MaterialTheme.typography.labelSmall) }
+                            } else null
                         )
                         Spacer(modifier = Modifier.width(8.dp))
                         FilledTonalButton(
@@ -123,6 +168,8 @@ fun CommentsScreen(
                                 if (newComment.isNotBlank()) {
                                     commentViewModel.createComment(postId, newComment.trim())
                                     newComment = ""
+                                    // Nascondi la tastiera dopo l'invio
+                                    keyboardController?.hide()
                                 }
                             },
                             enabled = newComment.isNotBlank(),
@@ -173,7 +220,7 @@ fun CommentsScreen(
                                         fontWeight = FontWeight.Bold
                                     )
                                     Text(
-                                        text = "Sii il primo a commentare!",
+                                        text = "Sii il primo a commentare! ✨",
                                         style = MaterialTheme.typography.bodyMedium,
                                         color = MaterialTheme.colorScheme.onSurfaceVariant
                                     )
@@ -182,11 +229,17 @@ fun CommentsScreen(
                         } else {
                             LazyColumn(
                                 modifier = Modifier.fillMaxSize(),
+                                state = listState,
                                 contentPadding = PaddingValues(16.dp),
                                 verticalArrangement = Arrangement.spacedBy(12.dp)
                             ) {
                                 items(comments) { comment ->
                                     CommentItem(comment = comment)
+                                }
+                                // Aggiunge spazio extra alla fine per evitare che l'ultimo commento
+                                // sia coperto dalla barra inferiore quando si apre la tastiera
+                                item {
+                                    Spacer(modifier = Modifier.height(16.dp))
                                 }
                             }
                         }
