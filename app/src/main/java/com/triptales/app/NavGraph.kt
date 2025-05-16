@@ -15,6 +15,7 @@ import com.triptales.app.ui.group.CreateGroupScreen
 import com.triptales.app.ui.group.GroupScreen
 import com.triptales.app.ui.group.GroupActionScreen
 import com.triptales.app.ui.group.JoinGroupScreen
+import com.triptales.app.ui.group.JoinGroupByCodeScreen
 import com.triptales.app.ui.home.HomeScreen
 import com.triptales.app.ui.post.CreatePostScreen
 import com.triptales.app.ui.post.CommentsScreen
@@ -38,20 +39,16 @@ fun NavGraph(
 ){
     val authState by authViewModel.authState.collectAsState()
 
+    // Determina la destinazione di partenza basandosi sul primo stato non-Idle
     val startDestination = when (authState) {
         is AuthState.Authenticated -> "home"
-        else -> "login"
-    }
-
-    LaunchedEffect(startDestination) {
-        navController.navigate(startDestination) {
-            launchSingleTop = true
-        }
+        is AuthState.Unauthenticated -> "login"
+        else -> "splash" // Per Idle, Loading, Success, Error
     }
 
     NavHost(
         navController = navController,
-        startDestination = "splash"
+        startDestination = startDestination
     ) {
         composable("splash") {
             SplashScreen(navController = navController, tokenManager = tokenManager)
@@ -69,9 +66,6 @@ fun NavGraph(
                 navController = navController
             )
         }
-        composable("loading") {
-            // Schermata vuota, serve solo per aspettare di sapere quale sarà lo startDestination
-        }
         composable("groupAction") {
             GroupActionScreen(navController = navController)
         }
@@ -80,6 +74,9 @@ fun NavGraph(
         }
         composable("joinGroup") {
             JoinGroupScreen(navController = navController)
+        }
+        composable("joinGroupByCode") {
+            JoinGroupByCodeScreen(navController = navController)
         }
         composable("createPost/{groupId}") { backStackEntry ->
             val groupId = backStackEntry.arguments?.getString("groupId")?.toIntOrNull() ?: return@composable

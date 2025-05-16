@@ -35,43 +35,56 @@ class AuthViewModel(
     val authState: StateFlow<AuthState> = _authState
 
     init {
-        viewModelScope.launch {
-            tokenManager.clearIfExpired()
-            checkAuthStatus()
-
-            // Monitora i cambiamenti dei token
-            tokenManager.accessToken.collect { token ->
-                if (token != null && !tokenManager.isTokenExpired(token)) {
-                    Log.d("AuthViewModel", "User is authenticated with valid token")
-                    _authState.value = AuthState.Authenticated
-                } else {
-                    Log.d("AuthViewModel", "User is not authenticated")
-                    _authState.value = AuthState.Unauthenticated
-                }
-            }
-        }
+        // Controlla immediatamente l'autenticazione senza creare cambiamenti di stato extra
+        checkInitialAuthStatus()
     }
 
-    private suspend fun checkAuthStatus() {
-        val accessToken = tokenManager.accessToken.first()
-        val refreshToken = tokenManager.refreshToken.first()
+    private fun checkInitialAuthStatus() {
+        viewModelScope.launch {
+            try {
+                // Pulisce token scaduti
+                tokenManager.clearIfExpired()
 
-        when {
-            !accessToken.isNullOrBlank() && !tokenManager.isTokenExpired(accessToken) -> {
-                Log.d("AuthViewModel", "Valid access token found")
-                _authState.value = AuthState.Authenticated
-            }
-            !refreshToken.isNullOrBlank() && !tokenManager.isTokenExpired(refreshToken) -> {
-                Log.d("AuthViewModel", "Attempting to refresh token...")
-                val refreshSuccess = tokenManager.refreshAccessToken()
-                if (refreshSuccess) {
-                    _authState.value = AuthState.Authenticated
-                } else {
-                    _authState.value = AuthState.Unauthenticated
+                val accessToken = tokenManager.accessToken.first()
+                val refreshToken = tokenManager.refreshToken.first()
+
+                when {
+                    !accessToken.isNullOrBlank() && !tokenManager.isTokenExpired(accessToken) -> {
+                        Log.d("AuthViewModel", "Valid access token found")
+                        _authState.value = AuthState.Authenticated
+                    }
+                    !refreshToken.isNullOrBlank() && !tokenManager.isTokenExpired(refreshToken) -> {
+                        Log.d("AuthViewModel", "Attempting to refresh token...")
+                        // Non cambiamo lo stato durante il refresh per evitare flicker
+                        val refreshSuccess = tokenManager.refreshAccessToken()
+                        if (refreshSuccess) {
+                            _authState.value = AuthState.Authenticated
+                        } else {
+                            _authState.value = AuthState.Unauthenticated
+                        }
+                    }
+                    else -> {
+                        Log.d("AuthViewModel", "No valid tokens found")
+                        _authState.value = AuthState.Unauthenticated
+                    }
                 }
-            }
-            else -> {
-                Log.d("AuthViewModel", "No valid tokens found")
+
+                // Monitora i cambiamenti dei token solo DOPO il controllo iniziale
+                tokenManager.accessToken.collect { token ->
+                    // Evita aggiornamenti ridondanti dello stato
+                    val currentState = _authState.value
+                    val shouldBeAuthenticated = !token.isNullOrBlank() && !tokenManager.isTokenExpired(token)
+
+                    if (shouldBeAuthenticated && currentState !is AuthState.Authenticated) {
+                        Log.d("AuthViewModel", "User authenticated via token change")
+                        _authState.value = AuthState.Authenticated
+                    } else if (!shouldBeAuthenticated && currentState is AuthState.Authenticated) {
+                        Log.d("AuthViewModel", "User unauthenticated via token change")
+                        _authState.value = AuthState.Unauthenticated
+                    }
+                }
+            } catch (e: Exception) {
+                Log.e("AuthViewModel", "Error during initial auth check", e)
                 _authState.value = AuthState.Unauthenticated
             }
         }
@@ -125,7 +138,7 @@ class AuthViewModel(
     fun logout() {
         viewModelScope.launch {
             Log.d("AuthViewModel", "Logging out...")
-            _authState.value = AuthState.Loading // Mostra loading durante logout
+            _authState.value = AuthState.Loading
 
             // Piccola pausa per feedback visivo
             kotlinx.coroutines.delay(500)
@@ -136,6 +149,9 @@ class AuthViewModel(
     }
 
     fun resetState() {
-        _authState.value = AuthState.Idle
+        // Solo resetta se non stiamo in uno stato di autenticazione
+        if (_authState.value !is AuthState.Authenticated && _authState.value !is AuthState.Unauthenticated) {
+            _authState.value = AuthState.Idle
+        }
     }
 }
