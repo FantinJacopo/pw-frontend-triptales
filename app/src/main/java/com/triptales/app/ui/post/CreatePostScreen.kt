@@ -45,7 +45,11 @@ fun CreatePostScreen(
         when (postState) {
             is PostState.PostCreated -> {
                 Toast.makeText(context, "Post creato con successo!", Toast.LENGTH_SHORT).show()
+
+                // Importante: resettiamo lo stato PRIMA di navigare
                 postViewModel.resetState()
+
+                // Naviga indietro alla schermata del gruppo
                 navController.popBackStack()
             }
             is PostState.Error -> {

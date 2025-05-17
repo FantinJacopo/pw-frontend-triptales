@@ -8,6 +8,7 @@ import androidx.lifecycle.viewModelScope
 import com.triptales.app.data.post.Post
 import com.triptales.app.data.post.PostRepository
 import com.triptales.app.data.utils.uriToFile
+import com.triptales.app.viewmodel.PostState
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
@@ -81,9 +82,12 @@ class PostViewModel(private val repository: PostRepository) : ViewModel() {
 
                 if (response.isSuccessful) {
                     Log.d("PostViewModel", "Post created successfully")
+                    // Importante: Prima impostiamo lo stato a PostCreated
                     _postState.value = PostState.PostCreated
-                    // Ricarica automaticamente i post del gruppo
-                    fetchPosts(groupId, forceRefresh = true)
+
+                    // Poi aggiorniamo lastGroupId per assicurarci che quando torneremo
+                    // alla schermata del gruppo, i post saranno aggiornati
+                    lastGroupId = groupId
                 } else {
                     val errorBody = response.errorBody()?.string()
                     Log.e("PostViewModel", "Error creating post: $errorBody")
