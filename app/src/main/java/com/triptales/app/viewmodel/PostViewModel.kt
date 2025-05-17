@@ -1,14 +1,10 @@
 package com.triptales.app.viewmodel
 
-import android.content.Context
-import android.net.Uri
 import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.triptales.app.data.post.Post
 import com.triptales.app.data.post.PostRepository
-import com.triptales.app.data.utils.uriToFile
-import com.triptales.app.viewmodel.PostState
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch

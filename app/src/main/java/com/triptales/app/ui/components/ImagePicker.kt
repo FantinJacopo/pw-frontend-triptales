@@ -13,10 +13,10 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import com.triptales.app.data.utils.createImageUri
-import com.triptales.app.data.utils.hasCameraPermission
-import com.triptales.app.data.utils.hasStoragePermission
-import com.triptales.app.data.utils.requestCameraPermission
+import com.triptales.app.data.utils.ImageUtils.createImageUri
+import com.triptales.app.ui.utils.PermissionUtils.hasCameraPermission
+import com.triptales.app.ui.utils.PermissionUtils.hasStoragePermission
+import com.triptales.app.ui.utils.PermissionUtils.requestCameraPermission
 import kotlinx.coroutines.launch
 
 @Composable

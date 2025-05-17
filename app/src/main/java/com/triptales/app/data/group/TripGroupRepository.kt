@@ -3,6 +3,8 @@ package com.triptales.app.data.group
 import android.util.Log
 import com.triptales.app.data.utils.toRequestBody
 import com.google.gson.Gson
+import com.triptales.app.data.utils.ApiUtils.getErrorMessage
+import com.triptales.app.data.utils.ApiUtils.safeApiCall
 import okhttp3.MultipartBody
 
 class TripGroupRepository(private val api: TripGroupApi) {
@@ -26,33 +28,18 @@ class TripGroupRepository(private val api: TripGroupApi) {
             Log.d("TripGroupRepository", "Attempting to join group with code: $qrCode")
 
             val request = JoinGroupRequest(qrCode)
-            Log.d("TripGroupRepository", "Request body: ${gson.toJson(request)}")
 
-            val response = api.joinGroup(request)
+            val response = safeApiCall(
+                tag = "TripGroupRepository",
+                operation = "join group with QR code",
+                apiCall = { api.joinGroup(request) }
+            )
 
-            Log.d("TripGroupRepository", "Response code: ${response.code()}")
-            Log.d("TripGroupRepository", "Response headers: ${response.headers()}")
-
-            if (response.isSuccessful) {
-                val body = response.body()
-                Log.d("TripGroupRepository", "Join successful: ${body?.message}")
-                body
-            } else {
-                val errorBody = response.errorBody()?.string()
-                Log.e("TripGroupRepository", "Join failed: ${response.code()} - $errorBody")
-
-                // Gestisci specifici codici di errore
-                when (response.code()) {
-                    400 -> throw Exception("Codice gruppo non valido")
-                    404 -> throw Exception("Gruppo non trovato con questo codice")
-                    405 -> throw Exception("Metodo non consentito - problema di configurazione server")
-                    409 -> throw Exception("Sei già membro di questo gruppo")
-                    else -> throw Exception("Errore durante l'unione al gruppo: ${response.code()}")
-                }
-            }
+            return response.body()
         } catch (e: Exception) {
             Log.e("TripGroupRepository", "Exception in joinGroup", e)
-            throw e
+            val errorMessage = getErrorMessage(e, "Errore durante l'unione al gruppo")
+            throw Exception(errorMessage)
         }
     }
 

@@ -8,6 +8,7 @@ import android.widget.Toast
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -16,7 +17,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import coil.compose.rememberAsyncImagePainter
-import com.triptales.app.data.utils.uriToFile
+import com.triptales.app.data.utils.ImageUtils.uriToFile
 import com.triptales.app.ui.components.ImagePicker
 import com.triptales.app.viewmodel.GroupViewModel
 import com.triptales.app.viewmodel.GroupState
@@ -69,7 +70,7 @@ fun CreateGroupScreen(viewModel: GroupViewModel, navController: NavController) {
                         navController.popBackStack()
                     }) {
                         Icon(
-                            imageVector = Icons.Default.ArrowBack,
+                            imageVector = Icons.AutoMirrored.Filled.ArrowBack,
                             contentDescription = "Indietro"
                         )
                     }

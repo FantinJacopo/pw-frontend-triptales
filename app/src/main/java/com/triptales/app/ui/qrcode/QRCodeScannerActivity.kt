@@ -14,6 +14,7 @@ import com.triptales.app.data.auth.TokenManager
 import com.triptales.app.data.group.TripGroupApi
 import com.triptales.app.data.group.TripGroupRepository
 import com.triptales.app.ui.theme.FrontendtriptalesTheme
+import com.triptales.app.ui.utils.PermissionUtils.hasCameraPermission
 import kotlinx.coroutines.launch
 
 class QRCodeScannerActivity : ComponentActivity() {
@@ -61,10 +62,7 @@ class QRCodeScannerActivity : ComponentActivity() {
     }
 
     private fun checkCameraPermission() {
-        hasPermission = ContextCompat.checkSelfPermission(
-            this,
-            Manifest.permission.CAMERA
-        ) == PackageManager.PERMISSION_GRANTED
+        hasPermission = hasCameraPermission(this)
 
         if (!hasPermission) {
             permissionLauncher.launch(Manifest.permission.CAMERA)

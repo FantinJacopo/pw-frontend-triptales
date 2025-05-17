@@ -19,6 +19,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.triptales.app.data.group.GroupMember
+import com.triptales.app.data.utils.DateUtils.formatJoinDate
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
@@ -80,36 +81,5 @@ fun MemberItem(
                 )
             }
         }
-    }
-}
-
-private fun formatJoinDate(dateString: String): String {
-    return try {
-        val inputFormats = listOf(
-            "yyyy-MM-dd'T'HH:mm:ss.SSSSSS'Z'",
-            "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'",
-            "yyyy-MM-dd'T'HH:mm:ss'Z'",
-            "yyyy-MM-dd HH:mm:ss"
-        )
-
-        var date: Date? = null
-        for (format in inputFormats) {
-            try {
-                val inputFormat = SimpleDateFormat(format, Locale.getDefault())
-                date = inputFormat.parse(dateString)
-                if (date != null) break
-            } catch (_: Exception) {
-                // Continua con il prossimo formato
-            }
-        }
-
-        if (date != null) {
-            val outputFormat = SimpleDateFormat("dd MMM yyyy", Locale.getDefault())
-            outputFormat.format(date)
-        } else {
-            dateString
-        }
-    } catch (_: Exception) {
-        dateString
     }
 }

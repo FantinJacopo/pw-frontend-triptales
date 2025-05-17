@@ -11,6 +11,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.triptales.app.data.comment.Comment
+import com.triptales.app.data.utils.DateUtils.formatCommentDate
 import java.text.SimpleDateFormat
 import java.util.*
 
@@ -77,48 +78,5 @@ fun CommentItem(
                 )
             }
         }
-    }
-}
-
-private fun formatCommentDate(dateString: String): String {
-    return try {
-        val inputFormats = listOf(
-            "yyyy-MM-dd'T'HH:mm:ss.SSSSSS'Z'",
-            "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'",
-            "yyyy-MM-dd'T'HH:mm:ss'Z'",
-            "yyyy-MM-dd HH:mm:ss"
-        )
-
-        var date: Date? = null
-        for (format in inputFormats) {
-            try {
-                val inputFormat = SimpleDateFormat(format, Locale.getDefault())
-                date = inputFormat.parse(dateString)
-                if (date != null) break
-            } catch (_: Exception) {
-                // Continua con il prossimo formato
-            }
-        }
-
-        if (date != null) {
-            val now = Date()
-            val diffInMillis = now.time - date.time
-            val diffInHours = diffInMillis / (1000 * 60 * 60)
-            val diffInDays = diffInHours / 24
-
-            when {
-                diffInHours < 1 -> "Ora"
-                diffInHours < 24 -> "${diffInHours}h"
-                diffInDays < 7 -> "${diffInDays}g"
-                else -> {
-                    val outputFormat = SimpleDateFormat("dd MMM", Locale.getDefault())
-                    outputFormat.format(date)
-                }
-            }
-        } else {
-            dateString
-        }
-    } catch (_: Exception) {
-        dateString
     }
 }

@@ -34,7 +34,11 @@ import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import coil.compose.rememberAsyncImagePainter
-import com.triptales.app.data.utils.uriToFile
+import com.triptales.app.data.utils.ValidationUtils.isValidEmail
+import com.triptales.app.data.utils.ValidationUtils.validatePassword
+import com.triptales.app.data.utils.ValidationUtils.validateUsername
+import com.triptales.app.data.utils.ValidationUtils.validateName
+import com.triptales.app.data.utils.ImageUtils.uriToFile
 import com.triptales.app.ui.components.ImagePickerWithCrop
 import com.triptales.app.ui.theme.FrontendtriptalesTheme
 import com.triptales.app.viewmodel.AuthState
@@ -55,6 +59,10 @@ fun RegisterScreen(
         var username by remember { mutableStateOf("") }
         var name by remember { mutableStateOf("") }
         var password by remember { mutableStateOf("") }
+        var emailError by remember { mutableStateOf<String?>(null) }
+        var passwordError by remember { mutableStateOf<String?>(null) }
+        var usernameError by remember { mutableStateOf<String?>(null) }
+        var nameError by remember { mutableStateOf<String?>(null) }
 
         Scaffold { paddingValues ->
             Column(
@@ -73,8 +81,17 @@ fun RegisterScreen(
                     value = email,
                     onValueChange = { email = it },
                     label = { Text("Email") },
-                    modifier = Modifier.fillMaxWidth()
+                    modifier = Modifier.fillMaxWidth(),
+                    isError = emailError != null
                 )
+                emailError?.let {
+                    Text(
+                        text = it,
+                        color = MaterialTheme.colorScheme.error,
+                        style = MaterialTheme.typography.bodySmall,
+                        modifier = Modifier.padding(start = 16.dp)
+                    )
+                }
 
                 Spacer(modifier = Modifier.height(8.dp))
 
@@ -82,8 +99,17 @@ fun RegisterScreen(
                     value = username,
                     onValueChange = { username = it },
                     label = { Text("Username") },
-                    modifier = Modifier.fillMaxWidth()
+                    modifier = Modifier.fillMaxWidth(),
+                    isError = usernameError != null
                 )
+                usernameError?.let {
+                    Text(
+                        text = it,
+                        color = MaterialTheme.colorScheme.error,
+                        style = MaterialTheme.typography.bodySmall,
+                        modifier = Modifier.padding(start = 16.dp)
+                    )
+                }
 
                 Spacer(modifier = Modifier.height(8.dp))
 
@@ -91,8 +117,17 @@ fun RegisterScreen(
                     value = name,
                     onValueChange = { name = it },
                     label = { Text("Nome Completo") },
-                    modifier = Modifier.fillMaxWidth()
+                    modifier = Modifier.fillMaxWidth(),
+                    isError = nameError != null
                 )
+                nameError?.let {
+                    Text(
+                        text = it,
+                        color = MaterialTheme.colorScheme.error,
+                        style = MaterialTheme.typography.bodySmall,
+                        modifier = Modifier.padding(start = 16.dp)
+                    )
+                }
 
                 Spacer(Modifier.height(8.dp))
 
@@ -115,20 +150,63 @@ fun RegisterScreen(
                     onValueChange = { password = it },
                     label = { Text("Password") },
                     visualTransformation = PasswordVisualTransformation(),
-                    modifier = Modifier.fillMaxWidth()
+                    modifier = Modifier.fillMaxWidth(),
+                    isError = passwordError != null
                 )
+                passwordError?.let {
+                    Text(
+                        text = it,
+                        color = MaterialTheme.colorScheme.error,
+                        style = MaterialTheme.typography.bodySmall,
+                        modifier = Modifier.padding(start = 16.dp)
+                    )
+                }
 
                 Spacer(modifier = Modifier.height(20.dp))
 
                 Button(
                     onClick = {
-                        viewModel.register(
-                            email,
-                            username,
-                            name,
-                            password,
-                            profileImageUri?.let { uri -> uriToFile(uri, context) } ?: File("")
-                        )
+                        // Pulisci gli errori precedenti
+                        emailError = null
+                        passwordError = null
+                        usernameError = null
+                        nameError = null
+
+                        // Valida i campi
+                        var isValid = true
+
+                        if (!isValidEmail(email)) {
+                            emailError = "Email non valida"
+                            isValid = false
+                        }
+
+                        val passwordResult = validatePassword(password)
+                        if (!passwordResult.isValid) {
+                            passwordError = passwordResult.errorMessage
+                            isValid = false
+                        }
+
+                        val usernameResult = validateUsername(username)
+                        if (!usernameResult.isValid) {
+                            usernameError = usernameResult.errorMessage
+                            isValid = false
+                        }
+
+                        val nameResult = validateName(name)
+                        if (!nameResult.isValid) {
+                            nameError = nameResult.errorMessage
+                            isValid = false
+                        }
+
+                        if (isValid) {
+                            viewModel.register(
+                                email,
+                                username,
+                                name,
+                                password,
+                                profileImageUri?.let { uri -> uriToFile(uri, context) } ?: File("")
+                            )
+                        }
                     },
                     modifier = Modifier.fillMaxWidth()
                 ) {

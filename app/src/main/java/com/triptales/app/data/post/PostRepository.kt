@@ -1,6 +1,7 @@
 package com.triptales.app.data.post
 
 import android.util.Log
+import com.triptales.app.data.utils.ApiUtils.safeApiCall
 import com.triptales.app.data.utils.toRequestBody
 import okhttp3.MultipartBody
 
@@ -32,13 +33,19 @@ class PostRepository(private val api: PostApi) {
         imagePart: MultipartBody.Part
     ) = try {
         Log.d("PostRepository", "Creating post for group: $tripGroupId, caption: $smartCaption")
-        val response = api.createPost(
-            imagePart,
-            toRequestBody(tripGroupId.toString()),
-            toRequestBody(smartCaption),
+
+        // Usa ApiUtils per gestire la chiamata
+        safeApiCall(
+            tag = "PostRepository",
+            operation = "create post",
+            apiCall = {
+                api.createPost(
+                    imagePart,
+                    toRequestBody(tripGroupId.toString()),
+                    toRequestBody(smartCaption)
+                )
+            }
         )
-        Log.d("PostRepository", "Create response: ${response.code()}")
-        response
     } catch (e: Exception) {
         Log.e("PostRepository", "Error creating post", e)
         throw e

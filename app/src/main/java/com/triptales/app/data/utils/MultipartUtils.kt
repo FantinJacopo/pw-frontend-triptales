@@ -7,6 +7,12 @@ import okhttp3.MultipartBody
 import okhttp3.RequestBody
 import okhttp3.RequestBody.Companion.toRequestBody
 
+/**
+ * Converts a string to a RequestBody.
+ *
+ * @param value The string value
+ * @return A RequestBody containing the string
+ */
 fun toRequestBody(value: String): RequestBody =
     value.toRequestBody("text/plain".toMediaTypeOrNull())
 

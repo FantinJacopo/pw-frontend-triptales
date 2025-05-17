@@ -1,5 +1,6 @@
 package com.triptales.app.data.auth
 
+import android.content.ContentValues.TAG
 import android.content.Context
 import android.util.Base64
 import android.util.Log
@@ -7,6 +8,7 @@ import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
 import com.triptales.app.data.RetrofitProvider
+import com.triptales.app.data.utils.ApiUtils.safeApiCall
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
@@ -108,13 +110,13 @@ class TokenManager(private val context: Context) {
         try {
             val refresh = refreshToken.first()
             if (refresh.isNullOrBlank()) {
-                Log.w("TokenManager", "No refresh token available")
+                Log.w(TAG, "No refresh token available")
                 return@withLock false
             }
 
             // Controlla se il refresh token è scaduto
             if (isTokenExpired(refresh)) {
-                Log.w("TokenManager", "Refresh token is expired")
+                Log.w(TAG, "Refresh token is expired")
                 clearTokens()
                 return@withLock false
             }
@@ -122,21 +124,21 @@ class TokenManager(private val context: Context) {
             val retrofit = RetrofitProvider.createUnauthenticated()
             val authApi = retrofit.create(AuthApi::class.java)
 
-            Log.d("TokenManager", "Attempting to refresh token...")
-            val response = authApi.refreshToken(RefreshRequest(refresh))
+            Log.d(TAG, "Attempting to refresh token...")
 
-            if (response.isSuccessful && response.body() != null) {
-                val newTokens = response.body()!!
-                saveTokens(newTokens.access, refresh)
-                Log.d("TokenManager", "Token refreshed successfully")
-                return@withLock true
-            } else {
-                Log.e("TokenManager", "Token refresh failed: ${response.code()}")
-                clearTokens()
-                return@withLock false
-            }
+            // Usa ApiUtils per la chiamata API
+            val response = safeApiCall(
+                tag = TAG,
+                operation = "refresh token",
+                apiCall = { authApi.refreshToken(RefreshRequest(refresh)) }
+            )
+
+            val newTokens = response.body()!!
+            saveTokens(newTokens.access, refresh)
+            Log.d(TAG, "Token refreshed successfully")
+            return@withLock true
         } catch (e: Exception) {
-            Log.e("TokenManager", "Error during token refresh", e)
+            Log.e(TAG, "Error during token refresh", e)
             clearTokens()
             return@withLock false
         } finally {

@@ -42,6 +42,8 @@ import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import coil.compose.rememberAsyncImagePainter
 import com.triptales.app.ui.theme.FrontendtriptalesTheme
+import com.triptales.app.ui.utils.UIUtils.ConfirmationDialog
+import com.triptales.app.ui.utils.UIUtils.rememberDialogState
 import com.triptales.app.viewmodel.AuthViewModel
 import com.triptales.app.viewmodel.UserState
 import com.triptales.app.viewmodel.UserViewModel
@@ -57,7 +59,7 @@ fun ProfileScreen(
         val state by viewModel.userState.collectAsState()
         val authState by authViewModel.authState.collectAsState()
 
-        var showLogoutDialog by remember { mutableStateOf(false) }
+        val showLogoutDialog = rememberDialogState()
 
         LaunchedEffect(Unit) {
             viewModel.fetchUserProfile()
@@ -186,7 +188,7 @@ fun ProfileScreen(
 
                         // Pulsante logout
                         Button(
-                            onClick = { showLogoutDialog = true },
+                            onClick = { showLogoutDialog.value = true },
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .height(56.dp),
@@ -244,39 +246,15 @@ fun ProfileScreen(
         }
 
         // Dialog di conferma logout
-        if (showLogoutDialog) {
-            AlertDialog(
-                onDismissRequest = { showLogoutDialog = false },
-                title = {
-                    Text(
-                        text = "Conferma Logout",
-                        fontWeight = FontWeight.Bold
-                    )
-                },
-                text = {
-                    Text("Sei sicuro di voler uscire dall'applicazione?")
-                },
-                confirmButton = {
-                    Button(
-                        onClick = {
-                            showLogoutDialog = false
-                            authViewModel.logout()
-                        },
-                        colors = ButtonDefaults.buttonColors(
-                            containerColor = MaterialTheme.colorScheme.error
-                        )
-                    ) {
-                        Text("Logout")
-                    }
-                },
-                dismissButton = {
-                    TextButton(
-                        onClick = { showLogoutDialog = false }
-                    ) {
-                        Text("Annulla")
-                    }
-                }
-            )
-        }
+        ConfirmationDialog(
+            showDialog = showLogoutDialog,
+            title = "Conferma Logout",
+            message = "Sei sicuro di voler fare il logout?",
+            confirmButtonText = "Logout",
+            onConfirm = {
+                authViewModel.logout()
+            },
+            isDestructive = true
+        )
     }
 }

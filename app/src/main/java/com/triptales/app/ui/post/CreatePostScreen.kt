@@ -46,7 +46,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import coil.compose.rememberAsyncImagePainter
-import com.triptales.app.data.utils.uriToFile
+import com.triptales.app.data.utils.ImageUtils.uriToFile
 import com.triptales.app.ui.components.ImagePickerWithCrop
 import com.triptales.app.viewmodel.PostState
 import com.triptales.app.viewmodel.PostViewModel
