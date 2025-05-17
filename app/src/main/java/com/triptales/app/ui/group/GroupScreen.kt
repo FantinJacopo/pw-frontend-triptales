@@ -17,15 +17,19 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Code
 import androidx.compose.material.icons.filled.Group
+import androidx.compose.material.icons.filled.LocationOn
 import androidx.compose.material.icons.filled.Person
+import androidx.compose.material.icons.filled.PhotoCamera
 import androidx.compose.material.icons.filled.QrCode
 import androidx.compose.material3.AssistChip
 import androidx.compose.material3.AssistChipDefaults
+import androidx.compose.material3.BottomAppBar
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
@@ -43,7 +47,10 @@ import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalClipboardManager
@@ -55,12 +62,12 @@ import androidx.navigation.NavController
 import coil.compose.rememberAsyncImagePainter
 import com.triptales.app.ui.components.PostCard
 import com.triptales.app.ui.qrcode.QRCodeActivity
-import com.triptales.app.ui.qrcode.QRCodeScannerActivity
 import com.triptales.app.ui.theme.FrontendtriptalesTheme
 import com.triptales.app.viewmodel.GroupState
 import com.triptales.app.viewmodel.GroupViewModel
 import com.triptales.app.viewmodel.PostState
 import com.triptales.app.viewmodel.PostViewModel
+import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
 @SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
@@ -76,6 +83,15 @@ fun GroupScreen(
         val postState by postViewModel.postState.collectAsState()
         val context = LocalContext.current
         val clipboardManager = LocalClipboardManager.current
+        val lazyListState = rememberLazyListState()
+        val coroutineScope = rememberCoroutineScope()
+
+        // Controlla se ci sono nuovi post da visualizzare
+        val shouldRefreshPosts by remember(postState) {
+            derivedStateOf {
+                postState is PostState.PostCreated
+            }
+        }
 
         // Carica i gruppi e post
         LaunchedEffect(groupId) {
@@ -83,14 +99,19 @@ fun GroupScreen(
             postViewModel.fetchPosts(groupId)
         }
 
-        // Ricarica i post quando si torna dalla CreatePostScreen
-        LaunchedEffect(navController.currentBackStackEntry) {
-            postViewModel.fetchPosts(groupId)
-        }
-
-        // Gestione dello stato PostCreated
-        LaunchedEffect(postState) {
-            if (postState is PostState.PostCreated) {
+        // Ricarica i post quando si torna dalla CreatePostScreen o quando si ricevono aggiornamenti
+        LaunchedEffect(navController.currentBackStackEntry, shouldRefreshPosts) {
+            if (shouldRefreshPosts) {
+                // Se lo stato è PostCreated, facciamo un refresh dei post
+                postViewModel.fetchPosts(groupId, forceRefresh = true)
+                // Poi resettiamo lo stato
+                postViewModel.resetState()
+                // Scrolliamo in cima alla lista per vedere il nuovo post
+                coroutineScope.launch {
+                    lazyListState.animateScrollToItem(0)
+                }
+            } else {
+                // Refresh regolare quando torniamo indietro
                 postViewModel.fetchPosts(groupId)
             }
         }
@@ -112,18 +133,59 @@ fun GroupScreen(
                     }
                 )
             },
-            floatingActionButton = {
-                FloatingActionButton(
-                    onClick = {
-                        navController.navigate("createPost/$groupId")
-                    },
-                    containerColor = MaterialTheme.colorScheme.primary,
-                    contentColor = MaterialTheme.colorScheme.onPrimary
+            bottomBar = {
+                BottomAppBar(
+                    modifier = Modifier.fillMaxWidth()
                 ) {
-                    Icon(
-                        imageVector = Icons.Default.Add,
-                        contentDescription = "Crea post"
-                    )
+                    // Utilizziamo una Row con peso uguale per distribuire uniformemente lo spazio
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceEvenly,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        // Icona Posizioni (a sinistra)
+                        IconButton(
+                            onClick = {
+                                Toast.makeText(context, "Funzionalità di mappa in arrivo...", Toast.LENGTH_SHORT).show()
+                            },
+                            modifier = Modifier.weight(1f)
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.LocationOn,
+                                contentDescription = "Posizioni",
+                                tint = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        }
+
+                        // FAB per la creazione di post (al centro)
+                        FloatingActionButton(
+                            onClick = {
+                                navController.navigate("createPost/$groupId")
+                            },
+                            containerColor = MaterialTheme.colorScheme.primary,
+                            contentColor = MaterialTheme.colorScheme.onPrimary,
+                            modifier = Modifier.weight(1f)
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.PhotoCamera,
+                                contentDescription = "Crea post"
+                            )
+                        }
+
+                        // Icona Membri (a destra)
+                        IconButton(
+                            onClick = {
+                                navController.navigate("group/$groupId/members")
+                            },
+                            modifier = Modifier.weight(1f)
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.Group,
+                                contentDescription = "Membri",
+                                tint = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        }
+                    }
                 }
             }
         ) { paddingValues ->
@@ -136,6 +198,7 @@ fun GroupScreen(
                 }
             } else {
                 LazyColumn(
+                    state = lazyListState,
                     modifier = Modifier
                         .fillMaxSize()
                         .padding(paddingValues),
@@ -300,43 +363,11 @@ fun GroupScreen(
                                         )
                                     }
                                 }
-
-                                Spacer(modifier = Modifier.width(8.dp))
-
-                                // Pulsante Scanner QR
-                                Card(
-                                    onClick = {
-                                        val intent = Intent(context, QRCodeScannerActivity::class.java)
-                                        context.startActivity(intent)
-                                    },
-                                    modifier = Modifier.weight(1f),
-                                    colors = CardDefaults.cardColors(
-                                        containerColor = MaterialTheme.colorScheme.tertiaryContainer
-                                    )
-                                ) {
-                                    Column(
-                                        modifier = Modifier.padding(16.dp),
-                                        horizontalAlignment = Alignment.CenterHorizontally
-                                    ) {
-                                        Icon(
-                                            imageVector = Icons.Default.QrCode,
-                                            contentDescription = "Scansiona",
-                                            modifier = Modifier.size(24.dp),
-                                            tint = MaterialTheme.colorScheme.onTertiaryContainer
-                                        )
-                                        Text(
-                                            text = "Scansiona",
-                                            style = MaterialTheme.typography.labelMedium,
-                                            color = MaterialTheme.colorScheme.onTertiaryContainer,
-                                            modifier = Modifier.padding(top = 4.dp)
-                                        )
-                                    }
-                                }
                             }
 
                             HorizontalDivider(
-                                modifier = Modifier.padding(16.dp),
-                                thickness = 1.dp, color = MaterialTheme.colorScheme.outline
+                                modifier = Modifier.padding(horizontal = 16.dp),
+                                thickness = 1.dp, color = MaterialTheme.colorScheme.outline.copy(alpha = 0.5f)
                             )
                         }
                     }
@@ -442,13 +473,10 @@ fun GroupScreen(
                                 }
                             }
                         }
-                        PostState.Idle -> {}
-                        PostState.PostCreated -> {
-                            // Questo caso viene gestito dal LaunchedEffect sopra
-                        }
+                        else -> { /* Non fare nulla per gli altri stati */ }
                     }
 
-                    // Spazio per il FAB
+                    // Spazio per la BottomAppBar
                     item {
                         Spacer(modifier = Modifier.height(80.dp))
                     }

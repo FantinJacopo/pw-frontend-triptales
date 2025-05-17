@@ -10,6 +10,7 @@ import com.triptales.app.data.RetrofitProvider
 import com.triptales.app.data.auth.AuthApi
 import com.triptales.app.data.auth.AuthRepository
 import com.triptales.app.data.auth.TokenManager
+import com.triptales.app.data.group.GroupMembersRepository
 import com.triptales.app.data.group.TripGroupApi
 import com.triptales.app.data.group.TripGroupRepository
 import com.triptales.app.data.post.PostApi
@@ -34,12 +35,20 @@ class MainActivity : ComponentActivity() {
                 // Retrofit configurato con interceptor
                 val retrofit = RetrofitProvider.create(tokenManager)
 
+                // APIs
+                val authApi = retrofit.create(AuthApi::class.java)
+                val tripGroupApi = retrofit.create(TripGroupApi::class.java)
+                val postApi = retrofit.create(PostApi::class.java)
+                val userApi = retrofit.create(UserApi::class.java)
+                val commentApi = retrofit.create(CommentApi::class.java)
+
                 // Repositories
-                val authRepository = AuthRepository(retrofit.create(AuthApi::class.java))
-                val tripGroupRepository = TripGroupRepository(retrofit.create(TripGroupApi::class.java))
-                val postRepository = PostRepository(retrofit.create(PostApi::class.java))
-                val userRepository = UserRepository(retrofit.create(UserApi::class.java))
-                val commentRepository = CommentRepository(retrofit.create(CommentApi::class.java))
+                val authRepository = AuthRepository(authApi)
+                val tripGroupRepository = TripGroupRepository(tripGroupApi)
+                val postRepository = PostRepository(postApi)
+                val userRepository = UserRepository(userApi)
+                val commentRepository = CommentRepository(commentApi)
+                val groupMembersRepository = GroupMembersRepository(tripGroupApi)
 
                 // ViewModels
                 val authViewModel = ViewModelProvider(
@@ -67,6 +76,11 @@ class MainActivity : ComponentActivity() {
                     CommentViewModelFactory(commentRepository)
                 )[CommentViewModel::class.java]
 
+                val membersViewModel = ViewModelProvider(
+                    this,
+                    GroupMembersViewModelFactory(groupMembersRepository)
+                )[GroupMembersViewModel::class.java]
+
                 // Avvio navigazione
                 NavGraph(
                     navController = navController,
@@ -75,6 +89,7 @@ class MainActivity : ComponentActivity() {
                     postViewModel = postViewModel,
                     userViewModel = userViewModel,
                     commentViewModel = commentViewModel,
+                    membersViewModel = membersViewModel,
                     tokenManager = tokenManager
                 )
             }

@@ -12,6 +12,7 @@ import com.triptales.app.ui.auth.RegisterScreen
 import com.triptales.app.ui.auth.SplashScreen
 import com.triptales.app.ui.group.CreateGroupScreen
 import com.triptales.app.ui.group.GroupActionScreen
+import com.triptales.app.ui.group.GroupMembersScreen
 import com.triptales.app.ui.group.GroupScreen
 import com.triptales.app.ui.group.JoinGroupByCodeScreen
 import com.triptales.app.ui.group.JoinGroupScreen
@@ -23,6 +24,7 @@ import com.triptales.app.ui.theme.FrontendtriptalesTheme
 import com.triptales.app.viewmodel.AuthState
 import com.triptales.app.viewmodel.AuthViewModel
 import com.triptales.app.viewmodel.CommentViewModel
+import com.triptales.app.viewmodel.GroupMembersViewModel
 import com.triptales.app.viewmodel.GroupViewModel
 import com.triptales.app.viewmodel.PostViewModel
 import com.triptales.app.viewmodel.UserViewModel
@@ -35,6 +37,7 @@ fun NavGraph(
     postViewModel: PostViewModel,
     userViewModel: UserViewModel,
     commentViewModel: CommentViewModel,
+    membersViewModel: GroupMembersViewModel,
     tokenManager: TokenManager
 ){
     FrontendtriptalesTheme {
@@ -108,6 +111,15 @@ fun NavGraph(
                     groupId = groupId,
                     groupViewModel = groupViewModel,
                     postViewModel = postViewModel,
+                    navController = navController
+                )
+            }
+            composable("group/{groupId}/members") { backStackEntry ->
+                val groupId = backStackEntry.arguments?.getString("groupId")?.toIntOrNull() ?: return@composable
+                GroupMembersScreen(
+                    groupId = groupId,
+                    groupViewModel = groupViewModel,
+                    membersViewModel = membersViewModel,
                     navController = navController
                 )
             }

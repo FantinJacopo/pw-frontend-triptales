@@ -1,13 +1,14 @@
 package com.triptales.app.data.group
 
-import okhttp3.MultipartBody
-import okhttp3.RequestBody
 import retrofit2.Response
 import retrofit2.http.Body
 import retrofit2.http.GET
 import retrofit2.http.Multipart
 import retrofit2.http.POST
 import retrofit2.http.Part
+import retrofit2.http.Path
+import okhttp3.MultipartBody
+import okhttp3.RequestBody
 
 interface TripGroupApi {
     @GET("groups/")
@@ -27,4 +28,8 @@ interface TripGroupApi {
 
     @GET("groups/my_groups/")
     suspend fun getUserGroups(): Response<List<TripGroup>>
+
+    // Nuovo endpoint per ottenere i membri di un gruppo
+    @GET("groups/{group_id}/members/")
+    suspend fun getGroupMembers(@Path("group_id") groupId: Int): Response<List<GroupMember>>
 }
