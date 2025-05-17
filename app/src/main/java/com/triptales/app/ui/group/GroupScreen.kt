@@ -19,27 +19,20 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Code
 import androidx.compose.material.icons.filled.Group
-import androidx.compose.material.icons.filled.LocationOn
 import androidx.compose.material.icons.filled.Person
-import androidx.compose.material.icons.filled.PhotoCamera
 import androidx.compose.material.icons.filled.QrCode
 import androidx.compose.material3.AssistChip
 import androidx.compose.material3.AssistChipDefaults
-import androidx.compose.material3.BottomAppBar
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
@@ -60,6 +53,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import coil.compose.rememberAsyncImagePainter
+import com.triptales.app.ui.components.GroupNavigationBar
 import com.triptales.app.ui.components.PostCard
 import com.triptales.app.ui.qrcode.QRCodeActivity
 import com.triptales.app.ui.theme.FrontendtriptalesTheme
@@ -122,71 +116,18 @@ fun GroupScreen(
         Scaffold(
             topBar = {
                 TopAppBar(
-                    title = { Text(group?.group_name ?: "Gruppo") },
-                    navigationIcon = {
-                        IconButton(onClick = { navController.popBackStack() }) {
-                            Icon(
-                                imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                                contentDescription = "Indietro"
-                            )
-                        }
-                    }
+                    title = { Text(group?.group_name ?: "Gruppo") }
                 )
             },
             bottomBar = {
-                BottomAppBar(
-                    modifier = Modifier.fillMaxWidth()
-                ) {
-                    // Utilizziamo una Row con peso uguale per distribuire uniformemente lo spazio
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceEvenly,
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        // Icona Posizioni (a sinistra)
-                        IconButton(
-                            onClick = {
-                                Toast.makeText(context, "Funzionalità di mappa in arrivo...", Toast.LENGTH_SHORT).show()
-                            },
-                            modifier = Modifier.weight(1f)
-                        ) {
-                            Icon(
-                                imageVector = Icons.Default.LocationOn,
-                                contentDescription = "Posizioni",
-                                tint = MaterialTheme.colorScheme.onSurfaceVariant
-                            )
-                        }
-
-                        // FAB per la creazione di post (al centro)
-                        FloatingActionButton(
-                            onClick = {
-                                navController.navigate("createPost/$groupId")
-                            },
-                            containerColor = MaterialTheme.colorScheme.primary,
-                            contentColor = MaterialTheme.colorScheme.onPrimary,
-                            modifier = Modifier.weight(1f)
-                        ) {
-                            Icon(
-                                imageVector = Icons.Default.PhotoCamera,
-                                contentDescription = "Crea post"
-                            )
-                        }
-
-                        // Icona Membri (a destra)
-                        IconButton(
-                            onClick = {
-                                navController.navigate("group/$groupId/members")
-                            },
-                            modifier = Modifier.weight(1f)
-                        ) {
-                            Icon(
-                                imageVector = Icons.Default.Group,
-                                contentDescription = "Membri",
-                                tint = MaterialTheme.colorScheme.onSurfaceVariant
-                            )
-                        }
+                GroupNavigationBar(
+                    groupId = groupId,
+                    navController = navController,
+                    currentRoute = "group/$groupId",
+                    onLocationClick = {
+                        Toast.makeText(context, "Funzionalità di mappa in arrivo...", Toast.LENGTH_SHORT).show()
                     }
-                }
+                )
             }
         ) { paddingValues ->
             if (groupState is GroupState.Loading || group == null) {

@@ -4,6 +4,7 @@ data class Post(
     val id: Int,
     val user_id: Int,
     val user_name: String? = null,
+    val user_profile_image: String? = null,  // Aggiungiamo questo campo per l'immagine profilo dell'utente
     val trip_group: Int,
     val image_url: String,
     val smart_caption: String,

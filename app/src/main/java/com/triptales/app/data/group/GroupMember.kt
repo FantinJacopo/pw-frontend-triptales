@@ -7,6 +7,5 @@ data class GroupMember(
     val user_email: String,
     val user_profile_image: String?,
     val group: Int,
-    val joined_at: String,
-    val is_creator: Boolean = false
+    val joined_at: String
 )

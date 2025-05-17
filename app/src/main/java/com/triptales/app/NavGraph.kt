@@ -12,6 +12,7 @@ import com.triptales.app.ui.auth.RegisterScreen
 import com.triptales.app.ui.auth.SplashScreen
 import com.triptales.app.ui.group.CreateGroupScreen
 import com.triptales.app.ui.group.GroupActionScreen
+import com.triptales.app.ui.group.GroupMapScreen
 import com.triptales.app.ui.group.GroupMembersScreen
 import com.triptales.app.ui.group.GroupScreen
 import com.triptales.app.ui.group.JoinGroupByCodeScreen
@@ -120,6 +121,14 @@ fun NavGraph(
                     groupId = groupId,
                     groupViewModel = groupViewModel,
                     membersViewModel = membersViewModel,
+                    navController = navController
+                )
+            }
+            composable("group/{groupId}/map") { backStackEntry ->
+                val groupId = backStackEntry.arguments?.getString("groupId")?.toIntOrNull() ?: return@composable
+                GroupMapScreen(
+                    groupId = groupId,
+                    groupViewModel = groupViewModel,
                     navController = navController
                 )
             }

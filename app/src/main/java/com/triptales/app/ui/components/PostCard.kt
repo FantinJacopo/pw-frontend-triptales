@@ -45,9 +45,9 @@ fun PostCard(
             ) {
                 // Avatar utente usando ProfileImage
                 ProfileImage(
-                    profileImage = null, // Post non ha image utente, puoi estenderlo se necessario
+                    profileImage = post.user_profile_image,
                     size = 40,
-                    contentDescription = "Profilo utente"
+                    contentDescription = "Profilo di ${post.user_name ?: "Utente"}"
                 )
 
                 Spacer(modifier = Modifier.width(12.dp))
