@@ -19,6 +19,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Code
 import androidx.compose.material.icons.filled.Group
 import androidx.compose.material.icons.filled.Person
@@ -31,6 +32,7 @@ import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -125,9 +127,24 @@ fun GroupScreen(
                     navController = navController,
                     currentRoute = "group/$groupId",
                     onLocationClick = {
-                        Toast.makeText(context, "Funzionalità di mappa in arrivo...", Toast.LENGTH_SHORT).show()
+                        navController.navigate("group/$groupId/map")
                     }
                 )
+            },
+            floatingActionButton = {
+                // FAB visibile solo nella schermata principale del gruppo
+                FloatingActionButton(
+                    onClick = {
+                        navController.navigate("createPost/$groupId")
+                    },
+                    containerColor = MaterialTheme.colorScheme.primary,
+                    contentColor = MaterialTheme.colorScheme.onPrimary
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Add,
+                        contentDescription = "Aggiungi post"
+                    )
+                }
             }
         ) { paddingValues ->
             if (groupState is GroupState.Loading || group == null) {
