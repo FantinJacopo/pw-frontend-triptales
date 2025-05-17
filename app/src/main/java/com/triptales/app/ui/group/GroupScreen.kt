@@ -62,6 +62,7 @@ import com.triptales.app.ui.qrcode.QRCodeActivity
 import com.triptales.app.ui.theme.FrontendtriptalesTheme
 import com.triptales.app.viewmodel.GroupState
 import com.triptales.app.viewmodel.GroupViewModel
+import com.triptales.app.viewmodel.LikeState
 import com.triptales.app.viewmodel.PostState
 import com.triptales.app.viewmodel.PostViewModel
 import kotlinx.coroutines.launch
@@ -94,7 +95,20 @@ fun GroupScreen(
         LaunchedEffect(groupId) {
             groupViewModel.fetchGroups()
             postViewModel.fetchPosts(groupId)
+
+            // Carica i like dell'utente (verrà fatto nel fetchPosts)
+            // postViewModel.fetchUserLikes()
         }
+
+        // LaunchedEffect per monitorare lo stato dei like
+        LaunchedEffect(postViewModel.likeState.collectAsState().value) {
+            val likeState = postViewModel.likeState.value
+            if (likeState is LikeState.LikeActionSuccess) {
+                // Aggiorna il conteggio dei like per il post specifico
+                postViewModel.fetchPostLikes(likeState.postId)
+            }
+        }
+
 
         // Ricarica i post quando si torna dalla CreatePostScreen o quando si ricevono aggiornamenti
         LaunchedEffect(navController.currentBackStackEntry, shouldRefreshPosts) {
@@ -390,14 +404,22 @@ fun GroupScreen(
                                 }
                             } else {
                                 items(posts) { post ->
+                                    val isLiked = postViewModel.isPostLiked(post.id)
+                                    val likeCount = postViewModel.getLikesCount(post.id)
+
                                     PostCard(
                                         post = post,
                                         modifier = Modifier.padding(horizontal = 16.dp),
+                                        isLiked = isLiked,
+                                        likesCount = likeCount,
                                         onUserClick = { userId ->
                                             navController.navigate("userProfile/$userId")
                                         },
                                         onCommentClick = {
                                             navController.navigate("post/${post.id}/comments")
+                                        },
+                                        onLikeClick = {
+                                            postViewModel.toggleLike(post.id)
                                         },
                                         onLocationClick = if (post.latitude != null && post.longitude != null) {
                                             {
