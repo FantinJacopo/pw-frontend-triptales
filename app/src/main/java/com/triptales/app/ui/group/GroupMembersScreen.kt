@@ -199,7 +199,10 @@ fun GroupMembersScreen(
                                         colors = CardDefaults.cardColors(
                                             containerColor = MaterialTheme.colorScheme.primaryContainer
                                         ),
-                                        elevation = CardDefaults.cardElevation(4.dp)
+                                        elevation = CardDefaults.cardElevation(4.dp),
+                                        onClick = {
+                                            navController.navigate("userProfile/${creatorMember.user}")
+                                        }
                                     ) {
                                         Row(
                                             modifier = Modifier
@@ -213,7 +216,8 @@ fun GroupMembersScreen(
                                                 size = 64,
                                                 contentDescription = "Immagine profilo di ${creatorMember.user_name}",
                                                 borderWidth = 2,
-                                                borderColor = MaterialTheme.colorScheme.primary
+                                                borderColor = MaterialTheme.colorScheme.primary,
+                                                onProfileClick = { navController.navigate("userProfile/${creatorMember.user}") }
                                             )
 
                                             Spacer(modifier = Modifier.width(16.dp))
@@ -299,7 +303,12 @@ fun GroupMembersScreen(
 
                             // Altri membri
                             items(otherMembers) { member ->
-                                MemberItem(member = member)
+                                MemberItem(
+                                    member = member,
+                                    onUserClick = { userId ->
+                                        navController.navigate("userProfile/$userId")
+                                    }
+                                )
                             }
 
                             // Spazio extra in fondo

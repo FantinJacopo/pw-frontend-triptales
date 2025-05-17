@@ -1,5 +1,6 @@
 package com.triptales.app.ui.components
 
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -25,7 +26,8 @@ import java.util.Locale
 @Composable
 fun MemberItem(
     member: GroupMember,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    onUserClick: (Int) -> Unit = {}
 ) {
     Card(
         modifier = modifier.fillMaxWidth(),
@@ -38,11 +40,12 @@ fun MemberItem(
                 .padding(12.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            // Avatar dell'utente
+            // Avatar dell'utente (cliccabile)
             ProfileImage(
                 profileImage = member.user_profile_image,
                 size = 48,
-                contentDescription = "Immagine profilo di ${member.user_name}"
+                contentDescription = "Immagine profilo di ${member.user_name}",
+                onProfileClick = { onUserClick(member.user) }
             )
 
             Spacer(modifier = Modifier.width(12.dp))
@@ -56,7 +59,8 @@ fun MemberItem(
                     style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.Bold,
                     maxLines = 1,
-                    overflow = TextOverflow.Ellipsis
+                    overflow = TextOverflow.Ellipsis,
+                    modifier = Modifier.clickable { onUserClick(member.user) }
                 )
 
                 // Email utente

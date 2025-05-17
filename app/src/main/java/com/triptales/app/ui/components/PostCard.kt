@@ -1,5 +1,6 @@
 package com.triptales.app.ui.components
 
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -8,6 +9,7 @@ import androidx.compose.material.icons.filled.FavoriteBorder
 import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.LocationOn
 import androidx.compose.material3.*
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -28,7 +30,8 @@ fun PostCard(
     likesCount: Int = 0,
     onLikeClick: () -> Unit = {},
     onCommentClick: () -> Unit = {},
-    onLocationClick: (() -> Unit)? = null
+    onLocationClick: (() -> Unit)? = null,
+    onUserClick: (Int) -> Unit = {}
 ) {
     Card(
         modifier = modifier.fillMaxWidth(),
@@ -43,11 +46,12 @@ fun PostCard(
                 verticalAlignment = Alignment.CenterVertically,
                 modifier = Modifier.fillMaxWidth()
             ) {
-                // Avatar utente usando ProfileImage
+                // Avatar utente usando ProfileImage (cliccabile)
                 ProfileImage(
                     profileImage = post.user_profile_image,
                     size = 40,
-                    contentDescription = "Profilo di ${post.user_name ?: "Utente"}"
+                    contentDescription = "Profilo di ${post.user_name ?: "Utente"}",
+                    onProfileClick = { post.user_id?.let { onUserClick(it) } }
                 )
 
                 Spacer(modifier = Modifier.width(12.dp))
@@ -56,7 +60,8 @@ fun PostCard(
                     Text(
                         text = post.user_name?.ifBlank { "Utente ${post.user_id}" } ?: "Utente ${post.user_id}",
                         style = MaterialTheme.typography.titleSmall,
-                        fontWeight = FontWeight.Bold
+                        fontWeight = FontWeight.Bold,
+                        modifier = Modifier.clickable { post.user_id?.let { onUserClick(it) } }
                     )
                     Text(
                         text = formatDate(post.created_at),
@@ -161,9 +166,9 @@ fun PostCard(
                 Spacer(modifier = Modifier.height(8.dp))
             }
 
-            Divider(
-                color = MaterialTheme.colorScheme.outline.copy(alpha = 0.3f),
-                thickness = 0.5.dp
+            HorizontalDivider(
+                modifier = Modifier.fillMaxWidth(), thickness = 0.5.dp,
+                color = MaterialTheme.colorScheme.outline.copy(alpha = 0.3f)
             )
 
             Spacer(modifier = Modifier.height(8.dp))
@@ -237,7 +242,7 @@ private fun formatDate(dateString: String): String {
                 val inputFormat = SimpleDateFormat(format, Locale.getDefault())
                 date = inputFormat.parse(dateString)
                 if (date != null) break
-            } catch (e: Exception) {
+            } catch (_: Exception) {
                 // Continua con il prossimo formato
             }
         }
@@ -248,7 +253,7 @@ private fun formatDate(dateString: String): String {
         } else {
             dateString
         }
-    } catch (e: Exception) {
+    } catch (_: Exception) {
         dateString
     }
 }

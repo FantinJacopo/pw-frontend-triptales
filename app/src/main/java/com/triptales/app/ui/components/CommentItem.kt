@@ -1,5 +1,6 @@
 package com.triptales.app.ui.components
 
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
@@ -16,7 +17,8 @@ import java.util.*
 @Composable
 fun CommentItem(
     comment: Comment,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    onUserClick: (Int) -> Unit = {}
 ) {
     Card(
         modifier = modifier.fillMaxWidth(),
@@ -29,11 +31,12 @@ fun CommentItem(
             modifier = Modifier.padding(12.dp),
             horizontalArrangement = Arrangement.spacedBy(12.dp)
         ) {
-            // Avatar utente
+            // Avatar utente (cliccabile)
             ProfileImage(
                 profileImage = comment.user_profile_image,
                 size = 36,
-                contentDescription = "Profilo di ${comment.user_name}"
+                contentDescription = "Profilo di ${comment.user_name}",
+                onProfileClick = { onUserClick(comment.user_id) }
             )
 
             // Content
@@ -52,7 +55,9 @@ fun CommentItem(
                         color = MaterialTheme.colorScheme.primary,
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis,
-                        modifier = Modifier.weight(1f)
+                        modifier = Modifier
+                            .weight(1f)
+                            .clickable { onUserClick(comment.user_id) }
                     )
                     Text(
                         text = formatCommentDate(comment.created_at),
@@ -90,7 +95,7 @@ private fun formatCommentDate(dateString: String): String {
                 val inputFormat = SimpleDateFormat(format, Locale.getDefault())
                 date = inputFormat.parse(dateString)
                 if (date != null) break
-            } catch (e: Exception) {
+            } catch (_: Exception) {
                 // Continua con il prossimo formato
             }
         }
@@ -113,7 +118,7 @@ private fun formatCommentDate(dateString: String): String {
         } else {
             dateString
         }
-    } catch (e: Exception) {
+    } catch (_: Exception) {
         dateString
     }
 }

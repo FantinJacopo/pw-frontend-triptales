@@ -21,6 +21,7 @@ import com.triptales.app.ui.home.HomeScreen
 import com.triptales.app.ui.post.CommentsScreen
 import com.triptales.app.ui.post.CreatePostScreen
 import com.triptales.app.ui.profile.ProfileScreen
+import com.triptales.app.ui.profile.UserProfileScreen
 import com.triptales.app.ui.theme.FrontendtriptalesTheme
 import com.triptales.app.viewmodel.AuthState
 import com.triptales.app.viewmodel.AuthViewModel
@@ -136,6 +137,15 @@ fun NavGraph(
                 ProfileScreen(
                     viewModel = userViewModel,
                     authViewModel = authViewModel,
+                    navController = navController
+                )
+            }
+            // Nuova rotta per visualizzare il profilo di un altro utente
+            composable("userProfile/{userId}") { backStackEntry ->
+                val userId = backStackEntry.arguments?.getString("userId")?.toIntOrNull() ?: return@composable
+                UserProfileScreen(
+                    userId = userId,
+                    userViewModel = userViewModel,
                     navController = navController
                 )
             }

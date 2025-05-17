@@ -239,7 +239,12 @@ fun CommentsScreen(
                                 verticalArrangement = Arrangement.spacedBy(12.dp)
                             ) {
                                 items(comments) { comment ->
-                                    CommentItem(comment = comment)
+                                    CommentItem(
+                                        comment = comment,
+                                        onUserClick = { userId ->
+                                            navController.navigate("userProfile/$userId")
+                                        }
+                                    )
                                 }
                                 // Aggiunge spazio extra alla fine per evitare che l'ultimo commento
                                 // sia coperto dalla barra inferiore quando si apre la tastiera

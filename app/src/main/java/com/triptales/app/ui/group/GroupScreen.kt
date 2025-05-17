@@ -4,6 +4,7 @@ import android.annotation.SuppressLint
 import android.content.Intent
 import android.widget.Toast
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -191,7 +192,7 @@ fun GroupScreen(
                                     fontWeight = FontWeight.Bold
                                 )
 
-                                // Info creator
+                                // Info creator (ora cliccabile)
                                 group.creator_name?.let { creatorName ->
                                     Row(
                                         verticalAlignment = Alignment.CenterVertically,
@@ -207,7 +208,12 @@ fun GroupScreen(
                                         Text(
                                             text = "Creato da $creatorName",
                                             style = MaterialTheme.typography.bodySmall,
-                                            color = MaterialTheme.colorScheme.primary
+                                            color = MaterialTheme.colorScheme.primary,
+                                            modifier = Modifier.clickable {
+                                                group.creator?.let { creatorId ->
+                                                    navController.navigate("userProfile/$creatorId")
+                                                }
+                                            }
                                         )
                                         if (group.is_creator) {
                                             Spacer(modifier = Modifier.width(8.dp))
@@ -223,10 +229,14 @@ fun GroupScreen(
                                     }
                                 }
 
-                                // Numero membri
+                                // Numero membri (cliccabile per navigare alla lista membri)
                                 Row(
                                     verticalAlignment = Alignment.CenterVertically,
-                                    modifier = Modifier.padding(top = 4.dp)
+                                    modifier = Modifier
+                                        .padding(top = 4.dp)
+                                        .clickable {
+                                            navController.navigate("group/$groupId/members")
+                                        }
                                 ) {
                                     Icon(
                                         imageVector = Icons.Default.Group,
@@ -383,6 +393,9 @@ fun GroupScreen(
                                     PostCard(
                                         post = post,
                                         modifier = Modifier.padding(horizontal = 16.dp),
+                                        onUserClick = { userId ->
+                                            navController.navigate("userProfile/$userId")
+                                        },
                                         onCommentClick = {
                                             navController.navigate("post/${post.id}/comments")
                                         },
