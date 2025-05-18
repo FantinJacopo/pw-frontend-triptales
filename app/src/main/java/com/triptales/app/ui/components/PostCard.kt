@@ -47,7 +47,7 @@ fun PostCard(
     onCommentClick: () -> Unit = {},
     onLocationClick: (() -> Unit)? = null,
     onUserClick: (Int) -> Unit = {},
-    userLocation: LatLng? = null, // Posizione dell'utente per calcolare la distanza
+    userLocation: LatLng? = null,
 ) {
     Card(
         modifier = modifier.fillMaxWidth(),

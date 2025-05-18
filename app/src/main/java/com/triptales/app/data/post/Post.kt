@@ -15,5 +15,5 @@ data class Post(
     val ocr_text: String = "",
     val object_tags: List<String> = emptyList(),
     val comments_count: Int? = 0,
-    val likes_count: Int? = 0  // Aggiungiamo questo campo
+    val likes_count: Int? = 0
 )
