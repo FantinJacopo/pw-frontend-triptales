@@ -2,7 +2,6 @@ package com.triptales.app.ui.post
 
 import android.Manifest
 import android.annotation.SuppressLint
-import android.content.pm.PackageManager
 import android.net.Uri
 import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
@@ -24,6 +23,7 @@ import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.LocationOn
 import androidx.compose.material.icons.filled.MyLocation
 import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
@@ -31,6 +31,7 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Switch
@@ -50,13 +51,14 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import androidx.core.content.ContextCompat
 import androidx.navigation.NavController
 import coil.compose.rememberAsyncImagePainter
 import com.google.android.gms.maps.model.LatLng
 import com.triptales.app.data.location.LocationManager
 import com.triptales.app.data.utils.ImageUtils.uriToFile
+import com.triptales.app.ui.components.GpsDisabledDialog
 import com.triptales.app.ui.components.ImagePickerWithCrop
+import com.triptales.app.ui.utils.PermissionUtils
 import com.triptales.app.viewmodel.PostState
 import com.triptales.app.viewmodel.PostViewModel
 import kotlinx.coroutines.launch
@@ -80,52 +82,19 @@ fun CreatePostScreen(
     var locationEnabled by remember { mutableStateOf(false) }
     var isLoadingLocation by remember { mutableStateOf(false) }
     var locationPermissionGranted by remember {
-        mutableStateOf(
-            ContextCompat.checkSelfPermission(
-                context,
-                Manifest.permission.ACCESS_FINE_LOCATION
-            ) == PackageManager.PERMISSION_GRANTED
-        )
+        mutableStateOf(locationManager.hasLocationPermission())
     }
-
-    val locationManager = locationManager
-
-    // Permission launcher
-    val locationPermissionLauncher = rememberLauncherForActivityResult(
-        ActivityResultContracts.RequestMultiplePermissions()
-    ) { permissions ->
-        locationPermissionGranted = permissions[Manifest.permission.ACCESS_FINE_LOCATION] == true ||
-                permissions[Manifest.permission.ACCESS_COARSE_LOCATION] == true
-
-        if (locationPermissionGranted) {
-            Toast.makeText(context, "Permesso posizione concesso", Toast.LENGTH_SHORT).show()
-        }
-    }
-
-    // Gestisce la navigazione quando il post viene creato con successo
-    LaunchedEffect(postState) {
-        when (postState) {
-            is PostState.PostCreated -> {
-                Toast.makeText(context, "Post creato con successo!", Toast.LENGTH_SHORT).show()
-                postViewModel.resetState()
-                navController.popBackStack()
-            }
-            is PostState.Error -> {
-                Toast.makeText(context, (postState as PostState.Error).message, Toast.LENGTH_LONG).show()
-            }
-            else -> {}
-        }
-    }
+    var showGpsDialog by remember { mutableStateOf(false) }
 
     // Funzione per ottenere la posizione corrente
-    fun getCurrentLocation() {
+    fun requestLocation() {
         if (!locationPermissionGranted) {
-            locationPermissionLauncher.launch(
-                arrayOf(
-                    Manifest.permission.ACCESS_FINE_LOCATION,
-                    Manifest.permission.ACCESS_COARSE_LOCATION
-                )
-            )
+            // Non facciamo nulla qui, il launcher gestirà la richiesta
+            return
+        }
+
+        if (!PermissionUtils.isGpsEnabled(context)) {
+            showGpsDialog = true
             return
         }
 
@@ -138,25 +107,60 @@ fun CreatePostScreen(
                     locationEnabled = true
                     Toast.makeText(
                         context,
-                        "Posizione ottenuta: ${String.format("%.6f", location.latitude)}, ${String.format("%.6f", location.longitude)}",
+                        "✅ Posizione ottenuta con successo!",
                         Toast.LENGTH_SHORT
                     ).show()
                 } else {
                     Toast.makeText(
                         context,
-                        "Impossibile ottenere la posizione. Controlla che il GPS sia attivo.",
+                        "❌ Impossibile ottenere la posizione. Verifica che il GPS sia attivo e riprova.",
                         Toast.LENGTH_LONG
                     ).show()
+                    locationEnabled = false
                 }
             } catch (e: Exception) {
                 Toast.makeText(
                     context,
-                    "Errore nell'ottenere la posizione: ${e.message}",
+                    "Errore nell'ottenere la posizione: ${e.localizedMessage}",
                     Toast.LENGTH_LONG
                 ).show()
+                locationEnabled = false
             } finally {
                 isLoadingLocation = false
             }
+        }
+    }
+
+    // Permission launcher
+    val locationPermissionLauncher = rememberLauncherForActivityResult(
+        ActivityResultContracts.RequestMultiplePermissions()
+    ) { permissions ->
+        val granted = permissions[Manifest.permission.ACCESS_FINE_LOCATION] == true ||
+                permissions[Manifest.permission.ACCESS_COARSE_LOCATION] == true
+
+        locationPermissionGranted = granted
+
+        if (granted) {
+            Toast.makeText(context, "Permesso posizione concesso! 📍", Toast.LENGTH_SHORT).show()
+            // Ottieni automaticamente la posizione dopo aver concesso il permesso
+            requestLocation()
+        } else {
+            Toast.makeText(context, "Permesso posizione negato. Non sarà possibile aggiungere la posizione al post.", Toast.LENGTH_LONG).show()
+        }
+    }
+
+    // Gestisce la navigazione quando il post viene creato con successo
+    LaunchedEffect(postState) {
+        when (postState) {
+            is PostState.PostCreated -> {
+                Toast.makeText(context, "Post creato con successo! 🎉", Toast.LENGTH_SHORT).show()
+                postViewModel.resetState()
+                navController.popBackStack()
+            }
+            is PostState.Error -> {
+                Toast.makeText(context, (postState as PostState.Error).message, Toast.LENGTH_LONG).show()
+            }
+            else -> {}
         }
     }
 
@@ -190,19 +194,28 @@ fun CreatePostScreen(
                             } else {
                                 Toast.makeText(
                                     context,
-                                    "Aggiungi un'immagine e una didascalia",
+                                    "⚠️ Aggiungi un'immagine e una didascalia per pubblicare",
                                     Toast.LENGTH_SHORT
                                 ).show()
                             }
                         },
-                        enabled = postState !is PostState.Loading,
-                        modifier = Modifier.padding(horizontal = 8.dp)
+                        enabled = postState !is PostState.Loading && imageUri != null && caption.isNotBlank(),
+                        modifier = Modifier.padding(horizontal = 8.dp),
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = if (imageUri != null && caption.isNotBlank())
+                                MaterialTheme.colorScheme.primary
+                            else
+                                MaterialTheme.colorScheme.surfaceVariant
+                        )
                     ) {
                         if (postState is PostState.Loading) {
                             CircularProgressIndicator(
                                 modifier = Modifier.size(16.dp),
-                                strokeWidth = 2.dp
+                                strokeWidth = 2.dp,
+                                color = MaterialTheme.colorScheme.onPrimary
                             )
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Text("Pubblicando...")
                         } else {
                             Text("Pubblica")
                         }
@@ -228,7 +241,7 @@ fun CreatePostScreen(
                     modifier = Modifier.padding(16.dp)
                 ) {
                     Text(
-                        text = "Aggiungi una foto",
+                        text = "📷 Aggiungi una foto",
                         style = MaterialTheme.typography.titleMedium,
                         fontWeight = FontWeight.Bold
                     )
@@ -252,6 +265,15 @@ fun CreatePostScreen(
                     ImagePickerWithCrop { uri ->
                         imageUri = uri
                     }
+
+                    if (imageUri == null) {
+                        Text(
+                            text = "💡 Seleziona un'immagine per iniziare",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            modifier = Modifier.padding(top = 8.dp)
+                        )
+                    }
                 }
             }
 
@@ -265,7 +287,7 @@ fun CreatePostScreen(
                     modifier = Modifier.padding(16.dp)
                 ) {
                     Text(
-                        text = "Didascalia",
+                        text = "✏️ Didascalia",
                         style = MaterialTheme.typography.titleMedium,
                         fontWeight = FontWeight.Bold
                     )
@@ -276,24 +298,29 @@ fun CreatePostScreen(
                         value = caption,
                         onValueChange = { caption = it },
                         label = { Text("Descrivi la tua foto...") },
+                        placeholder = { Text("Es: Una giornata fantastica al museo!") },
                         modifier = Modifier.fillMaxWidth(),
                         maxLines = 5,
                         minLines = 3,
-                        shape = RoundedCornerShape(8.dp)
+                        shape = RoundedCornerShape(8.dp),
+                        supportingText = {
+                            Text("${caption.length}/500 caratteri")
+                        }
                     )
                 }
             }
 
-            // Sezione geolocalizzazione
+            // Sezione geolocalizzazione migliorata
             Card(
                 modifier = Modifier.fillMaxWidth(),
                 elevation = CardDefaults.cardElevation(4.dp),
                 shape = RoundedCornerShape(12.dp),
                 colors = CardDefaults.cardColors(
-                    containerColor = if (locationEnabled && currentLocation != null)
-                        MaterialTheme.colorScheme.primaryContainer
-                    else
-                        MaterialTheme.colorScheme.surfaceVariant
+                    containerColor = when {
+                        locationEnabled && currentLocation != null -> MaterialTheme.colorScheme.primaryContainer
+                        !locationPermissionGranted -> MaterialTheme.colorScheme.errorContainer
+                        else -> MaterialTheme.colorScheme.surfaceVariant
+                    }
                 )
             ) {
                 Column(
@@ -306,68 +333,125 @@ fun CreatePostScreen(
                         Icon(
                             imageVector = Icons.Default.LocationOn,
                             contentDescription = "Posizione",
-                            tint = if (locationEnabled && currentLocation != null)
-                                MaterialTheme.colorScheme.onPrimaryContainer
-                            else
-                                MaterialTheme.colorScheme.primary
+                            tint = when {
+                                locationEnabled && currentLocation != null -> MaterialTheme.colorScheme.onPrimaryContainer
+                                !locationPermissionGranted -> MaterialTheme.colorScheme.onErrorContainer
+                                else -> MaterialTheme.colorScheme.primary
+                            }
                         )
                         Spacer(modifier = Modifier.width(12.dp))
                         Column(modifier = Modifier.weight(1f)) {
                             Text(
-                                text = "Aggiungi posizione",
+                                text = when {
+                                    locationEnabled && currentLocation != null -> "🎯 Posizione aggiunta"
+                                    !locationPermissionGranted -> "⚠️ Permesso richiesto"
+                                    else -> "📍 Aggiungi posizione"
+                                },
                                 style = MaterialTheme.typography.titleSmall,
                                 fontWeight = FontWeight.Bold,
-                                color = if (locationEnabled && currentLocation != null)
-                                    MaterialTheme.colorScheme.onPrimaryContainer
-                                else
-                                    MaterialTheme.colorScheme.onSurface
+                                color = when {
+                                    locationEnabled && currentLocation != null -> MaterialTheme.colorScheme.onPrimaryContainer
+                                    !locationPermissionGranted -> MaterialTheme.colorScheme.onErrorContainer
+                                    else -> MaterialTheme.colorScheme.onSurface
+                                }
                             )
                             Text(
-                                text = if (locationEnabled && currentLocation != null) {
-                                    "Lat: ${String.format("%.6f", currentLocation!!.latitude)}\n" +
-                                            "Lng: ${String.format("%.6f", currentLocation!!.longitude)}"
-                                } else if (locationPermissionGranted) {
-                                    "Tocca il pulsante per ottenere la posizione"
-                                } else {
-                                    "Permesso di localizzazione richiesto"
+                                text = when {
+                                    locationEnabled && currentLocation != null -> {
+                                        "Lat: ${String.format("%.6f", currentLocation!!.latitude)}\n" +
+                                                "Lng: ${String.format("%.6f", currentLocation!!.longitude)}"
+                                    }
+                                    !locationPermissionGranted -> "Concedi il permesso per aggiungere la posizione"
+                                    isLoadingLocation -> "Ottenendo la posizione..."
+                                    else -> "I tuoi amici potranno vedere dove hai scattato questa foto"
                                 },
                                 style = MaterialTheme.typography.bodySmall,
-                                color = if (locationEnabled && currentLocation != null)
-                                    MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.8f)
-                                else
-                                    MaterialTheme.colorScheme.onSurfaceVariant
+                                color = when {
+                                    locationEnabled && currentLocation != null -> MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.8f)
+                                    !locationPermissionGranted -> MaterialTheme.colorScheme.onErrorContainer.copy(alpha = 0.8f)
+                                    else -> MaterialTheme.colorScheme.onSurfaceVariant
+                                }
                             )
                         }
+                    }
 
-                        if (isLoadingLocation) {
-                            CircularProgressIndicator(
-                                modifier = Modifier.size(24.dp),
-                                strokeWidth = 2.dp
-                            )
-                        } else {
-                            IconButton(
-                                onClick = { getCurrentLocation() }
+                    Spacer(modifier = Modifier.height(12.dp))
+
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(8.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        if (!locationPermissionGranted) {
+                            OutlinedButton(
+                                onClick = {
+                                    locationPermissionLauncher.launch(
+                                        arrayOf(
+                                            Manifest.permission.ACCESS_FINE_LOCATION,
+                                            Manifest.permission.ACCESS_COARSE_LOCATION
+                                        )
+                                    )
+                                },
+                                modifier = Modifier.weight(1f)
                             ) {
+                                Text("Concedi permesso")
+                            }
+                        } else {
+                            OutlinedButton(
+                                onClick = {
+                                    if (!locationPermissionGranted) {
+                                        locationPermissionLauncher.launch(
+                                            arrayOf(
+                                                Manifest.permission.ACCESS_FINE_LOCATION,
+                                                Manifest.permission.ACCESS_COARSE_LOCATION
+                                            )
+                                        )
+                                    } else {
+                                        requestLocation()
+                                    }
+                                },
+                                enabled = !isLoadingLocation,
+                                modifier = Modifier.weight(1f)
+                            ) {
+                                if (isLoadingLocation) {
+                                    CircularProgressIndicator(
+                                        modifier = Modifier.size(16.dp),
+                                        strokeWidth = 2.dp
+                                    )
+                                    Spacer(modifier = Modifier.width(8.dp))
+                                }
                                 Icon(
                                     imageVector = Icons.Default.MyLocation,
                                     contentDescription = "Ottieni posizione",
-                                    tint = MaterialTheme.colorScheme.primary
+                                    modifier = Modifier.size(16.dp)
                                 )
+                                Spacer(modifier = Modifier.width(4.dp))
+                                Text(if (isLoadingLocation) "..." else "Ottieni posizione")
                             }
-                        }
 
-                        Switch(
-                            checked = locationEnabled && currentLocation != null,
-                            onCheckedChange = { enabled ->
-                                if (enabled) {
-                                    getCurrentLocation()
-                                } else {
-                                    locationEnabled = false
-                                    currentLocation = null
-                                }
-                            },
-                            enabled = !isLoadingLocation
-                        )
+                            Switch(
+                                checked = locationEnabled && currentLocation != null,
+                                onCheckedChange = { enabled ->
+                                    if (enabled && currentLocation == null) {
+                                        if (!locationPermissionGranted) {
+                                            locationPermissionLauncher.launch(
+                                                arrayOf(
+                                                    Manifest.permission.ACCESS_FINE_LOCATION,
+                                                    Manifest.permission.ACCESS_COARSE_LOCATION
+                                                )
+                                            )
+                                        } else {
+                                            requestLocation()
+                                        }
+                                    } else if (!enabled) {
+                                        locationEnabled = false
+                                        currentLocation = null
+                                        Toast.makeText(context, "Posizione rimossa dal post", Toast.LENGTH_SHORT).show()
+                                    }
+                                },
+                                enabled = !isLoadingLocation
+                            )
+                        }
                     }
                 }
             }
@@ -391,10 +475,16 @@ fun CreatePostScreen(
                         color = MaterialTheme.colorScheme.onTertiaryContainer
                     )
                     Text(
-                        text = "OCR, traduzione e riconoscimento oggetti saranno disponibili nelle prossime versioni",
+                        text = "• Riconoscimento testo (OCR)\n• Traduzione automatica\n• Riconoscimento oggetti\n• Didascalie intelligenti",
                         style = MaterialTheme.typography.bodyMedium,
                         color = MaterialTheme.colorScheme.onTertiaryContainer,
                         modifier = Modifier.padding(top = 8.dp)
+                    )
+                    Text(
+                        text = "Saranno disponibili nelle prossime versioni dell'app",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onTertiaryContainer.copy(alpha = 0.7f),
+                        modifier = Modifier.padding(top = 4.dp)
                     )
                 }
             }
@@ -407,14 +497,33 @@ fun CreatePostScreen(
                     ),
                     shape = RoundedCornerShape(12.dp)
                 ) {
-                    Text(
-                        text = (postState as PostState.Error).message,
-                        color = MaterialTheme.colorScheme.onErrorContainer,
-                        modifier = Modifier.padding(16.dp),
-                        style = MaterialTheme.typography.bodyMedium
-                    )
+                    Column(
+                        modifier = Modifier.padding(16.dp)
+                    ) {
+                        Text(
+                            text = "❌ Errore nella pubblicazione",
+                            style = MaterialTheme.typography.titleSmall,
+                            fontWeight = FontWeight.Bold,
+                            color = MaterialTheme.colorScheme.onErrorContainer
+                        )
+                        Text(
+                            text = (postState as PostState.Error).message,
+                            color = MaterialTheme.colorScheme.onErrorContainer,
+                            style = MaterialTheme.typography.bodyMedium,
+                            modifier = Modifier.padding(top = 4.dp)
+                        )
+                    }
                 }
             }
         }
+    }
+
+    // Dialog per GPS disabilitato
+    if (showGpsDialog) {
+        GpsDisabledDialog(showDialog = remember { mutableStateOf(showGpsDialog) }.apply {
+            value = showGpsDialog
+            // Quando il dialog si chiude, aggiorna lo stato
+            if (!value) showGpsDialog = false
+        })
     }
 }

@@ -1,9 +1,11 @@
 package com.triptales.app.ui.utils
 
 import android.Manifest
+import android.app.Activity
 import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
+import android.location.LocationManager
 import android.net.Uri
 import android.provider.Settings
 import androidx.activity.compose.ManagedActivityResultLauncher
@@ -73,6 +75,15 @@ object PermissionUtils {
     }
 
     /**
+     * Checks if GPS is enabled on the device.
+     */
+    fun isGpsEnabled(context: Context): Boolean {
+        val locationManager = context.getSystemService(Context.LOCATION_SERVICE) as LocationManager
+        return locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER) ||
+                locationManager.isProviderEnabled(LocationManager.NETWORK_PROVIDER)
+    }
+
+    /**
      * Requests a specific permission.
      *
      * @param context The context
@@ -130,14 +141,24 @@ object PermissionUtils {
      * Requests location permission.
      *
      * @param context The context
-     * @param permissionLauncher The permission launcher
+     * @param permissionLauncher The permission launcher for multiple permissions
      * @return True if permission is already granted, false if it needs to be requested
      */
     fun requestLocationPermission(
         context: Context,
-        permissionLauncher: ManagedActivityResultLauncher<String, Boolean>
+        permissionLauncher: ManagedActivityResultLauncher<Array<String>, Map<String, Boolean>>
     ): Boolean {
-        return requestPermission(context, Manifest.permission.ACCESS_FINE_LOCATION, permissionLauncher)
+        val permissions = arrayOf(
+            Manifest.permission.ACCESS_FINE_LOCATION,
+            Manifest.permission.ACCESS_COARSE_LOCATION
+        )
+
+        return if (hasLocationPermission(context)) {
+            true
+        } else {
+            permissionLauncher.launch(permissions)
+            false
+        }
     }
 
     /**
@@ -149,7 +170,21 @@ object PermissionUtils {
         val intent = Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS).apply {
             data = Uri.fromParts("package", context.packageName, null)
         }
-        context.startActivity(intent)
+        if (intent.resolveActivity(context.packageManager) != null) {
+            context.startActivity(intent)
+        }
+    }
+
+    /**
+     * Opens location settings where the user can enable GPS.
+     *
+     * @param context The context
+     */
+    fun openLocationSettings(context: Context) {
+        val intent = Intent(Settings.ACTION_LOCATION_SOURCE_SETTINGS)
+        if (intent.resolveActivity(context.packageManager) != null) {
+            context.startActivity(intent)
+        }
     }
 
     /**
@@ -300,6 +335,42 @@ object PermissionUtils {
     }
 
     /**
+     * Dialog to prompt user to enable GPS.
+     */
+    @Composable
+    fun GpsDisabledDialog(
+        showDialog: MutableState<Boolean>
+    ) {
+        val context = LocalContext.current
+        AlertDialog(
+            onDismissRequest = { showDialog.value = false },
+            title = { Text("GPS disabilitato") },
+            text = {
+                Text(
+                    "Per ottenere la tua posizione, è necessario abilitare il GPS nelle impostazioni del dispositivo."
+                )
+            },
+            confirmButton = {
+                Button(
+                    onClick = {
+                        showDialog.value = false
+                        openLocationSettings(context)
+                    }
+                ) {
+                    Text("Abilita GPS")
+                }
+            },
+            dismissButton = {
+                TextButton(
+                    onClick = { showDialog.value = false }
+                ) {
+                    Text("Annulla")
+                }
+            }
+        )
+    }
+
+    /**
      * Check if we should show rationale for a permission.
      *
      * @param context The context
@@ -307,8 +378,10 @@ object PermissionUtils {
      * @return True if rationale should be shown, false otherwise
      */
     private fun shouldShowRationale(context: Context, permission: String): Boolean {
-        // This function is only available in activities, not composables directly
-        // For simplicity, we're returning false
-        return false
+        return if (context is Activity) {
+            context.shouldShowRequestPermissionRationale(permission)
+        } else {
+            false
+        }
     }
 }

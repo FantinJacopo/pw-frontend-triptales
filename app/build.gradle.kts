@@ -38,49 +38,64 @@ android {
     buildFeatures {
         compose = true
     }
+
+    packagingOptions {
+        resources {
+            excludes += "/META-INF/{AL2.0,LGPL2.1}"
+        }
+    }
 }
 
 dependencies {
-
-    // retrofit e gson
-    implementation(libs.retrofit)
-    implementation(libs.retrofit2.converter.gson)
-
-    implementation(libs.androidx.datastore.preferences)
-
-    implementation(libs.androidx.navigation.compose)
-    implementation(libs.material3)
-    implementation(libs.material)
-
-    // position
-    implementation(libs.play.services.maps)
-    implementation(libs.play.services.location)
-    implementation(libs.maps.compose)
-
-    // map utils
-    implementation(libs.android.maps.utils)
-
-    //  icons
-    implementation(libs.androidx.material.icons.extended)
-
-    // coil
-    implementation(libs.coil.kt.coil.compose)
-    implementation(libs.coil.network.okhttp)
-
-    //pull to refresh
-    implementation(libs.androidx.material3.window.size.class1)
-
-    // image cropper
-    implementation("com.vanniktech:android-image-cropper:4.6.0")
-
+    // Core Android dependencies
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.lifecycle.runtime.ktx)
     implementation(libs.androidx.activity.compose)
+
+    // Compose dependencies
     implementation(platform(libs.androidx.compose.bom))
     implementation(libs.androidx.ui)
     implementation(libs.androidx.ui.graphics)
     implementation(libs.androidx.ui.tooling.preview)
     implementation(libs.androidx.material3)
+    implementation(libs.material3)
+    implementation(libs.material)
+
+    // Navigation
+    implementation(libs.androidx.navigation.compose)
+
+    // DataStore
+    implementation(libs.androidx.datastore.preferences)
+
+    // Network dependencies
+    implementation(libs.retrofit)
+    implementation(libs.retrofit2.converter.gson)
+
+    // Maps and Location
+    implementation(libs.play.services.maps)
+    implementation(libs.play.services.location)
+    implementation(libs.maps.compose)
+    implementation(libs.android.maps.utils)
+
+    // Icons
+    implementation(libs.androidx.material.icons.extended)
+
+    // Image loading and cropping
+    implementation(libs.coil.kt.coil.compose)
+    implementation(libs.coil.network.okhttp)
+    implementation("com.vanniktech:android-image-cropper:4.6.0")
+
+    // QR Code scanning
+    implementation("com.google.zxing:core:3.4.1")
+    implementation("com.journeyapps:zxing-android-embedded:4.3.0")
+
+    // AppCompat for activities
+    implementation("androidx.appcompat:appcompat:1.7.0")
+
+    // Window size class
+    implementation(libs.androidx.material3.window.size.class1)
+
+    // Testing dependencies
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
@@ -88,10 +103,4 @@ dependencies {
     androidTestImplementation(libs.androidx.ui.test.junit4)
     debugImplementation(libs.androidx.ui.tooling)
     debugImplementation(libs.androidx.ui.test.manifest)
-    implementation("com.google.zxing:core:3.4.1")
-    implementation("com.journeyapps:zxing-android-embedded:4.3.0")
-
-    implementation ("androidx.appcompat:appcompat:1.7.0-alpha03")
-    implementation ("androidx.core:core-ktx:1.12.0")
-    implementation ("androidx.activity:activity-compose:1.8.0")
 }
