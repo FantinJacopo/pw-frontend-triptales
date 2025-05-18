@@ -18,6 +18,8 @@ interface PostApi {
     suspend fun createPost(
         @Part image: MultipartBody.Part,
         @Part("trip_group") tripGroup: RequestBody,
-        @Part("smart_caption") smartCaption: RequestBody
+        @Part("smart_caption") smartCaption: RequestBody,
+        @Part("latitude") latitude: RequestBody? = null,
+        @Part("longitude") longitude: RequestBody? = null
     ): Response<Post>
 }

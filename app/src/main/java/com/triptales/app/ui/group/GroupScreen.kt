@@ -45,8 +45,10 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalClipboardManager
@@ -56,13 +58,14 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import coil.compose.rememberAsyncImagePainter
+import com.google.android.gms.maps.model.LatLng
+import com.triptales.app.data.location.LocationManager
 import com.triptales.app.ui.components.GroupNavigationBar
 import com.triptales.app.ui.components.PostCard
 import com.triptales.app.ui.qrcode.QRCodeActivity
 import com.triptales.app.ui.theme.FrontendtriptalesTheme
 import com.triptales.app.viewmodel.GroupState
 import com.triptales.app.viewmodel.GroupViewModel
-import com.triptales.app.viewmodel.LikeState
 import com.triptales.app.viewmodel.PostState
 import com.triptales.app.viewmodel.PostViewModel
 import kotlinx.coroutines.launch
@@ -74,7 +77,8 @@ fun GroupScreen(
     groupId: Int,
     groupViewModel: GroupViewModel,
     postViewModel: PostViewModel,
-    navController: NavController
+    navController: NavController,
+    locationManager: LocationManager
 ) {
     FrontendtriptalesTheme {
         val groupState by groupViewModel.groupState.collectAsState()
@@ -83,6 +87,9 @@ fun GroupScreen(
         val clipboardManager = LocalClipboardManager.current
         val lazyListState = rememberLazyListState()
         val coroutineScope = rememberCoroutineScope()
+
+        // State per la posizione dell'utente
+        var userLocation by remember { mutableStateOf<LatLng?>(null) }
 
         // Controlla se ci sono nuovi post da visualizzare
         val shouldRefreshPosts by remember(postState) {
@@ -96,19 +103,11 @@ fun GroupScreen(
             groupViewModel.fetchGroups()
             postViewModel.fetchPosts(groupId)
 
-            // Carica i like dell'utente (verrà fatto nel fetchPosts)
-            // postViewModel.fetchUserLikes()
-        }
-
-        // LaunchedEffect per monitorare lo stato dei like
-        LaunchedEffect(postViewModel.likeState.collectAsState().value) {
-            val likeState = postViewModel.likeState.value
-            if (likeState is LikeState.LikeActionSuccess) {
-                // Aggiorna il conteggio dei like per il post specifico
-                postViewModel.fetchPostLikes(likeState.postId)
+            // Ottieni la posizione dell'utente
+            if (locationManager.hasLocationPermission()) {
+                userLocation = locationManager.getCurrentLocation()
             }
         }
-
 
         // Ricarica i post quando si torna dalla CreatePostScreen o quando si ricevono aggiornamenti
         LaunchedEffect(navController.currentBackStackEntry, shouldRefreshPosts) {
@@ -404,28 +403,21 @@ fun GroupScreen(
                                 }
                             } else {
                                 items(posts) { post ->
-                                    val isLiked = postViewModel.isPostLiked(post.id)
-                                    val likeCount = postViewModel.getLikesCount(post.id)
-
                                     PostCard(
                                         post = post,
                                         modifier = Modifier.padding(horizontal = 16.dp),
-                                        isLiked = isLiked,
-                                        likesCount = likeCount,
                                         onUserClick = { userId ->
                                             navController.navigate("userProfile/$userId")
                                         },
                                         onCommentClick = {
                                             navController.navigate("post/${post.id}/comments")
                                         },
-                                        onLikeClick = {
-                                            postViewModel.toggleLike(post.id)
-                                        },
                                         onLocationClick = if (post.latitude != null && post.longitude != null) {
                                             {
-                                                Toast.makeText(context, "Mappa non ancora implementata", Toast.LENGTH_SHORT).show()
+                                                navController.navigate("group/$groupId/map")
                                             }
-                                        } else null
+                                        } else null,
+                                        userLocation = userLocation, // Passa la posizione dell'utente
                                     )
                                 }
                             }

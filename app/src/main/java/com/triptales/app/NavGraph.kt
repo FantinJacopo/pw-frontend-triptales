@@ -7,6 +7,7 @@ import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import com.triptales.app.data.auth.TokenManager
+import com.triptales.app.data.location.LocationManager
 import com.triptales.app.ui.auth.LoginScreen
 import com.triptales.app.ui.auth.RegisterScreen
 import com.triptales.app.ui.auth.SplashScreen
@@ -40,7 +41,8 @@ fun NavGraph(
     userViewModel: UserViewModel,
     commentViewModel: CommentViewModel,
     membersViewModel: GroupMembersViewModel,
-    tokenManager: TokenManager
+    tokenManager: TokenManager,
+    locationManager: LocationManager
 ){
     FrontendtriptalesTheme {
         val authState by authViewModel.authState.collectAsState()
@@ -95,7 +97,8 @@ fun NavGraph(
                 CreatePostScreen(
                     groupId = groupId,
                     postViewModel = postViewModel,
-                    navController = navController
+                    navController = navController,
+                    locationManager = locationManager
                 )
             }
             composable("post/{postId}/comments") { backStackEntry ->
@@ -113,7 +116,8 @@ fun NavGraph(
                     groupId = groupId,
                     groupViewModel = groupViewModel,
                     postViewModel = postViewModel,
-                    navController = navController
+                    navController = navController,
+                    locationManager = locationManager
                 )
             }
             composable("group/{groupId}/members") { backStackEntry ->
@@ -130,6 +134,7 @@ fun NavGraph(
                 GroupMapScreen(
                     groupId = groupId,
                     groupViewModel = groupViewModel,
+                    postViewModel = postViewModel,
                     navController = navController
                 )
             }

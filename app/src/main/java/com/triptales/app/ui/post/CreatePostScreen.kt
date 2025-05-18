@@ -1,8 +1,12 @@
 package com.triptales.app.ui.post
 
+import android.Manifest
 import android.annotation.SuppressLint
+import android.content.pm.PackageManager
 import android.net.Uri
 import android.widget.Toast
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -18,6 +22,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.LocationOn
+import androidx.compose.material.icons.filled.MyLocation
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
@@ -37,6 +42,7 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -44,12 +50,16 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.core.content.ContextCompat
 import androidx.navigation.NavController
 import coil.compose.rememberAsyncImagePainter
+import com.google.android.gms.maps.model.LatLng
+import com.triptales.app.data.location.LocationManager
 import com.triptales.app.data.utils.ImageUtils.uriToFile
 import com.triptales.app.ui.components.ImagePickerWithCrop
 import com.triptales.app.viewmodel.PostState
 import com.triptales.app.viewmodel.PostViewModel
+import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
 @SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
@@ -57,32 +67,96 @@ import com.triptales.app.viewmodel.PostViewModel
 fun CreatePostScreen(
     groupId: Int,
     postViewModel: PostViewModel,
-    navController: NavController
+    navController: NavController,
+    locationManager: LocationManager
 ) {
     val context = LocalContext.current
     val postState by postViewModel.postState.collectAsState()
+    val coroutineScope = rememberCoroutineScope()
 
     var caption by remember { mutableStateOf("") }
     var imageUri by remember { mutableStateOf<Uri?>(null) }
-    var latitude by remember { mutableStateOf<Double?>(null) }
-    var longitude by remember { mutableStateOf<Double?>(null) }
+    var currentLocation by remember { mutableStateOf<LatLng?>(null) }
+    var locationEnabled by remember { mutableStateOf(false) }
+    var isLoadingLocation by remember { mutableStateOf(false) }
+    var locationPermissionGranted by remember {
+        mutableStateOf(
+            ContextCompat.checkSelfPermission(
+                context,
+                Manifest.permission.ACCESS_FINE_LOCATION
+            ) == PackageManager.PERMISSION_GRANTED
+        )
+    }
+
+    val locationManager = locationManager
+
+    // Permission launcher
+    val locationPermissionLauncher = rememberLauncherForActivityResult(
+        ActivityResultContracts.RequestMultiplePermissions()
+    ) { permissions ->
+        locationPermissionGranted = permissions[Manifest.permission.ACCESS_FINE_LOCATION] == true ||
+                permissions[Manifest.permission.ACCESS_COARSE_LOCATION] == true
+
+        if (locationPermissionGranted) {
+            Toast.makeText(context, "Permesso posizione concesso", Toast.LENGTH_SHORT).show()
+        }
+    }
 
     // Gestisce la navigazione quando il post viene creato con successo
     LaunchedEffect(postState) {
         when (postState) {
             is PostState.PostCreated -> {
                 Toast.makeText(context, "Post creato con successo!", Toast.LENGTH_SHORT).show()
-
-                // Importante: resettiamo lo stato PRIMA di navigare
                 postViewModel.resetState()
-
-                // Naviga indietro alla schermata del gruppo
                 navController.popBackStack()
             }
             is PostState.Error -> {
                 Toast.makeText(context, (postState as PostState.Error).message, Toast.LENGTH_LONG).show()
             }
             else -> {}
+        }
+    }
+
+    // Funzione per ottenere la posizione corrente
+    fun getCurrentLocation() {
+        if (!locationPermissionGranted) {
+            locationPermissionLauncher.launch(
+                arrayOf(
+                    Manifest.permission.ACCESS_FINE_LOCATION,
+                    Manifest.permission.ACCESS_COARSE_LOCATION
+                )
+            )
+            return
+        }
+
+        coroutineScope.launch {
+            isLoadingLocation = true
+            try {
+                val location = locationManager.getCurrentLocation()
+                if (location != null) {
+                    currentLocation = location
+                    locationEnabled = true
+                    Toast.makeText(
+                        context,
+                        "Posizione ottenuta: ${String.format("%.6f", location.latitude)}, ${String.format("%.6f", location.longitude)}",
+                        Toast.LENGTH_SHORT
+                    ).show()
+                } else {
+                    Toast.makeText(
+                        context,
+                        "Impossibile ottenere la posizione. Controlla che il GPS sia attivo.",
+                        Toast.LENGTH_LONG
+                    ).show()
+                }
+            } catch (e: Exception) {
+                Toast.makeText(
+                    context,
+                    "Errore nell'ottenere la posizione: ${e.message}",
+                    Toast.LENGTH_LONG
+                ).show()
+            } finally {
+                isLoadingLocation = false
+            }
         }
     }
 
@@ -106,7 +180,13 @@ fun CreatePostScreen(
                         onClick = {
                             if (imageUri != null && caption.isNotBlank()) {
                                 val imageFile = uriToFile(imageUri!!, context)
-                                postViewModel.createPost(groupId, caption, imageFile)
+                                postViewModel.createPost(
+                                    groupId = groupId,
+                                    caption = caption,
+                                    imageFile = imageFile,
+                                    latitude = if (locationEnabled && currentLocation != null) currentLocation!!.latitude else null,
+                                    longitude = if (locationEnabled && currentLocation != null) currentLocation!!.longitude else null
+                                )
                             } else {
                                 Toast.makeText(
                                     context,
@@ -204,42 +284,91 @@ fun CreatePostScreen(
                 }
             }
 
-            // Sezione geolocalizzazione (placeholder per ora)
+            // Sezione geolocalizzazione
             Card(
                 modifier = Modifier.fillMaxWidth(),
                 elevation = CardDefaults.cardElevation(4.dp),
                 shape = RoundedCornerShape(12.dp),
                 colors = CardDefaults.cardColors(
-                    containerColor = MaterialTheme.colorScheme.surfaceVariant
+                    containerColor = if (locationEnabled && currentLocation != null)
+                        MaterialTheme.colorScheme.primaryContainer
+                    else
+                        MaterialTheme.colorScheme.surfaceVariant
                 )
             ) {
-                Row(
-                    modifier = Modifier.padding(16.dp),
-                    verticalAlignment = Alignment.CenterVertically
+                Column(
+                    modifier = Modifier.padding(16.dp)
                 ) {
-                    Icon(
-                        imageVector = Icons.Default.LocationOn,
-                        contentDescription = "Posizione",
-                        tint = MaterialTheme.colorScheme.primary
-                    )
-                    Spacer(modifier = Modifier.width(12.dp))
-                    Column(modifier = Modifier.weight(1f)) {
-                        Text(
-                            text = "Aggiungi posizione",
-                            style = MaterialTheme.typography.titleSmall,
-                            fontWeight = FontWeight.Bold
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.LocationOn,
+                            contentDescription = "Posizione",
+                            tint = if (locationEnabled && currentLocation != null)
+                                MaterialTheme.colorScheme.onPrimaryContainer
+                            else
+                                MaterialTheme.colorScheme.primary
                         )
-                        Text(
-                            text = "Disponibile in una versione futura",
-                            style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        Spacer(modifier = Modifier.width(12.dp))
+                        Column(modifier = Modifier.weight(1f)) {
+                            Text(
+                                text = "Aggiungi posizione",
+                                style = MaterialTheme.typography.titleSmall,
+                                fontWeight = FontWeight.Bold,
+                                color = if (locationEnabled && currentLocation != null)
+                                    MaterialTheme.colorScheme.onPrimaryContainer
+                                else
+                                    MaterialTheme.colorScheme.onSurface
+                            )
+                            Text(
+                                text = if (locationEnabled && currentLocation != null) {
+                                    "Lat: ${String.format("%.6f", currentLocation!!.latitude)}\n" +
+                                            "Lng: ${String.format("%.6f", currentLocation!!.longitude)}"
+                                } else if (locationPermissionGranted) {
+                                    "Tocca il pulsante per ottenere la posizione"
+                                } else {
+                                    "Permesso di localizzazione richiesto"
+                                },
+                                style = MaterialTheme.typography.bodySmall,
+                                color = if (locationEnabled && currentLocation != null)
+                                    MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.8f)
+                                else
+                                    MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        }
+
+                        if (isLoadingLocation) {
+                            CircularProgressIndicator(
+                                modifier = Modifier.size(24.dp),
+                                strokeWidth = 2.dp
+                            )
+                        } else {
+                            IconButton(
+                                onClick = { getCurrentLocation() }
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Default.MyLocation,
+                                    contentDescription = "Ottieni posizione",
+                                    tint = MaterialTheme.colorScheme.primary
+                                )
+                            }
+                        }
+
+                        Switch(
+                            checked = locationEnabled && currentLocation != null,
+                            onCheckedChange = { enabled ->
+                                if (enabled) {
+                                    getCurrentLocation()
+                                } else {
+                                    locationEnabled = false
+                                    currentLocation = null
+                                }
+                            },
+                            enabled = !isLoadingLocation
                         )
                     }
-                    Switch(
-                        checked = false,
-                        onCheckedChange = { },
-                        enabled = false
-                    )
                 }
             }
 

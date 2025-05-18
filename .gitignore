@@ -13,4 +13,11 @@
 /captures
 .externalNativeBuild
 .cxx
+
+# API Keys e configurazioni sensibili
+gradle.properties
 local.properties
+
+# Keystores
+*.keystore
+*.jks

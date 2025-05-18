@@ -5,7 +5,6 @@ import com.triptales.app.data.utils.ApiUtils.safeApiCall
 import com.triptales.app.data.utils.toRequestBody
 import okhttp3.MultipartBody
 
-
 class PostRepository(private val api: PostApi) {
     suspend fun getPosts(groupId: Int) = try {
         Log.d("PostRepository", "Fetching posts for group: $groupId")
@@ -18,6 +17,7 @@ class PostRepository(private val api: PostApi) {
                 Log.d("PostRepository", "Post ${post.id}:")
                 Log.d("PostRepository", "  - image_url: '${post.image_url}'")
                 Log.d("PostRepository", "  - smart_caption: '${post.smart_caption}'")
+                Log.d("PostRepository", "  - location: ${post.latitude}, ${post.longitude}")
             }
         }
 
@@ -28,11 +28,14 @@ class PostRepository(private val api: PostApi) {
     }
 
     suspend fun createPost(
-        tripGroupId: Int,
-        smartCaption: String,
-        imagePart: MultipartBody.Part
+        groupId: Int,
+        caption: String,
+        imagePart: MultipartBody.Part,
+        latitude: Double? = null,
+        longitude: Double? = null
     ) = try {
-        Log.d("PostRepository", "Creating post for group: $tripGroupId, caption: $smartCaption")
+        Log.d("PostRepository", "Creating post for group: $groupId, caption: $caption")
+        Log.d("PostRepository", "Location: lat=$latitude, lng=$longitude")
 
         // Usa ApiUtils per gestire la chiamata
         safeApiCall(
@@ -40,9 +43,11 @@ class PostRepository(private val api: PostApi) {
             operation = "create post",
             apiCall = {
                 api.createPost(
-                    imagePart,
-                    toRequestBody(tripGroupId.toString()),
-                    toRequestBody(smartCaption)
+                    image = imagePart,
+                    tripGroup = toRequestBody(groupId.toString()),
+                    smartCaption = toRequestBody(caption),
+                    latitude = latitude?.let { toRequestBody(it.toString()) },
+                    longitude = longitude?.let { toRequestBody(it.toString()) }
                 )
             }
         )

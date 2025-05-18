@@ -14,15 +14,17 @@ import com.triptales.app.data.group.GroupMembersRepository
 import com.triptales.app.data.group.TripGroupApi
 import com.triptales.app.data.group.TripGroupRepository
 import com.triptales.app.data.post.PostApi
-import com.triptales.app.data.post.PostRepository
 import com.triptales.app.data.user.UserApi
 import com.triptales.app.data.user.UserRepository
 import com.triptales.app.data.comment.CommentApi
 import com.triptales.app.data.comment.CommentRepository
+import com.triptales.app.data.location.LocationManager
 import com.triptales.app.data.post.PostLikeApi
 import com.triptales.app.data.post.PostLikeRepository
+import com.triptales.app.data.post.PostRepository
 import com.triptales.app.ui.theme.FrontendtriptalesTheme
 import com.triptales.app.viewmodel.*
+import kotlin.jvm.java
 
 class MainActivity : ComponentActivity() {
     @SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
@@ -33,6 +35,7 @@ class MainActivity : ComponentActivity() {
             FrontendtriptalesTheme {
                 val navController = rememberNavController()
                 val tokenManager = TokenManager(applicationContext)
+                val locationManager = LocationManager(applicationContext)
 
                 // Retrofit configurato con interceptor
                 val retrofit = RetrofitProvider.create(tokenManager)
@@ -57,10 +60,10 @@ class MainActivity : ComponentActivity() {
                 // ViewModels
                 val authViewModel = ViewModelProvider(this, AuthViewModelFactory(authRepository, tokenManager))[AuthViewModel::class.java]
                 val groupViewModel = ViewModelProvider(this, GroupViewModelFactory(tripGroupRepository))[GroupViewModel::class.java]
-                val postViewModel = ViewModelProvider(this, PostViewModelFactory(postRepository, postLikeRepository))[PostViewModel::class.java]
                 val userViewModel = ViewModelProvider(this, UserViewModelFactory(userRepository))[UserViewModel::class.java]
                 val commentViewModel = ViewModelProvider(this, CommentViewModelFactory(commentRepository))[CommentViewModel::class.java]
                 val membersViewModel = ViewModelProvider(this, GroupMembersViewModelFactory(groupMembersRepository))[GroupMembersViewModel::class.java]
+                val postViewModel = ViewModelProvider(this, PostViewModelFactory(postRepository, postLikeRepository))[PostViewModel::class.java]
 
                 // Avvio navigazione
                 NavGraph(
@@ -71,7 +74,8 @@ class MainActivity : ComponentActivity() {
                     userViewModel = userViewModel,
                     commentViewModel = commentViewModel,
                     membersViewModel = membersViewModel,
-                    tokenManager = tokenManager
+                    tokenManager = tokenManager,
+                    locationManager = locationManager
                 )
             }
         }

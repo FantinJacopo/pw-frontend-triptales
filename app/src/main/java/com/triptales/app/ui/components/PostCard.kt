@@ -8,6 +8,7 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -31,8 +32,10 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
+import com.triptales.app.data.location.LocationManager
 import com.triptales.app.data.post.Post
 import com.triptales.app.data.utils.DateUtils.formatPostDate
+import com.google.android.gms.maps.model.LatLng
 
 @Composable
 fun PostCard(
@@ -43,7 +46,8 @@ fun PostCard(
     onLikeClick: () -> Unit = {},
     onCommentClick: () -> Unit = {},
     onLocationClick: (() -> Unit)? = null,
-    onUserClick: (Int) -> Unit = {}
+    onUserClick: (Int) -> Unit = {},
+    userLocation: LatLng? = null, // Posizione dell'utente per calcolare la distanza
 ) {
     Card(
         modifier = modifier.fillMaxWidth(),
@@ -80,6 +84,17 @@ fun PostCard(
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
+
+                    // Mostra la distanza se disponibile sia la posizione del post che dell'utente
+                    if (post.latitude != null && post.longitude != null && userLocation != null) {
+                        val postLocation = LatLng(post.latitude, post.longitude)
+                        val distance = LocationManager.calculateDistance(userLocation, postLocation)
+                        Text(
+                            text = "📍 ${LocationManager.formatDistance(distance)} da te",
+                            style = MaterialTheme.typography.labelSmall,
+                            color = MaterialTheme.colorScheme.primary
+                        )
+                    }
                 }
 
                 // Location button se disponibile
@@ -87,7 +102,7 @@ fun PostCard(
                     IconButton(onClick = onLocationClick) {
                         Icon(
                             imageVector = Icons.Default.LocationOn,
-                            contentDescription = "Mostra posizione",
+                            contentDescription = "Mostra sulla mappa",
                             tint = MaterialTheme.colorScheme.primary
                         )
                     }
@@ -118,6 +133,44 @@ fun PostCard(
                     style = MaterialTheme.typography.bodyLarge,
                     fontWeight = FontWeight.Medium
                 )
+                Spacer(modifier = Modifier.height(8.dp))
+            }
+
+            // Mostra le coordinate se disponibili
+            if (post.latitude != null && post.longitude != null) {
+                Card(
+                    colors = CardDefaults.cardColors(
+                        containerColor = MaterialTheme.colorScheme.primaryContainer
+                    ),
+                    shape = RoundedCornerShape(8.dp),
+                    modifier = Modifier.clickable { onLocationClick?.invoke() }
+                ) {
+                    Row(
+                        modifier = Modifier.padding(12.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.LocationOn,
+                            contentDescription = "Posizione",
+                            tint = MaterialTheme.colorScheme.onPrimaryContainer,
+                            modifier = Modifier.size(16.dp)
+                        )
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Column {
+                            Text(
+                                text = "📍 Posizione disponibile",
+                                style = MaterialTheme.typography.labelMedium,
+                                fontWeight = FontWeight.Bold,
+                                color = MaterialTheme.colorScheme.onPrimaryContainer
+                            )
+                            Text(
+                                text = "Lat: ${String.format("%.6f", post.latitude)}, Lng: ${String.format("%.6f", post.longitude)}",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.8f)
+                            )
+                        }
+                    }
+                }
                 Spacer(modifier = Modifier.height(8.dp))
             }
 
