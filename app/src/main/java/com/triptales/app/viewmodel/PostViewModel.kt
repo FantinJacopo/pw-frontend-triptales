@@ -1,5 +1,6 @@
 package com.triptales.app.viewmodel
 
+import android.net.Uri
 import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -20,6 +21,7 @@ sealed class PostState {
     object Loading : PostState()
     data class Success(val posts: List<Post>) : PostState()
     object PostCreated : PostState()
+    data class MLKitAnalyzing(val progress: String) : PostState() // Nuovo stato per l'analisi ML Kit
     data class Error(val message: String) : PostState()
 }
 
@@ -91,14 +93,23 @@ class PostViewModel(
         groupId: Int,
         caption: String,
         imageFile: File,
+        imageUri: Uri? = null,
         latitude: Double? = null,
         longitude: Double? = null
     ) {
         viewModelScope.launch {
             Log.d("PostViewModel", "Creating post for group: $groupId, caption: $caption")
             Log.d("PostViewModel", "Location: lat=$latitude, lng=$longitude")
+            Log.d("PostViewModel", "Will analyze image with ML Kit: ${imageUri != null}")
+
             _postState.value = PostState.Loading
+
             try {
+                // Mostra stato di analisi ML Kit se abbiamo un'immagine
+                if (imageUri != null) {
+                    _postState.value = PostState.MLKitAnalyzing("🤖 Analizando immagine con l'intelligenza artificiale...")
+                }
+
                 val requestFile = imageFile.asRequestBody("image/*".toMediaTypeOrNull())
                 val imagePart = MultipartBody.Part.createFormData("image", imageFile.name, requestFile)
 
@@ -106,13 +117,14 @@ class PostViewModel(
                     groupId = groupId,
                     caption = caption,
                     imagePart = imagePart,
+                    imageUri = imageUri, // Passa l'URI per l'analisi ML Kit
                     latitude = latitude,
                     longitude = longitude
                 )
                 Log.d("PostViewModel", "Create post response code: ${response.code()}")
 
                 if (response.isSuccessful) {
-                    Log.d("PostViewModel", "Post created successfully")
+                    Log.d("PostViewModel", "Post created successfully with ML Kit analysis")
                     // Importante: Prima impostiamo lo stato a PostCreated
                     _postState.value = PostState.PostCreated
 

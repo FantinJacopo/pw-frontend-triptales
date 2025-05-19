@@ -19,14 +19,18 @@ import com.triptales.app.data.user.UserRepository
 import com.triptales.app.data.comment.CommentApi
 import com.triptales.app.data.comment.CommentRepository
 import com.triptales.app.data.location.LocationManager
+import com.triptales.app.data.mlkit.MLKitAnalyzer
 import com.triptales.app.data.post.PostLikeApi
 import com.triptales.app.data.post.PostLikeRepository
 import com.triptales.app.data.post.PostRepository
 import com.triptales.app.ui.theme.FrontendtriptalesTheme
 import com.triptales.app.viewmodel.*
-import kotlin.jvm.java
 
 class MainActivity : ComponentActivity() {
+
+    // MLKitAnalyzer deve essere chiuso quando l'attività viene distrutta
+    private lateinit var mlKitAnalyzer: MLKitAnalyzer
+
     @SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -36,6 +40,9 @@ class MainActivity : ComponentActivity() {
                 val navController = rememberNavController()
                 val tokenManager = TokenManager(applicationContext)
                 val locationManager = LocationManager(applicationContext)
+
+                // Inizializza MLKitAnalyzer
+                mlKitAnalyzer = MLKitAnalyzer(applicationContext)
 
                 // Retrofit configurato con interceptor
                 val retrofit = RetrofitProvider.create(tokenManager)
@@ -51,7 +58,8 @@ class MainActivity : ComponentActivity() {
                 // Repositories
                 val authRepository = AuthRepository(authApi)
                 val tripGroupRepository = TripGroupRepository(tripGroupApi)
-                val postRepository = PostRepository(postApi)
+                // PostRepository ora include MLKitAnalyzer
+                val postRepository = PostRepository(postApi, mlKitAnalyzer)
                 val userRepository = UserRepository(userApi)
                 val commentRepository = CommentRepository(commentApi)
                 val groupMembersRepository = GroupMembersRepository(tripGroupApi)
@@ -78,6 +86,14 @@ class MainActivity : ComponentActivity() {
                     locationManager = locationManager
                 )
             }
+        }
+    }
+
+    override fun onDestroy() {
+        super.onDestroy()
+        // Chiudi le risorse ML Kit quando l'attività viene distrutta
+        if (::mlKitAnalyzer.isInitialized) {
+            mlKitAnalyzer.close()
         }
     }
 }

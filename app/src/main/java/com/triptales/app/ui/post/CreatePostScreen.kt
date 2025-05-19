@@ -8,6 +8,7 @@ import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -17,9 +18,12 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.AutoFixHigh
 import androidx.compose.material.icons.filled.LocationOn
 import androidx.compose.material.icons.filled.MyLocation
 import androidx.compose.material3.Button
@@ -30,6 +34,7 @@ import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
@@ -89,7 +94,6 @@ fun CreatePostScreen(
     // Funzione per ottenere la posizione corrente
     fun requestLocation() {
         if (!locationPermissionGranted) {
-            // Non facciamo nulla qui, il launcher gestirà la richiesta
             return
         }
 
@@ -142,7 +146,6 @@ fun CreatePostScreen(
 
         if (granted) {
             Toast.makeText(context, "Permesso posizione concesso! 📍", Toast.LENGTH_SHORT).show()
-            // Ottieni automaticamente la posizione dopo aver concesso il permesso
             requestLocation()
         } else {
             Toast.makeText(context, "Permesso posizione negato. Non sarà possibile aggiungere la posizione al post.", Toast.LENGTH_LONG).show()
@@ -153,7 +156,7 @@ fun CreatePostScreen(
     LaunchedEffect(postState) {
         when (postState) {
             is PostState.PostCreated -> {
-                Toast.makeText(context, "Post creato con successo! 🎉", Toast.LENGTH_SHORT).show()
+                Toast.makeText(context, "Post pubblicato con successo! 🎉", Toast.LENGTH_SHORT).show()
                 postViewModel.resetState()
                 navController.popBackStack()
             }
@@ -188,6 +191,7 @@ fun CreatePostScreen(
                                     groupId = groupId,
                                     caption = caption,
                                     imageFile = imageFile,
+                                    imageUri = imageUri, // Passa l'URI per l'analisi ML Kit
                                     latitude = if (locationEnabled && currentLocation != null) currentLocation!!.latitude else null,
                                     longitude = if (locationEnabled && currentLocation != null) currentLocation!!.longitude else null
                                 )
@@ -199,7 +203,10 @@ fun CreatePostScreen(
                                 ).show()
                             }
                         },
-                        enabled = postState !is PostState.Loading && imageUri != null && caption.isNotBlank(),
+                        enabled = postState !is PostState.Loading &&
+                                postState !is PostState.MLKitAnalyzing &&
+                                imageUri != null &&
+                                caption.isNotBlank(),
                         modifier = Modifier.padding(horizontal = 8.dp),
                         colors = ButtonDefaults.buttonColors(
                             containerColor = if (imageUri != null && caption.isNotBlank())
@@ -208,16 +215,28 @@ fun CreatePostScreen(
                                 MaterialTheme.colorScheme.surfaceVariant
                         )
                     ) {
-                        if (postState is PostState.Loading) {
-                            CircularProgressIndicator(
-                                modifier = Modifier.size(16.dp),
-                                strokeWidth = 2.dp,
-                                color = MaterialTheme.colorScheme.onPrimary
-                            )
-                            Spacer(modifier = Modifier.width(8.dp))
-                            Text("Pubblicando...")
-                        } else {
-                            Text("Pubblica")
+                        when (postState) {
+                            is PostState.Loading -> {
+                                CircularProgressIndicator(
+                                    modifier = Modifier.size(16.dp),
+                                    strokeWidth = 2.dp,
+                                    color = MaterialTheme.colorScheme.onPrimary
+                                )
+                                Spacer(modifier = Modifier.width(8.dp))
+                                Text("Pubblicando...")
+                            }
+                            is PostState.MLKitAnalyzing -> {
+                                CircularProgressIndicator(
+                                    modifier = Modifier.size(16.dp),
+                                    strokeWidth = 2.dp,
+                                    color = MaterialTheme.colorScheme.onPrimary
+                                )
+                                Spacer(modifier = Modifier.width(8.dp))
+                                Text("Analizzando...")
+                            }
+                            else -> {
+                                Text("Pubblica")
+                            }
                         }
                     }
                 }
@@ -228,9 +247,67 @@ fun CreatePostScreen(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(paddingValues)
-                .padding(16.dp),
+                .padding(16.dp)
+                .verticalScroll(rememberScrollState()),
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
+            // Stato ML Kit Analyzing
+            if (postState is PostState.MLKitAnalyzing) {
+                Card(
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = CardDefaults.cardColors(
+                        containerColor = MaterialTheme.colorScheme.secondaryContainer
+                    ),
+                    shape = RoundedCornerShape(12.dp)
+                ) {
+                    Column(
+                        modifier = Modifier.padding(16.dp),
+                        horizontalAlignment = Alignment.CenterHorizontally
+                    ) {
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.Center
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.AutoFixHigh,
+                                contentDescription = "AI Analysis",
+                                tint = MaterialTheme.colorScheme.onSecondaryContainer,
+                                modifier = Modifier.size(24.dp)
+                            )
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Text(
+                                text = "Analisi AI in corso",
+                                style = MaterialTheme.typography.titleMedium,
+                                fontWeight = FontWeight.Bold,
+                                color = MaterialTheme.colorScheme.onSecondaryContainer
+                            )
+                        }
+
+                        Spacer(modifier = Modifier.height(8.dp))
+
+                        LinearProgressIndicator(
+                            modifier = Modifier.fillMaxWidth(),
+                            color = MaterialTheme.colorScheme.primary
+                        )
+
+                        Spacer(modifier = Modifier.height(8.dp))
+
+                        Text(
+                            text = (postState as PostState.MLKitAnalyzing).progress,
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.onSecondaryContainer
+                        )
+
+                        Text(
+                            text = "• Riconoscimento testo (OCR)\n• Identificazione oggetti\n• Generazione tag automatici",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSecondaryContainer.copy(alpha = 0.8f),
+                            modifier = Modifier.padding(top = 4.dp)
+                        )
+                    }
+                }
+            }
+
             // Sezione immagine
             Card(
                 modifier = Modifier.fillMaxWidth(),
@@ -310,7 +387,7 @@ fun CreatePostScreen(
                 }
             }
 
-            // Sezione geolocalizzazione migliorata
+            // Sezione geolocalizzazione
             Card(
                 modifier = Modifier.fillMaxWidth(),
                 elevation = CardDefaults.cardElevation(4.dp),
@@ -398,18 +475,7 @@ fun CreatePostScreen(
                             }
                         } else {
                             OutlinedButton(
-                                onClick = {
-                                    if (!locationPermissionGranted) {
-                                        locationPermissionLauncher.launch(
-                                            arrayOf(
-                                                Manifest.permission.ACCESS_FINE_LOCATION,
-                                                Manifest.permission.ACCESS_COARSE_LOCATION
-                                            )
-                                        )
-                                    } else {
-                                        requestLocation()
-                                    }
-                                },
+                                onClick = { requestLocation() },
                                 enabled = !isLoadingLocation,
                                 modifier = Modifier.weight(1f)
                             ) {
@@ -456,7 +522,7 @@ fun CreatePostScreen(
                 }
             }
 
-            // Informazioni ML Kit (placeholder)
+            // Informazioni ML Kit (aggiornate)
             Card(
                 modifier = Modifier.fillMaxWidth(),
                 elevation = CardDefaults.cardElevation(4.dp),
@@ -468,23 +534,51 @@ fun CreatePostScreen(
                 Column(
                     modifier = Modifier.padding(16.dp)
                 ) {
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.AutoFixHigh,
+                            contentDescription = "AI Features",
+                            tint = MaterialTheme.colorScheme.onTertiaryContainer,
+                            modifier = Modifier.size(24.dp)
+                        )
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text(
+                            text = "🤖 Funzionalità AI Integrate",
+                            style = MaterialTheme.typography.titleMedium,
+                            fontWeight = FontWeight.Bold,
+                            color = MaterialTheme.colorScheme.onTertiaryContainer
+                        )
+                    }
+
+                    Spacer(modifier = Modifier.height(12.dp))
+
                     Text(
-                        text = "🤖 Funzionalità Smart",
-                        style = MaterialTheme.typography.titleMedium,
-                        fontWeight = FontWeight.Bold,
+                        text = "✨ L'intelligenza artificiale analizzerà automaticamente la tua foto:",
+                        style = MaterialTheme.typography.bodyMedium,
+                        fontWeight = FontWeight.SemiBold,
                         color = MaterialTheme.colorScheme.onTertiaryContainer
                     )
+
+                    Spacer(modifier = Modifier.height(8.dp))
+
                     Text(
-                        text = "• Riconoscimento testo (OCR)\n• Traduzione automatica\n• Riconoscimento oggetti\n• Didascalie intelligenti",
+                        text = "📝 Riconoscimento testo (OCR) - Estrae automaticamente il testo dalle immagini\n" +
+                                "🏷️ Identificazione oggetti - Riconosce 3 tag automatici per categorizzare la foto\n" +
+                                "🔍 Analisi intelligente - Migliora la ricerca e organizzazione dei tuoi ricordi",
                         style = MaterialTheme.typography.bodyMedium,
                         color = MaterialTheme.colorScheme.onTertiaryContainer,
-                        modifier = Modifier.padding(top = 8.dp)
+                        lineHeight = MaterialTheme.typography.bodyMedium.lineHeight * 1.3f
                     )
+
+                    Spacer(modifier = Modifier.height(8.dp))
+
                     Text(
-                        text = "Saranno disponibili nelle prossime versioni dell'app",
+                        text = "💡 Suggerimento: L'analisi avviene automaticamente quando pubblichi il post!",
                         style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onTertiaryContainer.copy(alpha = 0.7f),
-                        modifier = Modifier.padding(top = 4.dp)
+                        color = MaterialTheme.colorScheme.onTertiaryContainer.copy(alpha = 0.8f),
+                        fontWeight = FontWeight.Medium
                     )
                 }
             }

@@ -20,6 +20,8 @@ interface PostApi {
         @Part("trip_group") tripGroup: RequestBody,
         @Part("smart_caption") smartCaption: RequestBody,
         @Part("latitude") latitude: RequestBody? = null,
-        @Part("longitude") longitude: RequestBody? = null
+        @Part("longitude") longitude: RequestBody? = null,
+        @Part("ocr_text") ocrText: RequestBody? = null,
+        @Part("object_tags") objectTags: RequestBody? = null
     ): Response<Post>
 }

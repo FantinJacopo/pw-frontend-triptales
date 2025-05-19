@@ -103,4 +103,16 @@ dependencies {
     androidTestImplementation(libs.androidx.ui.test.junit4)
     debugImplementation(libs.androidx.ui.tooling)
     debugImplementation(libs.androidx.ui.test.manifest)
+
+    // ML Kit - Text Recognition (OCR)
+    implementation("com.google.mlkit:text-recognition:16.0.0")
+
+    // ML Kit - Object Detection and Tracking
+    implementation("com.google.mlkit:object-detection:17.0.1")
+
+    // ML Kit - Image Labeling (per i tag degli oggetti)
+    implementation("com.google.mlkit:image-labeling:17.0.8")
+
+    // Se vuoi usare anche le versioni custom (opzionale)
+    implementation("com.google.mlkit:image-labeling-custom:17.0.2")
 }
