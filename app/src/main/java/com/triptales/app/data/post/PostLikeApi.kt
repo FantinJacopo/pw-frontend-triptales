@@ -18,6 +18,6 @@ interface PostLikeApi {
     @GET("post-likes/")
     suspend fun getLikes(@Query("post_id") postId: Int): Response<List<PostLike>>
 
-    @GET("post-likes/user/")
+    @GET("post-likes/user_likes/")
     suspend fun getUserLikes(): Response<List<PostLike>>
 }
