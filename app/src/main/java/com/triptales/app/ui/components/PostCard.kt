@@ -16,7 +16,6 @@ import androidx.compose.material.icons.filled.ChatBubbleOutline
 import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.FavoriteBorder
 import androidx.compose.material.icons.filled.LocationOn
-import androidx.compose.material3.AssistChip
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.HorizontalDivider
@@ -32,11 +31,25 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
+import com.google.android.gms.maps.model.LatLng
 import com.triptales.app.data.location.LocationManager
 import com.triptales.app.data.post.Post
 import com.triptales.app.data.utils.DateUtils.formatPostDate
-import com.google.android.gms.maps.model.LatLng
 
+/**
+ * Card component for displaying a post with ML Kit analysis results.
+ *
+ * @param post The post data to display
+ * @param modifier Optional modifier for styling
+ * @param isLiked Whether the post is liked by the current user
+ * @param likesCount Number of likes on the post
+ * @param onLikeClick Callback when the like button is clicked
+ * @param onCommentClick Callback when the comment button is clicked
+ * @param onLocationClick Optional callback when the location is clicked
+ * @param onUserClick Callback when the user profile is clicked
+ * @param userLocation Optional current user location to show distance
+ * @param showMLKitResults Whether to show ML Kit analysis results
+ */
 @Composable
 fun PostCard(
     post: Post,
@@ -48,6 +61,7 @@ fun PostCard(
     onLocationClick: (() -> Unit)? = null,
     onUserClick: (Int) -> Unit = {},
     userLocation: LatLng? = null,
+    showMLKitResults: Boolean = true
 ) {
     Card(
         modifier = modifier.fillMaxWidth(),
@@ -57,12 +71,12 @@ fun PostCard(
         Column(
             modifier = Modifier.padding(16.dp)
         ) {
-            // Header con info utente
+            // Header with user info
             Row(
                 verticalAlignment = Alignment.CenterVertically,
                 modifier = Modifier.fillMaxWidth()
             ) {
-                // Avatar utente usando ProfileImage (cliccabile)
+                // User avatar
                 ProfileImage(
                     profileImage = post.user_profile_image,
                     size = 40,
@@ -79,16 +93,18 @@ fun PostCard(
                         fontWeight = FontWeight.Bold,
                         modifier = Modifier.clickable { post.user_id?.let { onUserClick(it) } }
                     )
+
                     Text(
                         text = formatPostDate(post.created_at),
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
 
-                    // Mostra la distanza se disponibile sia la posizione del post che dell'utente
+                    // Show distance if available
                     if (post.latitude != null && post.longitude != null && userLocation != null) {
                         val postLocation = LatLng(post.latitude, post.longitude)
                         val distance = LocationManager.calculateDistance(userLocation, postLocation)
+
                         Text(
                             text = "📍 ${LocationManager.formatDistance(distance)} da te",
                             style = MaterialTheme.typography.labelSmall,
@@ -97,7 +113,7 @@ fun PostCard(
                     }
                 }
 
-                // Location button se disponibile
+                // Location button if available
                 if (post.latitude != null && post.longitude != null && onLocationClick != null) {
                     IconButton(onClick = onLocationClick) {
                         Icon(
@@ -111,7 +127,7 @@ fun PostCard(
 
             Spacer(modifier = Modifier.height(12.dp))
 
-            // Immagine del post
+            // Post image
             if (!post.image_url.isNullOrBlank()) {
                 AsyncImage(
                     model = post.image_url,
@@ -126,7 +142,7 @@ fun PostCard(
                 Spacer(modifier = Modifier.height(12.dp))
             }
 
-            // Caption/Smart caption
+            // Caption
             if (!post.smart_caption.isNullOrBlank()) {
                 Text(
                     text = post.smart_caption,
@@ -136,103 +152,32 @@ fun PostCard(
                 Spacer(modifier = Modifier.height(8.dp))
             }
 
-            // Mostra le coordinate se disponibili
+            // Location card if available
             if (post.latitude != null && post.longitude != null) {
-                Card(
-                    colors = CardDefaults.cardColors(
-                        containerColor = MaterialTheme.colorScheme.primaryContainer
-                    ),
-                    shape = RoundedCornerShape(8.dp),
-                    modifier = Modifier.clickable { onLocationClick?.invoke() }
-                ) {
-                    Row(
-                        modifier = Modifier.padding(12.dp),
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Icon(
-                            imageVector = Icons.Default.LocationOn,
-                            contentDescription = "Posizione",
-                            tint = MaterialTheme.colorScheme.onPrimaryContainer,
-                            modifier = Modifier.size(16.dp)
-                        )
-                        Spacer(modifier = Modifier.width(8.dp))
-                        Column {
-                            Text(
-                                text = "📍 Posizione disponibile",
-                                style = MaterialTheme.typography.labelMedium,
-                                fontWeight = FontWeight.Bold,
-                                color = MaterialTheme.colorScheme.onPrimaryContainer
-                            )
-                            Text(
-                                text = "Lat: ${String.format("%.6f", post.latitude)}, Lng: ${String.format("%.6f", post.longitude)}",
-                                style = MaterialTheme.typography.bodySmall,
-                                color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.8f)
-                            )
-                        }
-                    }
-                }
+                LocationInfoCard(
+                    latitude = post.latitude,
+                    longitude = post.longitude,
+                    onClick = onLocationClick
+                )
                 Spacer(modifier = Modifier.height(8.dp))
             }
 
-            // OCR Text se disponibile
-            if (!post.ocr_text.isNullOrBlank()) {
-                Card(
-                    colors = CardDefaults.cardColors(
-                        containerColor = MaterialTheme.colorScheme.surfaceVariant
-                    ),
-                    shape = RoundedCornerShape(8.dp)
-                ) {
-                    Column(modifier = Modifier.padding(12.dp)) {
-                        Text(
-                            text = "📄 Testo riconosciuto:",
-                            style = MaterialTheme.typography.labelMedium,
-                            fontWeight = FontWeight.Bold,
-                            color = MaterialTheme.colorScheme.primary
-                        )
-                        Text(
-                            text = post.ocr_text,
-                            style = MaterialTheme.typography.bodyMedium,
-                            modifier = Modifier.padding(top = 4.dp)
-                        )
-                    }
-                }
-                Spacer(modifier = Modifier.height(8.dp))
-            }
+            // ML Kit results if available and enabled
+            if (showMLKitResults &&
+                ((post.ocr_text != null && post.ocr_text.isNotBlank()) ||
+                        (post.object_tags != null && post.object_tags.isNotEmpty()))) {
 
-            // Object tags se disponibili
-            if (post.object_tags.isNotEmpty()) {
-                Row(
-                    horizontalArrangement = Arrangement.spacedBy(8.dp),
-                    modifier = Modifier.fillMaxWidth()
-                ) {
-                    Text(
-                        text = "🏷️",
-                        style = MaterialTheme.typography.bodySmall
-                    )
-                    post.object_tags.take(3).forEach { tag ->
-                        AssistChip(
-                            onClick = { },
-                            label = {
-                                Text(
-                                    text = tag,
-                                    style = MaterialTheme.typography.labelSmall
-                                )
-                            }
-                        )
-                    }
-                    if (post.object_tags.size > 3) {
-                        Text(
-                            text = "+${post.object_tags.size - 3}",
-                            style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                    }
-                }
+                MLKitResultsCard(
+                    ocrText = post.ocr_text ?: "",
+                    objectTags = post.object_tags ?: emptyList()
+                )
+
                 Spacer(modifier = Modifier.height(8.dp))
             }
 
             HorizontalDivider(
-                modifier = Modifier.fillMaxWidth(), thickness = 0.5.dp,
+                modifier = Modifier.fillMaxWidth(),
+                thickness = 0.5.dp,
                 color = MaterialTheme.colorScheme.outline.copy(alpha = 0.3f)
             )
 
@@ -255,6 +200,7 @@ fun PostCard(
                             tint = if (isLiked) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.onSurfaceVariant
                         )
                     }
+
                     if (likesCount > 0) {
                         Text(
                             text = "$likesCount",
@@ -275,7 +221,8 @@ fun PostCard(
                             tint = MaterialTheme.colorScheme.onSurfaceVariant
                         )
                     }
-                    // Usa comments_count dal post se disponibile
+
+                    // Use comments_count from post if available
                     val commentsCount = post.comments_count ?: 0
                     if (commentsCount > 0) {
                         Text(
@@ -285,6 +232,53 @@ fun PostCard(
                         )
                     }
                 }
+            }
+        }
+    }
+}
+
+/**
+ * Card per visualizzare le informazioni di posizione
+ */
+@Composable
+fun LocationInfoCard(
+    latitude: Double,
+    longitude: Double,
+    onClick: (() -> Unit)?
+) {
+    Card(
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.primaryContainer
+        ),
+        shape = RoundedCornerShape(8.dp),
+        modifier = Modifier.clickable(enabled = onClick != null) { onClick?.invoke() }
+    ) {
+        Row(
+            modifier = Modifier.padding(12.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Icon(
+                imageVector = Icons.Default.LocationOn,
+                contentDescription = "Posizione",
+                tint = MaterialTheme.colorScheme.onPrimaryContainer,
+                modifier = Modifier.size(16.dp)
+            )
+
+            Spacer(modifier = Modifier.width(8.dp))
+
+            Column {
+                Text(
+                    text = "📍 Posizione disponibile",
+                    style = MaterialTheme.typography.labelMedium,
+                    fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.onPrimaryContainer
+                )
+
+                Text(
+                    text = "Lat: ${String.format("%.6f", latitude)}, Lng: ${String.format("%.6f", longitude)}",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.8f)
+                )
             }
         }
     }

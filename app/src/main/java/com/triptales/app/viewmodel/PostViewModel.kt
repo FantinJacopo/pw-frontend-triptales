@@ -16,15 +16,21 @@ import okhttp3.MultipartBody
 import okhttp3.RequestBody.Companion.asRequestBody
 import java.io.File
 
+/**
+ * Stati possibili per la gestione dei post
+ */
 sealed class PostState {
     object Idle : PostState()
     object Loading : PostState()
     data class Success(val posts: List<Post>) : PostState()
     object PostCreated : PostState()
-    data class MLKitAnalyzing(val progress: String) : PostState() // Nuovo stato per l'analisi ML Kit
+    data class MLKitAnalyzing(val progress: String) : PostState() // Stato per analisi ML Kit
     data class Error(val message: String) : PostState()
 }
 
+/**
+ * Stati possibili per la gestione dei like
+ */
 sealed class LikeState {
     object Idle : LikeState()
     object Loading : LikeState()
@@ -34,32 +40,36 @@ sealed class LikeState {
     data class Error(val message: String) : LikeState()
 }
 
+/**
+ * ViewModel per la gestione dei post e delle interazioni dell'utente.
+ */
 class PostViewModel(
     private val repository: PostRepository,
     private val likeRepository: PostLikeRepository
 ) : ViewModel() {
+
     private val _postState = MutableStateFlow<PostState>(PostState.Idle)
     val postState: StateFlow<PostState> = _postState
 
     private val _likeState = MutableStateFlow<LikeState>(LikeState.Idle)
     val likeState: StateFlow<LikeState> = _likeState
 
-    private val likesCountMap = mutableMapOf<Int, Int>()
-
-    // Cache delle informazioni sui like
+    // Cache dei like e conteggi
     private val userLikedPosts = mutableSetOf<Int>()
     private val userLikeIdMap = mutableMapOf<Int, Int>() // postId -> likeId
+    private val likesCountMap = mutableMapOf<Int, Int>() // postId -> count
 
-    // Mantieni traccia dell'ultimo gruppo caricato per il refresh automatico
+    // Ultimo gruppo caricato
     private var lastGroupId: Int? = null
 
+    /**
+     * Carica i post per un gruppo specifico.
+     */
     fun fetchPosts(groupId: Int, forceRefresh: Boolean = false) {
         viewModelScope.launch {
-            Log.d("PostViewModel", "Fetching posts for group: $groupId (force: $forceRefresh)")
-
             // Se è lo stesso gruppo e non è un force refresh, evita il reload
             if (!forceRefresh && _postState.value is PostState.Success && lastGroupId == groupId) {
-                Log.d("PostViewModel", "Already showing posts for group $groupId, skipping")
+                Log.d("PostViewModel", "Using cached posts for group $groupId")
                 return@launch
             }
 
@@ -68,19 +78,18 @@ class PostViewModel(
 
             try {
                 val response = repository.getPosts(groupId)
-                Log.d("PostViewModel", "Response code: ${response.code()}")
 
                 if (response.isSuccessful && response.body() != null) {
                     val posts = response.body()!!
-                    Log.d("PostViewModel", "Received ${posts.size} posts")
+                    Log.d("PostViewModel", "Successfully fetched ${posts.size} posts")
                     _postState.value = PostState.Success(posts)
 
                     // Carica i like dell'utente dopo aver caricato i post
                     fetchUserLikes()
                 } else {
                     val errorBody = response.errorBody()?.string()
-                    Log.e("PostViewModel", "Error response: $errorBody")
-                    _postState.value = PostState.Error("Errore caricamento post: ${response.code()} - $errorBody")
+                    Log.e("PostViewModel", "Error fetching posts: ${response.code()} - $errorBody")
+                    _postState.value = PostState.Error("Errore nel caricamento dei post: ${response.code()}")
                 }
             } catch (e: Exception) {
                 Log.e("PostViewModel", "Exception fetching posts", e)
@@ -89,6 +98,9 @@ class PostViewModel(
         }
     }
 
+    /**
+     * Crea un nuovo post con analisi ML Kit.
+     */
     fun createPost(
         groupId: Int,
         caption: String,
@@ -98,43 +110,39 @@ class PostViewModel(
         longitude: Double? = null
     ) {
         viewModelScope.launch {
-            Log.d("PostViewModel", "Creating post for group: $groupId, caption: $caption")
-            Log.d("PostViewModel", "Location: lat=$latitude, lng=$longitude")
-            Log.d("PostViewModel", "Will analyze image with ML Kit: ${imageUri != null}")
-
+            // Prima mostriamo lo stato di caricamento
             _postState.value = PostState.Loading
 
             try {
-                // Mostra stato di analisi ML Kit se abbiamo un'immagine
+                // Se abbiamo un URI dell'immagine, mostriamo lo stato di analisi ML Kit
                 if (imageUri != null) {
-                    _postState.value = PostState.MLKitAnalyzing("🤖 Analizando immagine con l'intelligenza artificiale...")
+                    _postState.value = PostState.MLKitAnalyzing("Analisi AI in corso...")
                 }
 
+                // Prepara il file immagine per l'upload
                 val requestFile = imageFile.asRequestBody("image/*".toMediaTypeOrNull())
                 val imagePart = MultipartBody.Part.createFormData("image", imageFile.name, requestFile)
 
+                // Creazione del post
                 val response = repository.createPost(
                     groupId = groupId,
                     caption = caption,
                     imagePart = imagePart,
-                    imageUri = imageUri, // Passa l'URI per l'analisi ML Kit
+                    imageUri = imageUri,
                     latitude = latitude,
                     longitude = longitude
                 )
-                Log.d("PostViewModel", "Create post response code: ${response.code()}")
 
                 if (response.isSuccessful) {
-                    Log.d("PostViewModel", "Post created successfully with ML Kit analysis")
-                    // Importante: Prima impostiamo lo stato a PostCreated
+                    Log.d("PostViewModel", "Post created successfully")
                     _postState.value = PostState.PostCreated
 
-                    // Poi aggiorniamo lastGroupId per assicurarci che quando torneremo
-                    // alla schermata del gruppo, i post saranno aggiornati
+                    // Aggiorna lastGroupId
                     lastGroupId = groupId
                 } else {
                     val errorBody = response.errorBody()?.string()
-                    Log.e("PostViewModel", "Error creating post: $errorBody")
-                    _postState.value = PostState.Error("Errore creazione post: ${response.code()} - $errorBody")
+                    Log.e("PostViewModel", "Post creation failed: ${response.code()} - $errorBody")
+                    _postState.value = PostState.Error("Errore nella creazione del post: ${response.code()}")
                 }
             } catch (e: Exception) {
                 Log.e("PostViewModel", "Exception creating post", e)
@@ -143,12 +151,14 @@ class PostViewModel(
         }
     }
 
-    // Carica i like dell'utente
+    /**
+     * Carica i like dell'utente corrente.
+     */
     fun fetchUserLikes() {
         viewModelScope.launch {
             try {
-                Log.d("PostViewModel", "Fetching user likes")
                 val response = likeRepository.getUserLikes()
+
                 if (response.isSuccessful && response.body() != null) {
                     val likes = response.body()!!
 
@@ -169,33 +179,39 @@ class PostViewModel(
                     Log.d("PostViewModel", "Fetched ${likes.size} user likes")
                 } else {
                     Log.e("PostViewModel", "Error fetching user likes: ${response.code()}")
-                    _likeState.value = LikeState.Error("Errore nel caricamento dei mi piace")
                 }
             } catch (e: Exception) {
                 Log.e("PostViewModel", "Exception fetching user likes", e)
-                _likeState.value = LikeState.Error("Errore: ${e.message}")
             }
         }
     }
 
-    // Gestisce il toggle del like
+    /**
+     * Aggiunge o rimuove un like da un post.
+     */
     fun toggleLike(postId: Int) {
         viewModelScope.launch {
             _likeState.value = LikeState.Loading
 
             try {
                 if (postId in userLikedPosts) {
-                    // L'utente ha già messo like, quindi rimuoviamolo
+                    // L'utente ha già messo like, rimuoviamolo
                     val likeId = userLikeIdMap[postId] ?: throw Exception("Like ID not found")
                     val response = likeRepository.unlikePost(likeId)
 
                     if (response.isSuccessful) {
                         userLikedPosts.remove(postId)
                         userLikeIdMap.remove(postId)
+
+                        // Aggiorna il conteggio
+                        val currentCount = likesCountMap[postId] ?: 0
+                        if (currentCount > 0) {
+                            likesCountMap[postId] = currentCount - 1
+                        }
+
                         _likeState.value = LikeState.LikeActionSuccess(postId, false)
-                        Log.d("PostViewModel", "Post $postId unliked successfully")
                     } else {
-                        _likeState.value = LikeState.Error("Errore nella rimozione del mi piace")
+                        _likeState.value = LikeState.Error("Errore rimozione like: ${response.code()}")
                     }
                 } else {
                     // L'utente non ha ancora messo like, aggiungiamolo
@@ -205,10 +221,14 @@ class PostViewModel(
                         val likeResponse = response.body()!!
                         userLikedPosts.add(postId)
                         userLikeIdMap[postId] = likeResponse.id
+
+                        // Aggiorna il conteggio
+                        val currentCount = likesCountMap[postId] ?: 0
+                        likesCountMap[postId] = currentCount + 1
+
                         _likeState.value = LikeState.LikeActionSuccess(postId, true, likeResponse.id)
-                        Log.d("PostViewModel", "Post $postId liked successfully, like ID: ${likeResponse.id}")
                     } else {
-                        _likeState.value = LikeState.Error("Errore nell'aggiunta del mi piace")
+                        _likeState.value = LikeState.Error("Errore aggiunta like: ${response.code()}")
                     }
                 }
             } catch (e: Exception) {
@@ -218,76 +238,19 @@ class PostViewModel(
         }
     }
 
-    fun isPostLiked(postId: Int): Boolean {
-        return postId in userLikedPosts
-    }
-
-    // Metodo per aggiornare il conteggio commenti di un singolo post
-    fun updatePostCommentCount(postId: Int, newCount: Int) {
-        val currentState = _postState.value
-        if (currentState is PostState.Success) {
-            val updatedPosts = currentState.posts.map { post ->
-                if (post.id == postId) {
-                    post.copy(comments_count = newCount)
-                } else {
-                    post
-                }
-            }
-            _postState.value = PostState.Success(updatedPosts)
-            Log.d("PostViewModel", "Updated comment count for post $postId to $newCount")
-        }
-    }
-
-    // Metodo per incrementare il conteggio commenti di un singolo post
-    fun incrementPostCommentCount(postId: Int) {
-        val currentState = _postState.value
-        if (currentState is PostState.Success) {
-            val updatedPosts = currentState.posts.map { post ->
-                if (post.id == postId) {
-                    val newCount = (post.comments_count ?: 0) + 1
-                    Log.d("PostViewModel", "Incrementing comment count for post $postId to $newCount")
-                    post.copy(comments_count = newCount)
-                } else {
-                    post
-                }
-            }
-            _postState.value = PostState.Success(updatedPosts)
-        }
-    }
-
-    // Metodo per refreshare i post quando un commento viene aggiunto
-    fun refreshPosts() {
-        lastGroupId?.let { groupId ->
-            Log.d("PostViewModel", "Refreshing posts for group $groupId")
-            fetchPosts(groupId, forceRefresh = true)
-        }
-    }
-
-    // Metodo per ottenere tutti i post con posizione per la mappa
-    fun getPostsWithLocation(): List<Post> {
-        val currentState = _postState.value
-        return if (currentState is PostState.Success) {
-            currentState.posts.filter { post ->
-                post.latitude != null && post.longitude != null
-            }
-        } else {
-            emptyList()
-        }
-    }
-
-    fun resetState() {
-        Log.d("PostViewModel", "Resetting state")
-        _postState.value = PostState.Idle
-    }
-
-    // Funzione per ottenere i like di un post specifico
+    /**
+     * Carica i like per un post specifico.
+     */
     fun fetchPostLikes(postId: Int) {
         viewModelScope.launch {
             try {
                 val response = likeRepository.getLikes(postId)
+
                 if (response.isSuccessful && response.body() != null) {
                     val likes = response.body()!!
                     likesCountMap[postId] = likes.size
+
+                    Log.d("PostViewModel", "Updated likes count for post $postId: ${likes.size}")
 
                     // Aggiorna lo stato
                     val currentLikeState = _likeState.value
@@ -300,10 +263,6 @@ class PostViewModel(
                         newLikes[postId] = likes
                         _likeState.value = LikeState.Success(newLikes)
                     }
-
-                    Log.d("PostViewModel", "Fetched ${likes.size} likes for post $postId")
-                } else {
-                    Log.e("PostViewModel", "Error fetching post likes: ${response.code()}")
                 }
             } catch (e: Exception) {
                 Log.e("PostViewModel", "Exception fetching post likes", e)
@@ -311,8 +270,41 @@ class PostViewModel(
         }
     }
 
-    // Funzione per ottenere il conteggio di like di un post
+    /**
+     * Verifica se un post è piaciuto dall'utente.
+     */
+    fun isPostLiked(postId: Int): Boolean {
+        return postId in userLikedPosts
+    }
+
+    /**
+     * Ottiene il conteggio dei like per un post.
+     */
     fun getLikesCount(postId: Int): Int {
         return likesCountMap[postId] ?: 0
+    }
+
+    /**
+     * Aggiorna il conteggio commenti per un post.
+     */
+    fun updatePostCommentCount(postId: Int, newCount: Int) {
+        val currentState = _postState.value
+        if (currentState is PostState.Success) {
+            val updatedPosts = currentState.posts.map { post ->
+                if (post.id == postId) {
+                    post.copy(comments_count = newCount)
+                } else {
+                    post
+                }
+            }
+            _postState.value = PostState.Success(updatedPosts)
+        }
+    }
+
+    /**
+     * Resetta lo stato.
+     */
+    fun resetState() {
+        _postState.value = PostState.Idle
     }
 }

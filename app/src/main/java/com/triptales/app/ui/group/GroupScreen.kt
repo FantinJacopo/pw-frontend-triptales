@@ -439,7 +439,7 @@ fun GroupScreen(
                                                 navController.navigate("group/$groupId/map")
                                             }
                                         } else null,
-                                        userLocation = userLocation,
+                                        userLocation = userLocation, // Passa la posizione dell'utente
                                     )
                                 }
                             }

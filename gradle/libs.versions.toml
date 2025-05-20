@@ -8,12 +8,16 @@ coilComposeVersion = "2.4.0"
 coilNetworkOkhttp = "3.1.0"
 converterGsonVersion = "2.9.0"
 datastorePreferences = "1.1.6"
+gson = "2.10.1"
 hiltAndroidGradlePlugin = "2.48"
+imageLabeling = "17.0.9"
 kotlin = "2.0.0"
 coreKtx = "1.16.0"
 junit = "4.13.2"
 junitVersion = "1.2.1"
 espressoCore = "3.6.1"
+kotlinxCoroutinesAndroid = "1.10.1"
+kotlinxCoroutinesCore = "1.10.1"
 lifecycleRuntimeKtx = "2.9.0"
 activityCompose = "1.10.1"
 composeBom = "2024.04.01"
@@ -21,9 +25,12 @@ mapsCompose = "4.3.3"
 material = "1.12.0"
 material3 = "1.3.2"
 navigationCompose = "2.8.9"
+objectDetection = "17.0.2"
 playServicesLocation = "21.3.0"
 playServicesMaps = "19.2.0"
 retrofit = "2.9.0"
+textRecognition = "16.0.1"
+visionCommon = "17.3.0"
 
 [libraries]
 android-image-cropper = { module = "com.github.CanHub:Android-Image-Cropper", version.ref = "androidImageCropper" }
@@ -35,7 +42,9 @@ androidx-material3-window-size-class1 = { module = "androidx.compose.material3:m
 androidx-navigation-compose = { module = "androidx.navigation:navigation-compose", version.ref = "navigationCompose" }
 coil-kt-coil-compose = { module = "io.coil-kt:coil-compose", version.ref = "coilComposeVersion" }
 coil-network-okhttp = { module = "io.coil-kt.coil3:coil-network-okhttp", version.ref = "coilNetworkOkhttp" }
+gson = { module = "com.google.code.gson:gson", version.ref = "gson" }
 hilt-android-gradle-plugin = { module = "com.google.dagger:hilt-android-gradle-plugin", version.ref = "hiltAndroidGradlePlugin" }
+image-labeling = { module = "com.google.mlkit:image-labeling", version.ref = "imageLabeling" }
 junit = { group = "junit", name = "junit", version.ref = "junit" }
 androidx-junit = { group = "androidx.test.ext", name = "junit", version.ref = "junitVersion" }
 androidx-espresso-core = { group = "androidx.test.espresso", name = "espresso-core", version.ref = "espressoCore" }
@@ -49,14 +58,19 @@ androidx-ui-tooling-preview = { group = "androidx.compose.ui", name = "ui-toolin
 androidx-ui-test-manifest = { group = "androidx.compose.ui", name = "ui-test-manifest" }
 androidx-ui-test-junit4 = { group = "androidx.compose.ui", name = "ui-test-junit4" }
 androidx-material3 = { group = "androidx.compose.material3", name = "material3" }
+kotlinx-coroutines-android = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-android", version.ref = "kotlinxCoroutinesAndroid" }
+kotlinx-coroutines-core = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-core", version.ref = "kotlinxCoroutinesCore" }
 maps-compose = { module = "com.google.maps.android:maps-compose", version.ref = "mapsCompose" }
 material = { module = "com.google.android.material:material", version.ref = "material" }
 material3 = { module = "androidx.compose.material3:material3", version.ref = "material3" }
+object1-detection = { module = "com.google.mlkit:object-detection", version.ref = "objectDetection" }
 play-services-location = { module = "com.google.android.gms:play-services-location", version.ref = "playServicesLocation" }
 play-services-maps = { module = "com.google.android.gms:play-services-maps", version.ref = "playServicesMaps" }
 retrofit = { module = "com.squareup.retrofit2:retrofit", version.ref = "retrofit" }
 retrofit2-converter-gson = { module = "com.squareup.retrofit2:converter-gson", version.ref = "converterGsonVersion" }
+text-recognition = { module = "com.google.mlkit:text-recognition", version.ref = "textRecognition" }
 vanniktech-android-image-cropper = { module = "com.vanniktech:android-image-cropper", version.ref = "androidImageCropperVersion" }
+vision-common = { module = "com.google.mlkit:vision-common", version.ref = "visionCommon" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }
