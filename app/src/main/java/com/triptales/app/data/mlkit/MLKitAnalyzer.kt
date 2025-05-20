@@ -5,7 +5,6 @@ import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.net.Uri
 import android.util.Log
-import com.google.gson.Gson
 import com.google.mlkit.vision.common.InputImage
 import com.google.mlkit.vision.label.ImageLabeling
 import com.google.mlkit.vision.label.defaults.ImageLabelerOptions
@@ -36,8 +35,6 @@ class MLKitAnalyzer(private val context: Context) {
             .setConfidenceThreshold(0.7f) // Solo etichette con confidenza >= 70%
             .build()
     )
-
-    private val gson = Gson()
 
     /**
      * Analizza un'immagine utilizzando ML Kit e restituisce i risultati.

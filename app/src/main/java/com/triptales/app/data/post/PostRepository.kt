@@ -2,11 +2,13 @@ package com.triptales.app.data.post
 
 import android.net.Uri
 import android.util.Log
+import com.google.gson.Gson
 import com.triptales.app.data.mlkit.MLKitAnalyzer
 import com.triptales.app.data.utils.toRequestBody
+import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.MultipartBody
+import okhttp3.RequestBody.Companion.toRequestBody
 import retrofit2.Response
-import java.io.IOException
 
 /**
  * Repository per la gestione dei post, include l'integrazione con ML Kit.
@@ -107,9 +109,12 @@ class PostRepository(
             } else null
 
             val objectTagsParam = if (objectTags.isNotEmpty()) {
-                val tagsString = objectTags.joinToString(",")
-                val param = toRequestBody(tagsString)
-                Log.d(TAG, "Adding object tags to request: $tagsString")
+                // Serializziamo i tag come array JSON
+                val gson = Gson()
+                val tagsJson = gson.toJson(objectTags)
+                val param = tagsJson
+                    .toRequestBody("application/json".toMediaTypeOrNull())
+                Log.d(TAG, "Adding object tags as JSON to request: $tagsJson")
                 param
             } else null
 

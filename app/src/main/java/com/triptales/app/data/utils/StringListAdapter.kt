@@ -51,7 +51,7 @@ class StringListAdapter : TypeAdapter<List<String>>() {
                         .map { it.trim() }
                         .map { it.trim('"') }
                         .filter { it.isNotBlank() }
-                } catch (e: Exception) {
+                } catch (_: Exception) {
                     // Fallback alla divisione semplice per virgola
                     return stringValue.split(",").map { it.trim() }
                 }

@@ -1,7 +1,6 @@
 package com.triptales.app.data
 
 import com.google.gson.GsonBuilder
-import com.triptales.app.data.auth.AuthApi
 import com.triptales.app.data.auth.AuthInterceptor
 import com.triptales.app.data.auth.TokenManager
 import com.triptales.app.data.utils.StringListAdapter
