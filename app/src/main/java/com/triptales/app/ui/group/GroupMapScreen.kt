@@ -217,13 +217,7 @@ fun GroupMapScreen(
                         ) {
                             PostsMap(
                                 posts = postsWithLocation,
-                                onMarkerClick = { post ->
-                                    Toast.makeText(
-                                        context,
-                                        "Post di ${post.user_name ?: "Utente"}: ${post.smart_caption}",
-                                        Toast.LENGTH_SHORT
-                                    ).show()
-                                },
+                                onMarkerClick = { },
                                 // Calcola il centro della mappa basandosi sui post
                                 initialLocation = run {
                                     val avgLat = postsWithLocation.mapNotNull { it.latitude }.average()
