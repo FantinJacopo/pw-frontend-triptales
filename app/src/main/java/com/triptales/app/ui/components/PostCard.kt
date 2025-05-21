@@ -1,5 +1,6 @@
 package com.triptales.app.ui.components
 
+import LocationInfoCard
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -47,6 +48,7 @@ import com.triptales.app.data.utils.DateUtils.formatPostDate
  * @param onCommentClick Callback when the comment button is clicked
  * @param onLocationClick Optional callback when the location is clicked
  * @param onUserClick Callback when the user profile is clicked
+ * @param onImageClick Callback when the image is clicked to view fullscreen
  * @param userLocation Optional current user location to show distance
  * @param showMLKitResults Whether to show ML Kit analysis results
  */
@@ -60,6 +62,7 @@ fun PostCard(
     onCommentClick: () -> Unit = {},
     onLocationClick: (() -> Unit)? = null,
     onUserClick: (Int) -> Unit = {},
+    onImageClick: (String, String, String) -> Unit = { _, _, _ -> },
     userLocation: LatLng? = null,
     showMLKitResults: Boolean = true
 ) {
@@ -127,7 +130,7 @@ fun PostCard(
 
             Spacer(modifier = Modifier.height(12.dp))
 
-            // Post image
+            // Post image with click to view fullscreen
             if (!post.image_url.isNullOrBlank()) {
                 AsyncImage(
                     model = post.image_url,
@@ -135,7 +138,14 @@ fun PostCard(
                     modifier = Modifier
                         .fillMaxWidth()
                         .height(300.dp)
-                        .clip(RoundedCornerShape(8.dp)),
+                        .clip(RoundedCornerShape(8.dp))
+                        .clickable {
+                            onImageClick(
+                                post.image_url,
+                                post.smart_caption,
+                                post.user_name ?: "Utente ${post.user_id}"
+                            )
+                        },
                     contentScale = ContentScale.Crop
                 )
 
@@ -232,53 +242,6 @@ fun PostCard(
                         )
                     }
                 }
-            }
-        }
-    }
-}
-
-/**
- * Card per visualizzare le informazioni di posizione
- */
-@Composable
-fun LocationInfoCard(
-    latitude: Double,
-    longitude: Double,
-    onClick: (() -> Unit)?
-) {
-    Card(
-        colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.primaryContainer
-        ),
-        shape = RoundedCornerShape(8.dp),
-        modifier = Modifier.clickable(enabled = onClick != null) { onClick?.invoke() }
-    ) {
-        Row(
-            modifier = Modifier.padding(12.dp),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Icon(
-                imageVector = Icons.Default.LocationOn,
-                contentDescription = "Posizione",
-                tint = MaterialTheme.colorScheme.onPrimaryContainer,
-                modifier = Modifier.size(16.dp)
-            )
-
-            Spacer(modifier = Modifier.width(8.dp))
-
-            Column {
-                Text(
-                    text = "📍 Posizione disponibile",
-                    style = MaterialTheme.typography.labelMedium,
-                    fontWeight = FontWeight.Bold,
-                    color = MaterialTheme.colorScheme.onPrimaryContainer
-                )
-
-                Text(
-                    text = "Lat: ${String.format("%.6f", latitude)}, Lng: ${String.format("%.6f", longitude)}",
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.8f)
-                )
             }
         }
     }

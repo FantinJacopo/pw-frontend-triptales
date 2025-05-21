@@ -4,8 +4,10 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.navigation.NavHostController
+import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
+import androidx.navigation.navArgument
 import com.triptales.app.data.auth.TokenManager
 import com.triptales.app.data.location.LocationManager
 import com.triptales.app.ui.auth.LoginScreen
@@ -19,6 +21,7 @@ import com.triptales.app.ui.group.GroupScreen
 import com.triptales.app.ui.group.JoinGroupByCodeScreen
 import com.triptales.app.ui.group.JoinGroupScreen
 import com.triptales.app.ui.home.HomeScreen
+import com.triptales.app.ui.image.FullscreenImageScreen
 import com.triptales.app.ui.post.CommentsScreen
 import com.triptales.app.ui.post.CreatePostScreen
 import com.triptales.app.ui.profile.ProfileScreen
@@ -31,6 +34,8 @@ import com.triptales.app.viewmodel.GroupMembersViewModel
 import com.triptales.app.viewmodel.GroupViewModel
 import com.triptales.app.viewmodel.PostViewModel
 import com.triptales.app.viewmodel.UserViewModel
+import java.net.URLDecoder
+import java.nio.charset.StandardCharsets
 
 @Composable
 fun NavGraph(
@@ -43,7 +48,7 @@ fun NavGraph(
     membersViewModel: GroupMembersViewModel,
     tokenManager: TokenManager,
     locationManager: LocationManager
-){
+) {
     FrontendtriptalesTheme {
         val authState by authViewModel.authState.collectAsState()
 
@@ -93,7 +98,8 @@ fun NavGraph(
                 )
             }
             composable("createPost/{groupId}") { backStackEntry ->
-                val groupId = backStackEntry.arguments?.getString("groupId")?.toIntOrNull() ?: return@composable
+                val groupId = backStackEntry.arguments?.getString("groupId")?.toIntOrNull()
+                    ?: return@composable
                 CreatePostScreen(
                     groupId = groupId,
                     postViewModel = postViewModel,
@@ -102,7 +108,8 @@ fun NavGraph(
                 )
             }
             composable("post/{postId}/comments") { backStackEntry ->
-                val postId = backStackEntry.arguments?.getString("postId")?.toIntOrNull() ?: return@composable
+                val postId = backStackEntry.arguments?.getString("postId")?.toIntOrNull()
+                    ?: return@composable
                 CommentsScreen(
                     postId = postId,
                     commentViewModel = commentViewModel,
@@ -110,8 +117,44 @@ fun NavGraph(
                     postViewModel = postViewModel
                 )
             }
+            // Nuova rotta per la visualizzazione a schermo intero dell'immagine
+            composable(
+                route = "image/{imageUrl}/{caption}/{userName}",
+                arguments = listOf(
+                    navArgument("imageUrl") {
+                        type = NavType.StringType
+                    },
+                    navArgument("caption") {
+                        type = NavType.StringType
+                        defaultValue = ""
+                    },
+                    navArgument("userName") {
+                        type = NavType.StringType
+                        defaultValue = ""
+                    }
+                )
+            ) { backStackEntry ->
+                val encodedImageUrl =
+                    backStackEntry.arguments?.getString("imageUrl") ?: return@composable
+                val encodedCaption = backStackEntry.arguments?.getString("caption") ?: ""
+                val encodedUserName = backStackEntry.arguments?.getString("userName") ?: ""
+
+                // URL-decode i parametri
+                val imageUrl = URLDecoder.decode(encodedImageUrl, StandardCharsets.UTF_8.toString())
+                val caption = URLDecoder.decode(encodedCaption, StandardCharsets.UTF_8.toString())
+                val userName = URLDecoder.decode(encodedUserName, StandardCharsets.UTF_8.toString())
+
+                FullscreenImageScreen(
+                    imageUrl = imageUrl,
+                    caption = if (caption.isBlank()) null else caption,
+                    userName = if (userName.isBlank()) null else userName,
+                    navController = navController
+                )
+            }
+
             composable("group/{groupId}") { backStackEntry ->
-                val groupId = backStackEntry.arguments?.getString("groupId")?.toIntOrNull() ?: return@composable
+                val groupId = backStackEntry.arguments?.getString("groupId")?.toIntOrNull()
+                    ?: return@composable
                 GroupScreen(
                     groupId = groupId,
                     groupViewModel = groupViewModel,
@@ -121,7 +164,8 @@ fun NavGraph(
                 )
             }
             composable("group/{groupId}/members") { backStackEntry ->
-                val groupId = backStackEntry.arguments?.getString("groupId")?.toIntOrNull() ?: return@composable
+                val groupId = backStackEntry.arguments?.getString("groupId")?.toIntOrNull()
+                    ?: return@composable
                 GroupMembersScreen(
                     groupId = groupId,
                     groupViewModel = groupViewModel,
@@ -130,7 +174,8 @@ fun NavGraph(
                 )
             }
             composable("group/{groupId}/map") { backStackEntry ->
-                val groupId = backStackEntry.arguments?.getString("groupId")?.toIntOrNull() ?: return@composable
+                val groupId = backStackEntry.arguments?.getString("groupId")?.toIntOrNull()
+                    ?: return@composable
                 GroupMapScreen(
                     groupId = groupId,
                     groupViewModel = groupViewModel,
@@ -147,7 +192,8 @@ fun NavGraph(
             }
             // Nuova rotta per visualizzare il profilo di un altro utente
             composable("userProfile/{userId}") { backStackEntry ->
-                val userId = backStackEntry.arguments?.getString("userId")?.toIntOrNull() ?: return@composable
+                val userId = backStackEntry.arguments?.getString("userId")?.toIntOrNull()
+                    ?: return@composable
                 UserProfileScreen(
                     userId = userId,
                     userViewModel = userViewModel,

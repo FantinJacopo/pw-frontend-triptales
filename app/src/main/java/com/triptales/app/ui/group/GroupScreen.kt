@@ -70,6 +70,8 @@ import com.triptales.app.viewmodel.LikeState
 import com.triptales.app.viewmodel.PostState
 import com.triptales.app.viewmodel.PostViewModel
 import kotlinx.coroutines.launch
+import java.net.URLEncoder
+import java.nio.charset.StandardCharsets
 
 @OptIn(ExperimentalMaterial3Api::class)
 @SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
@@ -439,6 +441,15 @@ fun GroupScreen(
                                                 navController.navigate("group/$groupId/map")
                                             }
                                         } else null,
+                                        onImageClick = { imageUrl, caption, userName ->
+                                            // Codifica URL per la navigazione con parametri
+                                            val encodedImageUrl = URLEncoder.encode(imageUrl, StandardCharsets.UTF_8.toString())
+                                            val encodedCaption = URLEncoder.encode(caption, StandardCharsets.UTF_8.toString())
+                                            val encodedUserName = URLEncoder.encode(userName, StandardCharsets.UTF_8.toString())
+
+                                            // Naviga alla schermata a schermo intero
+                                            navController.navigate("image/$encodedImageUrl/$encodedCaption/$encodedUserName")
+                                        },
                                         userLocation = userLocation, // Passa la posizione dell'utente
                                     )
                                 }
