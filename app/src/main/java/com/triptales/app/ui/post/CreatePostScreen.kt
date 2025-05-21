@@ -331,8 +331,8 @@ fun CreatePostScreen(
                             }
 
                             // Image picker
-                            ImagePickerWithCrop { uri ->
-                                imageUri = uri
+                            ImagePickerWithCrop(fixedAspectRatio = false) {
+                                uri -> imageUri = uri
                             }
 
                             if (imageUri == null) {

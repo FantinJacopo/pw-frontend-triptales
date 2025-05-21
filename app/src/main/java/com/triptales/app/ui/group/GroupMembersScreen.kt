@@ -88,7 +88,7 @@ fun GroupMembersScreen(
                     navController = navController,
                     currentRoute = "group/$groupId/members",
                     onLocationClick = {
-                        Toast.makeText(context, "Funzionalità di mappa in arrivo...", Toast.LENGTH_SHORT).show()
+                        navController.navigate("group/$groupId/map")
                     }
                 )
             }

@@ -20,7 +20,10 @@ import kotlinx.coroutines.launch
 
 @Composable
 fun ImagePickerWithCrop(
-    onImageSelected: (Uri) -> Unit
+    xRatio: Int = 1,
+    yRatio: Int = 1,
+    fixedAspectRatio: Boolean = true,
+    onImageSelected: (Uri) -> Unit,
 ) {
     val context = LocalContext.current
     val coroutineScope = rememberCoroutineScope()
@@ -35,9 +38,9 @@ fun ImagePickerWithCrop(
 
     val crop: (Uri) -> Unit = { uri ->
         val options = CropImageOptions().apply {
-            aspectRatioX = 1
-            aspectRatioY = 1
-            fixAspectRatio = true
+            aspectRatioX = xRatio
+            aspectRatioY = yRatio
+            fixAspectRatio = fixedAspectRatio
             cropShape = CropImageView.CropShape.RECTANGLE
             guidelines = CropImageView.Guidelines.ON
             toolbarColor = android.graphics.Color.DKGRAY

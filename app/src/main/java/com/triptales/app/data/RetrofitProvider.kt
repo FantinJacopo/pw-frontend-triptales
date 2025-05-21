@@ -15,7 +15,7 @@ import java.util.concurrent.TimeUnit
  * Configura le impostazioni di base, inclusi adattatori personalizzati per la serializzazione.
  */
 object RetrofitProvider {
-    private const val IP_ADDRESS = "192.168.1.20"
+    private const val IP_ADDRESS = "192.168.1.3"
     private const val PORT = 8000
 
     /**

@@ -101,7 +101,7 @@ fun PostsMap(
     posts: List<Post>,
     modifier: Modifier = Modifier,
     onMarkerClick: (Post) -> Unit = {},
-    initialLocation: LatLng = LatLng(45.4642, 9.1900), // Milano come default
+    initialLocation: LatLng = LatLng(45.5955176, 11.5821713), // Monticello Conte Otto come centro del mondo di default
     initialZoom: Float = 12f
 ) {
     // Filtra solo i post con posizione
