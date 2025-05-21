@@ -160,6 +160,7 @@ fun HomeScreen(
                                     ) {
                                         Image(
                                             painter = rememberAsyncImagePainter(group.group_image_url),
+                                            //painter = rememberAsyncImagePainter("https://shepherd-precious-reliably.ngrok-free.app/media/groups/reparto_paguri.jpg"),
                                             contentDescription = "Group Image",
                                             modifier = Modifier.size(64.dp)
                                         )

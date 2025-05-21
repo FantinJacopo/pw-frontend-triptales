@@ -14,6 +14,7 @@ import androidx.compose.animation.core.infiniteRepeatable
 import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -354,9 +355,10 @@ fun PostsMap(
                                     contentDescription = "Immagine post",
                                     modifier = Modifier
                                         .fillMaxWidth()
-                                        .height(120.dp)
+                                        .height(160.dp)
                                         .padding(top = 8.dp)
-                                        .clip(RoundedCornerShape(8.dp)),
+                                        .clip(RoundedCornerShape(8.dp))
+                                        .clickable { onMarkerClick(post) },
                                     contentScale = ContentScale.Crop,
                                     loading = {
                                         Box(
@@ -372,10 +374,9 @@ fun PostsMap(
                                 )
                             }
 
-                            // Pulsante per visualizzare il post
                             Spacer(modifier = Modifier.height(8.dp))
 
-                            Surface(
+                            /*Surface(
                                 modifier = Modifier
                                     .fillMaxWidth()
                                     .padding(top = 8.dp),
@@ -390,7 +391,7 @@ fun PostsMap(
                                     modifier = Modifier.padding(vertical = 8.dp),
                                     textAlign = TextAlign.Center
                                 )
-                            }
+                            }*/
                         } else {
                             // Più post: mostra una galleria orizzontale
                             Text(

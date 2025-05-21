@@ -18,6 +18,12 @@ object RetrofitProvider {
     private const val IP_ADDRESS = "192.168.1.3"
     private const val PORT = 8000
 
+    private const val NGROK_URL = "https://shepherd-precious-reliably.ngrok-free.app/api/"
+
+    private const val USE_NGROK = true
+
+    private var URL = if (USE_NGROK) NGROK_URL else "http://$IP_ADDRESS:$PORT/api/"
+
     /**
      * Crea un'istanza Retrofit con interceptor per l'autenticazione.
      */
@@ -43,7 +49,7 @@ object RetrofitProvider {
             .create()
 
         return Retrofit.Builder()
-            .baseUrl("http://$IP_ADDRESS:$PORT/api/")
+            .baseUrl(URL)
             .client(client)
             .addConverterFactory(GsonConverterFactory.create(gson))
             .build()
@@ -74,7 +80,7 @@ object RetrofitProvider {
             .create()
 
         return Retrofit.Builder()
-            .baseUrl("http://$IP_ADDRESS:$PORT/api/")
+            .baseUrl(URL)
             .client(client)
             .addConverterFactory(GsonConverterFactory.create(gson))
             .build()

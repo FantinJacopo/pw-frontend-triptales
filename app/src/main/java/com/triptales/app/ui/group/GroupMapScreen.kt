@@ -217,14 +217,16 @@ fun GroupMapScreen(
                         ) {
                             PostsMap(
                                 posts = postsWithLocation,
-                                onMarkerClick = { },
+                                onMarkerClick = {
+                                    navController.navigate("post/${it.id}/comments")
+                                },
                                 // Calcola il centro della mappa basandosi sui post
                                 initialLocation = run {
                                     val avgLat = postsWithLocation.mapNotNull { it.latitude }.average()
                                     val avgLng = postsWithLocation.mapNotNull { it.longitude }.average()
                                     LatLng(avgLat, avgLng)
                                 },
-                                initialZoom = 13f
+                                initialZoom = 17f
                             )
 
                             // Overlay con informazioni
