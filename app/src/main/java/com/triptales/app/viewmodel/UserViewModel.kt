@@ -231,4 +231,39 @@ class UserViewModel(private val repository: UserRepository) : ViewModel() {
         userBadgeCache.remove(userId)
         fetchUserBadges(userId)
     }
+
+    /**
+     * Controlla e assegna eventuali badge mancanti all'utente corrente.
+     * Utile per recuperare badge che potrebbero non essere stati assegnati
+     * automaticamente o per verificare nuovi badge disponibili.
+     */
+    fun checkAndAssignBadges() {
+        viewModelScope.launch {
+            try {
+                Log.d("UserViewModel", "Checking for missing badges...")
+
+                val response = repository.checkAndAssignBadges()
+
+                if (response.isSuccessful && response.body() != null) {
+                    val result = response.body()!!
+                    Log.d("UserViewModel", "Badge check result: ${result.message}")
+                    Log.d("UserViewModel", "New badges assigned: ${result.assigned_badges}")
+
+                    if (result.assigned_badges.isNotEmpty()) {
+                        // Se sono stati assegnati nuovi badge, ricarica la lista
+                        Log.d("UserViewModel", "Reloading badges after assignment...")
+                        fetchUserBadges()
+
+                        // Potresti anche mostrare una notifica o un toast
+                        // per informare l'utente dei nuovi badge
+                    }
+                } else {
+                    Log.e("UserViewModel", "Error checking badges: ${response.code()}")
+                }
+            } catch (e: Exception) {
+                Log.e("UserViewModel", "Exception while checking badges", e)
+                // Non mostriamo errore all'utente, è un'operazione di background
+            }
+        }
+    }
 }

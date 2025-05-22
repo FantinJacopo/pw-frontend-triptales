@@ -5,8 +5,6 @@ import android.util.Log
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.LazyRow
-import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
@@ -18,13 +16,11 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import coil.compose.rememberAsyncImagePainter
 import com.triptales.app.data.user.UserProfile
-import com.triptales.app.ui.components.BadgeSection
+import com.triptales.app.ui.components.EnhancedBadgeSection
 import com.triptales.app.ui.theme.FrontendtriptalesTheme
 import com.triptales.app.viewmodel.UserViewModel
 
@@ -126,7 +122,8 @@ fun UserProfileScreen(
                     LazyColumn(
                         modifier = Modifier
                             .fillMaxSize()
-                            .padding(paddingValues)
+                            .padding(paddingValues),
+                        horizontalAlignment = Alignment.CenterHorizontally
                     ) {
                         item {
                             Column(
@@ -168,12 +165,28 @@ fun UserProfileScreen(
                                 }
 
                                 Spacer(modifier = Modifier.height(24.dp))
+                            }
+                        }
 
-                                // Sezione Badge
-                                BadgeSection(badgeState = badgeState)
+                        item {
+                            // Sezione Badge migliorata
+                            Box(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(horizontal = 16.dp)
+                            ) {
+                                EnhancedBadgeSection(badgeState = badgeState)
+                            }
 
-                                Spacer(modifier = Modifier.height(24.dp))
+                            Spacer(modifier = Modifier.height(24.dp))
+                        }
 
+                        item {
+                            Column(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(horizontal = 16.dp)
+                            ) {
                                 // Card con le informazioni
                                 Card(
                                     modifier = Modifier.fillMaxWidth(),
@@ -238,6 +251,8 @@ fun UserProfileScreen(
                                         )
                                     }
                                 }
+
+                                Spacer(modifier = Modifier.height(32.dp))
                             }
                         }
                     }

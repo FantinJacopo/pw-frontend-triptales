@@ -79,12 +79,21 @@ fun BadgeSection(badgeState: com.triptales.app.viewmodel.BadgeState) {
                         }
                     }
                 } else {
-                    LazyRow(
-                        contentPadding = PaddingValues(horizontal = 4.dp),
-                        horizontalArrangement = Arrangement.spacedBy(12.dp)
-                    ) {
-                        items(badges) { userBadge ->
-                            BadgeCard(userBadge = userBadge)
+                    Column {
+                        Text(
+                            text = "Tocca un badge per vedere i dettagli",
+                            style = MaterialTheme.typography.labelSmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            modifier = Modifier.padding(bottom = 8.dp)
+                        )
+
+                        LazyRow(
+                            contentPadding = PaddingValues(horizontal = 4.dp),
+                            horizontalArrangement = Arrangement.spacedBy(12.dp)
+                        ) {
+                            items(badges) { userBadge ->
+                                BadgeCard(userBadge = userBadge)
+                            }
                         }
                     }
                 }

@@ -2,6 +2,7 @@ package com.triptales.app.data.user
 
 import retrofit2.Response
 import retrofit2.http.GET
+import retrofit2.http.POST
 import retrofit2.http.Path
 
 interface UserApi {
@@ -16,4 +17,7 @@ interface UserApi {
 
     @GET("users/{user_id}/badges/")
     suspend fun getUserBadges(@Path("user_id") userId: Int): Response<List<UserBadge>>
+
+    @POST("user/check-badges/")
+    suspend fun checkAndAssignBadges(): Response<BadgeCheckResponse>
 }
