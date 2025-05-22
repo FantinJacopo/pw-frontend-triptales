@@ -1,46 +1,19 @@
 package com.triptales.app.ui.profile
 
-import androidx.compose.foundation.Image
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.ExitToApp
-import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
-import androidx.compose.material3.TopAppBar
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import coil.compose.rememberAsyncImagePainter
+import com.triptales.app.ui.components.BadgeSection
 import com.triptales.app.ui.theme.FrontendtriptalesTheme
 import com.triptales.app.ui.utils.UIUtils.ConfirmationDialog
 import com.triptales.app.ui.utils.UIUtils.rememberDialogState
@@ -58,11 +31,13 @@ fun ProfileScreen(
     FrontendtriptalesTheme {
         val state by viewModel.userState.collectAsState()
         val authState by authViewModel.authState.collectAsState()
+        val badgeState by viewModel.badgeState.collectAsState()
 
         val showLogoutDialog = rememberDialogState()
 
         LaunchedEffect(Unit) {
             viewModel.fetchUserProfile()
+            viewModel.fetchUserBadges()
         }
 
         // Osserva l'authState per la navigazione dopo il logout
@@ -120,7 +95,7 @@ fun ProfileScreen(
                             shape = RoundedCornerShape(60.dp),
                             elevation = CardDefaults.cardElevation(8.dp)
                         ) {
-                            Image(
+                            androidx.compose.foundation.Image(
                                 painter = rememberAsyncImagePainter(profile.profile_image),
                                 contentDescription = "Profile Image",
                                 modifier = Modifier.fillMaxSize()
@@ -154,7 +129,12 @@ fun ProfileScreen(
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
 
-                        Spacer(modifier = Modifier.height(48.dp))
+                        Spacer(modifier = Modifier.height(32.dp))
+
+                        // Sezione Badge
+                        BadgeSection(badgeState = badgeState)
+
+                        Spacer(modifier = Modifier.height(32.dp))
 
                         // Card informazioni
                         Card(
@@ -175,10 +155,6 @@ fun ProfileScreen(
                                 Spacer(modifier = Modifier.height(8.dp))
                                 Text(
                                     text = "Username: ${profile.name}",
-                                    style = MaterialTheme.typography.bodyMedium
-                                )
-                                Text(
-                                    text = "ID Utente: ${profile.id}",
                                     style = MaterialTheme.typography.bodyMedium
                                 )
                             }
@@ -233,7 +209,10 @@ fun ProfileScreen(
                                 )
                                 Spacer(modifier = Modifier.height(16.dp))
                                 Button(
-                                    onClick = { viewModel.fetchUserProfile() }
+                                    onClick = {
+                                        viewModel.fetchUserProfile()
+                                        viewModel.fetchUserBadges()
+                                    }
                                 ) {
                                     Text("Riprova")
                                 }
@@ -256,5 +235,21 @@ fun ProfileScreen(
             },
             isDestructive = true
         )
+    }
+}
+
+
+
+fun getBadgeEmoji(badgeName: String): String {
+    return when(badgeName) {
+        "Primo Post" -> "🎉"
+        "Fotografo" -> "📷"
+        "Primo Commento" -> "💬"
+        "Chiacchierone" -> "🗣️"
+        "Fondatore" -> "👑"
+        "Membro Attivo" -> "🤝"
+        "Esploratore" -> "🗺️"
+        "Amante dell'IA" -> "🤖"
+        else -> "🏆"
     }
 }

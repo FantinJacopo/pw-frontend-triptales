@@ -10,4 +10,10 @@ interface UserApi {
 
     @GET("users/{user_id}/")
     suspend fun getUserById(@Path("user_id") userId: Int): Response<UserProfile>
+
+    @GET("user/badges/")
+    suspend fun getUserBadges(): Response<List<UserBadge>>
+
+    @GET("users/{user_id}/badges/")
+    suspend fun getUserBadges(@Path("user_id") userId: Int): Response<List<UserBadge>>
 }

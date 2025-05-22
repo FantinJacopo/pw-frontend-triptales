@@ -1,3 +1,4 @@
+// UserViewModel.kt
 package com.triptales.app.viewmodel
 
 import android.util.Log
@@ -5,6 +6,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.triptales.app.data.user.UserProfile
 import com.triptales.app.data.user.UserRepository
+import com.triptales.app.data.user.UserBadge
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
@@ -18,13 +20,26 @@ sealed class UserState {
     data class Error(val message: String) : UserState()
 }
 
+sealed class BadgeState {
+    object Idle : BadgeState()
+    object Loading : BadgeState()
+    data class Success(val badges: List<UserBadge>) : BadgeState()
+    data class Error(val message: String) : BadgeState()
+}
+
 class UserViewModel(private val repository: UserRepository) : ViewModel() {
 
     private val _userState = MutableStateFlow<UserState>(UserState.Idle)
     val userState: StateFlow<UserState> = _userState
 
+    private val _badgeState = MutableStateFlow<BadgeState>(BadgeState.Idle)
+    val badgeState: StateFlow<BadgeState> = _badgeState
+
     // Cache per i profili utente, utile per evitare chiamate ripetute
     private val userProfileCache = mutableMapOf<Int, UserProfile>()
+
+    // Cache per i badge utente
+    private val userBadgeCache = mutableMapOf<Int, List<UserBadge>>()
 
     fun fetchUserProfile() {
         viewModelScope.launch {
@@ -42,6 +57,72 @@ class UserViewModel(private val repository: UserRepository) : ViewModel() {
                 }
             } catch (e: Exception) {
                 _userState.value = UserState.Error("Errore: ${e.message}")
+            }
+        }
+    }
+
+    /**
+     * Carica i badge dell'utente corrente.
+     */
+    fun fetchUserBadges() {
+        viewModelScope.launch {
+            _badgeState.value = BadgeState.Loading
+            try {
+                Log.d("UserViewModel", "Fetching user badges")
+                val response = repository.getUserBadges()
+
+                if (response.isSuccessful) {
+                    val badges = response.body() ?: emptyList()
+                    Log.d("UserViewModel", "Successfully fetched ${badges.size} badges")
+                    _badgeState.value = BadgeState.Success(badges)
+                } else {
+                    val errorMsg = "Errore nel caricamento dei badge: ${response.code()}"
+                    Log.e("UserViewModel", errorMsg)
+                    _badgeState.value = BadgeState.Error(errorMsg)
+                }
+            } catch (e: Exception) {
+                Log.e("UserViewModel", "Exception fetching user badges", e)
+                _badgeState.value = BadgeState.Error("Errore: ${e.message}")
+            }
+        }
+    }
+
+    /**
+     * Carica i badge di un utente specifico per ID.
+     *
+     * @param userId ID dell'utente di cui caricare i badge
+     */
+    fun fetchUserBadges(userId: Int) {
+        viewModelScope.launch {
+            _badgeState.value = BadgeState.Loading
+            try {
+                Log.d("UserViewModel", "Fetching badges for user $userId")
+
+                // Verifica se i badge sono già in cache
+                userBadgeCache[userId]?.let { cachedBadges ->
+                    Log.d("UserViewModel", "Returning cached badges for user $userId")
+                    _badgeState.value = BadgeState.Success(cachedBadges)
+                    return@launch
+                }
+
+                val response = repository.getUserBadges(userId)
+
+                if (response.isSuccessful) {
+                    val badges = response.body() ?: emptyList()
+                    Log.d("UserViewModel", "Successfully fetched ${badges.size} badges for user $userId")
+
+                    // Salva nella cache
+                    userBadgeCache[userId] = badges
+
+                    _badgeState.value = BadgeState.Success(badges)
+                } else {
+                    val errorMsg = "Errore nel caricamento dei badge: ${response.code()}"
+                    Log.e("UserViewModel", errorMsg)
+                    _badgeState.value = BadgeState.Error(errorMsg)
+                }
+            } catch (e: Exception) {
+                Log.e("UserViewModel", "Exception fetching badges for user $userId", e)
+                _badgeState.value = BadgeState.Error("Errore: ${e.message}")
             }
         }
     }
@@ -91,5 +172,63 @@ class UserViewModel(private val repository: UserRepository) : ViewModel() {
      */
     fun clearUserProfileCache() {
         userProfileCache.clear()
+    }
+
+    /**
+     * Pulisce la cache dei badge utente.
+     * Utile quando si vuole forzare un nuovo caricamento.
+     */
+    fun clearUserBadgeCache() {
+        userBadgeCache.clear()
+    }
+
+    /**
+     * Pulisce tutte le cache.
+     */
+    fun clearAllCache() {
+        userProfileCache.clear()
+        userBadgeCache.clear()
+    }
+
+    /**
+     * Resetta lo stato dei badge.
+     */
+    fun resetBadgeState() {
+        _badgeState.value = BadgeState.Idle
+    }
+
+    /**
+     * Resetta lo stato del profilo utente.
+     */
+    fun resetUserState() {
+        _userState.value = UserState.Idle
+    }
+
+    /**
+     * Resetta tutti gli stati.
+     */
+    fun resetAllStates() {
+        _userState.value = UserState.Idle
+        _badgeState.value = BadgeState.Idle
+    }
+
+    /**
+     * Forza un refresh dei badge dell'utente corrente.
+     * Ignora la cache e fa sempre una nuova chiamata API.
+     */
+    fun refreshUserBadges() {
+        // Pulisce la cache e ricarica
+        clearUserBadgeCache()
+        fetchUserBadges()
+    }
+
+    /**
+     * Forza un refresh dei badge di un utente specifico.
+     * Ignora la cache e fa sempre una nuova chiamata API.
+     */
+    fun refreshUserBadges(userId: Int) {
+        // Rimuove dalla cache e ricarica
+        userBadgeCache.remove(userId)
+        fetchUserBadges(userId)
     }
 }
