@@ -238,18 +238,17 @@ fun ProfileScreen(
     }
 }
 
-
-
 fun getBadgeEmoji(badgeName: String): String {
     return when(badgeName) {
         "Primo Post" -> "🎉"
-        "Fotografo" -> "📷"
+        "Fabrizio Corona" -> "📷"
         "Primo Commento" -> "💬"
-        "Chiacchierone" -> "🗣️"
+        "Kanye West" -> "🗣️"
         "Fondatore" -> "👑"
-        "Membro Attivo" -> "🤝"
-        "Esploratore" -> "🗺️"
-        "Amante dell'IA" -> "🤖"
+        "Nico B" -> "🌟"
+        "PLC" -> "🗺️"
+        "m-niky" -> "🤖"
+        "Cucippo" -> "🤙"
         else -> "🏆"
     }
 }
