@@ -45,19 +45,9 @@ fun LeaderboardHeader(
                 .padding(20.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            // Icona trofeo grande
-            Icon(
-                imageVector = Icons.Default.EmojiEvents,
-                contentDescription = "Classifica",
-                tint = MaterialTheme.colorScheme.primary,
-                modifier = Modifier.size(48.dp)
-            )
-
-            Spacer(modifier = Modifier.height(12.dp))
-
             // Titolo
             Text(
-                text = "🏆 Classifica Like",
+                text = "🏆 Classifica Like ❤️",
                 style = MaterialTheme.typography.headlineSmall,
                 fontWeight = FontWeight.Bold,
                 color = MaterialTheme.colorScheme.onPrimaryContainer,

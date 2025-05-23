@@ -66,7 +66,7 @@ fun LeaderboardPreviewCard(
                 modifier = Modifier.weight(1f)
             ) {
                 Text(
-                    text = "🏆 Classifica Like",
+                    text = "Classifica Like",
                     style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.Bold,
                     color = MaterialTheme.colorScheme.onSecondaryContainer
@@ -76,7 +76,7 @@ fun LeaderboardPreviewCard(
 
                 if (topUsers.isNotEmpty()) {
                     Text(
-                        text = "Top: ${topUsers.take(3).joinToString(", ")}",
+                        text = "🥇🥈🥉: ${topUsers.take(3).joinToString(", ")}",
                         style = MaterialTheme.typography.bodyMedium,
                         color = MaterialTheme.colorScheme.onSecondaryContainer.copy(alpha = 0.8f)
                     )

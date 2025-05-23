@@ -654,7 +654,7 @@ fun getBadgeEmoji(badgeName: String): String {
         "Primo Post" -> "🎉"
         "Fabrizio Corona" -> "📷"
         "Primo Commento" -> "💬"
-        "Kanye West" -> "🗣️"
+        "Kanye West" -> "🙅🏿‍♂️"
         "Fondatore" -> "👑"
         "Nico B" -> "🌟"
         "Esploratore" -> "📍"
