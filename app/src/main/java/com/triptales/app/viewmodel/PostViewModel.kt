@@ -373,4 +373,33 @@ class PostViewModel(
 
         Log.d("PostViewModel", "User data reset completed")
     }
+
+    /**
+     * Ottiene un singolo post per ID dalla lista corrente.
+     */
+    fun getPostById(postId: Int): Post? {
+        val currentState = _postState.value
+        return if (currentState is PostState.Success) {
+            currentState.posts.find { it.id == postId }
+        } else {
+            null
+        }
+    }
+
+    /**
+     * Carica un singolo post se non è già presente nella lista corrente.
+     * Questo metodo può essere utile se vuoi caricare solo un post specifico.
+     */
+    fun fetchSinglePost(groupId: Int, postId: Int) {
+        // Controlla se il post è già presente
+        val existingPost = getPostById(postId)
+        if (existingPost != null) {
+            // Il post è già presente, non serve ricaricarlo
+            return
+        }
+
+        // Altrimenti carica tutti i post del gruppo
+        // (potresti implementare un endpoint specifico per singoli post se necessario)
+        fetchPosts(groupId)
+    }
 }

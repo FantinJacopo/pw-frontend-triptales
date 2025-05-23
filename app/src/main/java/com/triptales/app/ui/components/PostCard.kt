@@ -9,7 +9,6 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -63,13 +62,14 @@ fun PostCard(
     onUserClick: (Int) -> Unit = {},
     onImageClick: (String, String, String) -> Unit = { _, _, _ -> },
     userLocation: LatLng? = null,
-    showMLKitResults: Boolean = true
+    showMLKitResults: Boolean = true,
+    onCardClick: () -> Unit
 ) {
     // Log per debug
     Log.d("PostCard", "Rendering post ${post.id}: isLiked=$isLiked, likesCount=$likesCount")
 
     Card(
-        modifier = modifier.fillMaxWidth(),
+        modifier = modifier.fillMaxWidth().clickable { onCardClick() },
         elevation = CardDefaults.cardElevation(4.dp),
         shape = RoundedCornerShape(12.dp)
     ) {

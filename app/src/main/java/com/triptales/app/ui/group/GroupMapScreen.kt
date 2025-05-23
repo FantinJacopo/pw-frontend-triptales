@@ -218,7 +218,7 @@ fun GroupMapScreen(
                             PostsMap(
                                 posts = postsWithLocation,
                                 onMarkerClick = {
-                                    navController.navigate("post/${it.id}/comments")
+                                    navController.navigate("post/${it.id}")
                                 },
                                 // Calcola il centro della mappa basandosi sui post
                                 initialLocation = run {

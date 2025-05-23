@@ -482,21 +482,21 @@ fun GroupScreen(
                                         modifier = Modifier.padding(horizontal = 16.dp),
                                         isLiked = isLiked,
                                         likesCount = likeCount,
-                                        onUserClick = { userId ->
-                                            navController.navigate("userProfile/$userId")
-                                        },
-                                        onCommentClick = {
-                                            navController.navigate("post/${post.id}/comments")
-                                        },
                                         onLikeClick = {
                                             Log.d("GroupScreen", "Toggling like for post ${post.id}")
                                             postViewModel.toggleLike(post.id)
+                                        },
+                                        onCommentClick = {
+                                            navController.navigate("post/${post.id}/comments")
                                         },
                                         onLocationClick = if (post.latitude != null && post.longitude != null) {
                                             {
                                                 navController.navigate("group/$groupId/map")
                                             }
                                         } else null,
+                                        onUserClick = { userId ->
+                                            navController.navigate("userProfile/$userId")
+                                        },
                                         onImageClick = { imageUrl, caption, userName ->
                                             // Codifica URL per la navigazione con parametri
                                             val encodedImageUrl = URLEncoder.encode(imageUrl, StandardCharsets.UTF_8.toString())
@@ -507,7 +507,7 @@ fun GroupScreen(
                                             navController.navigate("image/$encodedImageUrl/$encodedCaption/$encodedUserName")
                                         },
                                         userLocation = userLocation,
-                                    )
+                                    ) { navController.navigate("post/${post.id}") }
                                 }
                             }
                         }

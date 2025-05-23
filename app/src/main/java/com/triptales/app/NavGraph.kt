@@ -25,6 +25,7 @@ import com.triptales.app.ui.home.HomeScreen
 import com.triptales.app.ui.image.FullscreenImageScreen
 import com.triptales.app.ui.post.CommentsScreen
 import com.triptales.app.ui.post.CreatePostScreen
+import com.triptales.app.ui.post.PostDetailScreen
 import com.triptales.app.ui.profile.ProfileScreen
 import com.triptales.app.ui.profile.UserProfileScreen
 import com.triptales.app.ui.theme.FrontendtriptalesTheme
@@ -120,7 +121,18 @@ fun NavGraph(
                     postViewModel = postViewModel
                 )
             }
-            // Nuova rotta per la visualizzazione a schermo intero dell'immagine
+
+            composable("post/{postId}") { backStackEntry ->
+                val postId = backStackEntry.arguments?.getString("postId")?.toIntOrNull()
+                    ?: return@composable
+                PostDetailScreen(
+                    postId = postId,
+                    postViewModel = postViewModel,
+                    navController = navController,
+                    locationManager = locationManager
+                )
+            }
+
             composable(
                 route = "image/{imageUrl}/{caption}/{userName}",
                 arguments = listOf(
@@ -194,7 +206,7 @@ fun NavGraph(
                     navController = navController
                 )
             }
-            // Nuova rotta per visualizzare il profilo di un altro utente
+
             composable("userProfile/{userId}") { backStackEntry ->
                 val userId = backStackEntry.arguments?.getString("userId")?.toIntOrNull()
                     ?: return@composable
@@ -204,7 +216,6 @@ fun NavGraph(
                     navController = navController
                 )
             }
-            // Nel file NavGraph.kt, aggiungi questa nuova rotta nella sezione composable
 
             composable("group/{groupId}/leaderboard") { backStackEntry ->
                 val groupId = backStackEntry.arguments?.getString("groupId")?.toIntOrNull()
@@ -212,7 +223,7 @@ fun NavGraph(
                 GroupLeaderboardScreen(
                     groupId = groupId,
                     groupViewModel = groupViewModel,
-                    leaderboardViewModel = leaderboardViewModel, // Dovrai passare questo dal MainActivity
+                    leaderboardViewModel = leaderboardViewModel,
                     navController = navController
                 )
             }
