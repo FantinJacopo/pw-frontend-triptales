@@ -62,11 +62,14 @@ import coil.compose.rememberAsyncImagePainter
 import com.google.android.gms.maps.model.LatLng
 import com.triptales.app.data.location.LocationManager
 import com.triptales.app.ui.components.GroupNavigationBar
+import com.triptales.app.ui.components.LeaderboardPreviewCard
 import com.triptales.app.ui.components.PostCard
 import com.triptales.app.ui.qrcode.QRCodeActivity
 import com.triptales.app.ui.theme.FrontendtriptalesTheme
 import com.triptales.app.viewmodel.GroupState
 import com.triptales.app.viewmodel.GroupViewModel
+import com.triptales.app.viewmodel.LeaderboardState
+import com.triptales.app.viewmodel.LeaderboardViewModel
 import com.triptales.app.viewmodel.LikeState
 import com.triptales.app.viewmodel.PostState
 import com.triptales.app.viewmodel.PostViewModel
@@ -81,12 +84,14 @@ fun GroupScreen(
     groupId: Int,
     groupViewModel: GroupViewModel,
     postViewModel: PostViewModel,
+    leaderboardViewModel: LeaderboardViewModel,
     navController: NavController,
     locationManager: LocationManager
 ) {
     FrontendtriptalesTheme {
         val groupState by groupViewModel.groupState.collectAsState()
         val postState by postViewModel.postState.collectAsState()
+        val leaderboardState by leaderboardViewModel.leaderboardState.collectAsState() 
         val context = LocalContext.current
         val clipboardManager = LocalClipboardManager.current
         val lazyListState = rememberLazyListState()
@@ -102,13 +107,11 @@ fun GroupScreen(
             }
         }
 
-        // Carica i gruppi e post
+        // Carica i gruppi, post e classifica
         LaunchedEffect(groupId) {
             groupViewModel.fetchGroups()
             postViewModel.fetchPosts(groupId)
-
-            // Carica i like dell'utente (verrà fatto nel fetchPosts)
-            // postViewModel.fetchUserLikes()
+            leaderboardViewModel.fetchGroupLeaderboard(groupId) 
 
             // Ottieni la posizione dell'utente
             if (locationManager.hasLocationPermission()) {
@@ -116,20 +119,12 @@ fun GroupScreen(
             }
         }
 
-        /*// LaunchedEffect per monitorare lo stato dei like
-        LaunchedEffect(postViewModel.likeState.collectAsState().value) {
-            val likeState = postViewModel.likeState.value
-            if (likeState is LikeState.LikeActionSuccess) {
-                // Aggiorna il conteggio dei like per il post specifico
-                postViewModel.fetchPostLikes(likeState.postId)
-            }
-        }*/
-
         // Ricarica i post quando si torna dalla CreatePostScreen o quando si ricevono aggiornamenti
         LaunchedEffect(navController.currentBackStackEntry, shouldRefreshPosts) {
             if (shouldRefreshPosts) {
-                // Se lo stato è PostCreated, facciamo un refresh dei post
+                // Se lo stato è PostCreated, facciamo un refresh dei post e della classifica
                 postViewModel.fetchPosts(groupId, forceRefresh = true)
+                leaderboardViewModel.fetchGroupLeaderboard(groupId) // AGGIORNA ANCHE LA CLASSIFICA
                 // Poi resettiamo lo stato
                 postViewModel.resetState()
                 // Scrolliamo in cima alla lista per vedere il nuovo post
@@ -154,6 +149,8 @@ fun GroupScreen(
                     Log.d("GroupScreen", "Like action completed for post ${likeState.postId}: liked=${likeState.liked}")
                     // Ricarica i post per avere i conteggi aggiornati
                     postViewModel.fetchPosts(groupId, forceRefresh = false)
+                    // AGGIORNA ANCHE LA CLASSIFICA QUANDO CAMBIANO I LIKE
+                    leaderboardViewModel.fetchGroupLeaderboard(groupId)
                 }
                 is LikeState.Error -> {
                     Log.e("GroupScreen", "Like error: ${likeState.message}")
@@ -383,14 +380,51 @@ fun GroupScreen(
                                 }
                             }
 
+                            // ===== NUOVA SEZIONE: LEADERBOARD PREVIEW CARD =====
+                            when (leaderboardState) {
+                                is LeaderboardState.Success -> {
+                                    val leaderboard = (leaderboardState as LeaderboardState.Success).leaderboard
+                                    val topUsers = leaderboard.leaderboard.take(3).map { it.user_name }
+
+                                    LeaderboardPreviewCard(
+                                        topUsers = topUsers,
+                                        onClick = {
+                                            navController.navigate("group/$groupId/leaderboard")
+                                        },
+                                        modifier = Modifier.padding(horizontal = 16.dp)
+                                    )
+                                }
+                                is LeaderboardState.Error -> {
+                                    // Anche in caso di errore, mostra la card per permettere l'accesso
+                                    LeaderboardPreviewCard(
+                                        topUsers = emptyList(),
+                                        onClick = {
+                                            navController.navigate("group/$groupId/leaderboard")
+                                        },
+                                        modifier = Modifier.padding(horizontal = 16.dp)
+                                    )
+                                }
+                                else -> {
+                                    // Durante il caricamento, mostra comunque la card
+                                    LeaderboardPreviewCard(
+                                        topUsers = emptyList(),
+                                        onClick = {
+                                            navController.navigate("group/$groupId/leaderboard")
+                                        },
+                                        modifier = Modifier.padding(horizontal = 16.dp)
+                                    )
+                                }
+                            }
+
                             HorizontalDivider(
-                                modifier = Modifier.padding(horizontal = 16.dp),
-                                thickness = 1.dp, color = MaterialTheme.colorScheme.outline.copy(alpha = 0.5f)
+                                modifier = Modifier.padding(horizontal = 16.dp, vertical = 16.dp),
+                                thickness = 1.dp,
+                                color = MaterialTheme.colorScheme.outline.copy(alpha = 0.5f)
                             )
                         }
                     }
 
-                    // Lista post
+                    // Lista post (resto del codice rimane uguale)
                     when (postState) {
                         PostState.Loading -> {
                             item {
@@ -443,9 +477,6 @@ fun GroupScreen(
                                     val isLiked = postViewModel.isPostLiked(post.id)
                                     val likeCount = postViewModel.getLikesCount(post.id)
 
-                                    // Log per debug
-                                    Log.d("GroupScreen", "Post ${post.id}: isLiked=$isLiked, likeCount=$likeCount, post.likes_count=${post.likes_count}")
-
                                     PostCard(
                                         post = post,
                                         modifier = Modifier.padding(horizontal = 16.dp),
@@ -475,7 +506,7 @@ fun GroupScreen(
                                             // Naviga alla schermata a schermo intero
                                             navController.navigate("image/$encodedImageUrl/$encodedCaption/$encodedUserName")
                                         },
-                                        userLocation = userLocation, // Passa la posizione dell'utente
+                                        userLocation = userLocation,
                                     )
                                 }
                             }

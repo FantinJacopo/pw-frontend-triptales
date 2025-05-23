@@ -4,6 +4,7 @@ import android.os.Bundle
 import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.activity.viewModels
 import androidx.lifecycle.ViewModelProvider
 import androidx.navigation.compose.rememberNavController
 import com.triptales.app.data.RetrofitProvider
@@ -15,6 +16,8 @@ import com.triptales.app.data.comment.CommentRepository
 import com.triptales.app.data.group.GroupMembersRepository
 import com.triptales.app.data.group.TripGroupApi
 import com.triptales.app.data.group.TripGroupRepository
+import com.triptales.app.data.leaderboard.LeaderboardApi
+import com.triptales.app.data.leaderboard.LeaderboardRepository
 import com.triptales.app.data.location.LocationManager
 import com.triptales.app.data.mlkit.MLKitAnalyzer
 import com.triptales.app.data.post.PostApi
@@ -56,6 +59,8 @@ class MainActivity : ComponentActivity() {
         val commentRepository = CommentRepository(commentApi)
 
         val groupMembersRepository = GroupMembersRepository(groupApi)
+        val leaderboardApi = retrofit.create(LeaderboardApi::class.java)
+        val leaderboardRepository = LeaderboardRepository(leaderboardApi)
 
         // Factory per i ViewModel
         val authViewModelFactory = AuthViewModelFactory(authRepository, tokenManager)
@@ -64,6 +69,8 @@ class MainActivity : ComponentActivity() {
         val userViewModelFactory = UserViewModelFactory(userRepository)
         val commentViewModelFactory = CommentViewModelFactory(commentRepository)
         val membersViewModelFactory = GroupMembersViewModelFactory(groupMembersRepository)
+        val leaderboardViewModelFactory = LeaderboardViewModelFactory(leaderboardRepository)
+
 
         // Inizializza i ViewModel DOPO aver creato le factory
         val authViewModel = ViewModelProvider(this, authViewModelFactory)[AuthViewModel::class.java]
@@ -72,10 +79,11 @@ class MainActivity : ComponentActivity() {
         val userViewModel = ViewModelProvider(this, userViewModelFactory)[UserViewModel::class.java]
         val commentViewModel = ViewModelProvider(this, commentViewModelFactory)[CommentViewModel::class.java]
         val membersViewModel = ViewModelProvider(this, membersViewModelFactory)[GroupMembersViewModel::class.java]
+        val leaderboardViewModel = ViewModelProvider(this, leaderboardViewModelFactory)[LeaderboardViewModel::class.java]
 
         // IMPORTANTE: Imposta la callback per il reset dei dati utente DOPO l'inizializzazione
         authViewModel.setUserDataResetCallback {
-            resetAllUserData(postViewModel, userViewModel, groupViewModel)
+            resetAllUserData(postViewModel, userViewModel, groupViewModel, leaderboardViewModel)
         }
 
         setContent {
@@ -90,7 +98,8 @@ class MainActivity : ComponentActivity() {
                     commentViewModel = commentViewModel,
                     membersViewModel = membersViewModel,
                     tokenManager = tokenManager,
-                    locationManager = locationManager
+                    locationManager = locationManager,
+                    leaderboardViewModel = leaderboardViewModel,
                 )
             }
         }
@@ -102,7 +111,8 @@ class MainActivity : ComponentActivity() {
     private fun resetAllUserData(
         postViewModel: PostViewModel,
         userViewModel: UserViewModel,
-        groupViewModel: GroupViewModel
+        groupViewModel: GroupViewModel,
+        leaderboardViewModel : LeaderboardViewModel
     ) {
         Log.d("MainActivity", "Resetting all user data across ViewModels...")
 
@@ -115,6 +125,7 @@ class MainActivity : ComponentActivity() {
 
         // Reset del GroupViewModel se necessario
         groupViewModel.resetState()
+        leaderboardViewModel.resetState()
 
         Log.d("MainActivity", "All user data reset completed")
     }

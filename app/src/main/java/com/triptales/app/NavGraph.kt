@@ -15,6 +15,7 @@ import com.triptales.app.ui.auth.RegisterScreen
 import com.triptales.app.ui.auth.SplashScreen
 import com.triptales.app.ui.group.CreateGroupScreen
 import com.triptales.app.ui.group.GroupActionScreen
+import com.triptales.app.ui.group.GroupLeaderboardScreen
 import com.triptales.app.ui.group.GroupMapScreen
 import com.triptales.app.ui.group.GroupMembersScreen
 import com.triptales.app.ui.group.GroupScreen
@@ -32,6 +33,7 @@ import com.triptales.app.viewmodel.AuthViewModel
 import com.triptales.app.viewmodel.CommentViewModel
 import com.triptales.app.viewmodel.GroupMembersViewModel
 import com.triptales.app.viewmodel.GroupViewModel
+import com.triptales.app.viewmodel.LeaderboardViewModel
 import com.triptales.app.viewmodel.PostViewModel
 import com.triptales.app.viewmodel.UserViewModel
 import java.net.URLDecoder
@@ -47,7 +49,8 @@ fun NavGraph(
     commentViewModel: CommentViewModel,
     membersViewModel: GroupMembersViewModel,
     tokenManager: TokenManager,
-    locationManager: LocationManager
+    locationManager: LocationManager,
+    leaderboardViewModel : LeaderboardViewModel
 ) {
     FrontendtriptalesTheme {
         val authState by authViewModel.authState.collectAsState()
@@ -160,7 +163,8 @@ fun NavGraph(
                     groupViewModel = groupViewModel,
                     postViewModel = postViewModel,
                     navController = navController,
-                    locationManager = locationManager
+                    locationManager = locationManager,
+                    leaderboardViewModel = leaderboardViewModel,
                 )
             }
             composable("group/{groupId}/members") { backStackEntry ->
@@ -197,6 +201,18 @@ fun NavGraph(
                 UserProfileScreen(
                     userId = userId,
                     userViewModel = userViewModel,
+                    navController = navController
+                )
+            }
+            // Nel file NavGraph.kt, aggiungi questa nuova rotta nella sezione composable
+
+            composable("group/{groupId}/leaderboard") { backStackEntry ->
+                val groupId = backStackEntry.arguments?.getString("groupId")?.toIntOrNull()
+                    ?: return@composable
+                GroupLeaderboardScreen(
+                    groupId = groupId,
+                    groupViewModel = groupViewModel,
+                    leaderboardViewModel = leaderboardViewModel, // Dovrai passare questo dal MainActivity
                     navController = navController
                 )
             }

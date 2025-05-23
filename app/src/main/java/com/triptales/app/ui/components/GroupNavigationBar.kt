@@ -4,6 +4,7 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.EmojiEvents
 import androidx.compose.material.icons.filled.Group
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.LocationOn
@@ -18,7 +19,7 @@ import androidx.navigation.NavController
 
 /**
  * Componente comune per la barra di navigazione inferiore utilizzata nelle schermate del gruppo.
- * Questa è una barra di navigazione classica con 3 icone che permettono di navigare tra le schermate principali.
+ * Ora include anche la classifica dei like.
  *
  * @param groupId ID del gruppo attualmente visualizzato
  * @param navController Controller di navigazione per gestire le transizioni tra schermate
@@ -43,6 +44,25 @@ fun GroupNavigationBar(
             horizontalArrangement = Arrangement.SpaceEvenly,
             verticalAlignment = Alignment.CenterVertically
         ) {
+            // Icona principale del gruppo (home)
+            IconButton(
+                onClick = {
+                    if (!currentRoute.equals("group/$groupId")) {
+                        navController.navigate("group/$groupId")
+                    }
+                },
+                modifier = Modifier.weight(1f)
+            ) {
+                Icon(
+                    imageVector = Icons.Default.Home,
+                    contentDescription = "Home gruppo",
+                    tint = if (currentRoute == "group/$groupId")
+                        MaterialTheme.colorScheme.primary
+                    else
+                        MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
+
             // Icona della mappa/posizioni
             IconButton(
                 onClick = onLocationClick,
@@ -58,19 +78,19 @@ fun GroupNavigationBar(
                 )
             }
 
-            // Icona principale del gruppo (home)
+            // Icona classifica (NUOVO)
             IconButton(
                 onClick = {
-                    if (!currentRoute.equals("group/$groupId")) {
-                        navController.navigate("group/$groupId")
+                    if (!currentRoute.contains("leaderboard")) {
+                        navController.navigate("group/$groupId/leaderboard")
                     }
                 },
                 modifier = Modifier.weight(1f)
             ) {
                 Icon(
-                    imageVector = Icons.Default.Home,
-                    contentDescription = "Home gruppo",
-                    tint = if (currentRoute == "group/$groupId")
+                    imageVector = Icons.Default.EmojiEvents,
+                    contentDescription = "Classifica",
+                    tint = if (currentRoute.contains("leaderboard"))
                         MaterialTheme.colorScheme.primary
                     else
                         MaterialTheme.colorScheme.onSurfaceVariant
