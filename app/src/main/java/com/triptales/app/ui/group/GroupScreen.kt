@@ -2,6 +2,7 @@ package com.triptales.app.ui.group
 
 import android.annotation.SuppressLint
 import android.content.Intent
+import android.util.Log
 import android.widget.Toast
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
@@ -115,15 +116,14 @@ fun GroupScreen(
             }
         }
 
-        // LaunchedEffect per monitorare lo stato dei like
+        /*// LaunchedEffect per monitorare lo stato dei like
         LaunchedEffect(postViewModel.likeState.collectAsState().value) {
             val likeState = postViewModel.likeState.value
             if (likeState is LikeState.LikeActionSuccess) {
                 // Aggiorna il conteggio dei like per il post specifico
                 postViewModel.fetchPostLikes(likeState.postId)
             }
-        }
-
+        }*/
 
         // Ricarica i post quando si torna dalla CreatePostScreen o quando si ricevono aggiornamenti
         LaunchedEffect(navController.currentBackStackEntry, shouldRefreshPosts) {
@@ -139,6 +139,27 @@ fun GroupScreen(
             } else {
                 // Refresh regolare quando torniamo indietro
                 postViewModel.fetchPosts(groupId)
+            }
+        }
+
+        LaunchedEffect(postViewModel.likeState.collectAsState().value) {
+            val likeState = postViewModel.likeState.value
+            Log.d("GroupScreen", "Like state changed: $likeState")
+
+            when (likeState) {
+                is LikeState.UserLikesSuccess -> {
+                    Log.d("GroupScreen", "User likes loaded: ${likeState.likedPostIds}")
+                }
+                is LikeState.LikeActionSuccess -> {
+                    Log.d("GroupScreen", "Like action completed for post ${likeState.postId}: liked=${likeState.liked}")
+                    // Ricarica i post per avere i conteggi aggiornati
+                    postViewModel.fetchPosts(groupId, forceRefresh = false)
+                }
+                is LikeState.Error -> {
+                    Log.e("GroupScreen", "Like error: ${likeState.message}")
+                    Toast.makeText(context, "Errore like: ${likeState.message}", Toast.LENGTH_SHORT).show()
+                }
+                else -> {}
             }
         }
 
@@ -422,6 +443,9 @@ fun GroupScreen(
                                     val isLiked = postViewModel.isPostLiked(post.id)
                                     val likeCount = postViewModel.getLikesCount(post.id)
 
+                                    // Log per debug
+                                    Log.d("GroupScreen", "Post ${post.id}: isLiked=$isLiked, likeCount=$likeCount, post.likes_count=${post.likes_count}")
+
                                     PostCard(
                                         post = post,
                                         modifier = Modifier.padding(horizontal = 16.dp),
@@ -434,6 +458,7 @@ fun GroupScreen(
                                             navController.navigate("post/${post.id}/comments")
                                         },
                                         onLikeClick = {
+                                            Log.d("GroupScreen", "Toggling like for post ${post.id}")
                                             postViewModel.toggleLike(post.id)
                                         },
                                         onLocationClick = if (post.latitude != null && post.longitude != null) {

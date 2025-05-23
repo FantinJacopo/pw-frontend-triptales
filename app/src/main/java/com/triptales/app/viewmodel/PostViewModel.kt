@@ -54,13 +54,15 @@ class PostViewModel(
     private val _likeState = MutableStateFlow<LikeState>(LikeState.Idle)
     val likeState: StateFlow<LikeState> = _likeState
 
-    // Cache dei like e conteggi
+    // Cache dei like e conteggi - ora manteniamo sia il conteggio che lo stato like
     private val userLikedPosts = mutableSetOf<Int>()
     private val userLikeIdMap = mutableMapOf<Int, Int>() // postId -> likeId
-    private val likesCountMap = mutableMapOf<Int, Int>() // postId -> count
 
     // Ultimo gruppo caricato
     private var lastGroupId: Int? = null
+
+    // Lista corrente dei post per accesso rapido ai dati
+    private var currentPosts = listOf<Post>()
 
     /**
      * Carica i post per un gruppo specifico.
@@ -81,6 +83,7 @@ class PostViewModel(
 
                 if (response.isSuccessful && response.body() != null) {
                     val posts = response.body()!!
+                    currentPosts = posts // Salva la lista corrente
                     Log.d("PostViewModel", "Successfully fetched ${posts.size} posts")
                     _postState.value = PostState.Success(posts)
 
@@ -157,6 +160,7 @@ class PostViewModel(
     fun fetchUserLikes() {
         viewModelScope.launch {
             try {
+                Log.d("PostViewModel", "Fetching user likes...")
                 val response = likeRepository.getUserLikes()
 
                 if (response.isSuccessful && response.body() != null) {
@@ -169,6 +173,7 @@ class PostViewModel(
                     likes.forEach { like ->
                         userLikedPosts.add(like.post)
                         userLikeIdMap[like.post] = like.id
+                        Log.d("PostViewModel", "User liked post: ${like.post}")
                     }
 
                     _likeState.value = LikeState.UserLikesSuccess(
@@ -176,9 +181,11 @@ class PostViewModel(
                         userLikeIdMap.toMap()
                     )
 
-                    Log.d("PostViewModel", "Fetched ${likes.size} user likes")
+                    Log.d("PostViewModel", "Fetched ${likes.size} user likes: ${userLikedPosts.joinToString()}")
                 } else {
                     Log.e("PostViewModel", "Error fetching user likes: ${response.code()}")
+                    val errorBody = response.errorBody()?.string()
+                    Log.e("PostViewModel", "Error body: $errorBody")
                 }
             } catch (e: Exception) {
                 Log.e("PostViewModel", "Exception fetching user likes", e)
@@ -203,11 +210,8 @@ class PostViewModel(
                         userLikedPosts.remove(postId)
                         userLikeIdMap.remove(postId)
 
-                        // Aggiorna il conteggio
-                        val currentCount = likesCountMap[postId] ?: 0
-                        if (currentCount > 0) {
-                            likesCountMap[postId] = currentCount - 1
-                        }
+                        // Aggiorna il post nella lista corrente
+                        updatePostLikeCount(postId, false)
 
                         _likeState.value = LikeState.LikeActionSuccess(postId, false)
                     } else {
@@ -222,9 +226,8 @@ class PostViewModel(
                         userLikedPosts.add(postId)
                         userLikeIdMap[postId] = likeResponse.id
 
-                        // Aggiorna il conteggio
-                        val currentCount = likesCountMap[postId] ?: 0
-                        likesCountMap[postId] = currentCount + 1
+                        // Aggiorna il post nella lista corrente
+                        updatePostLikeCount(postId, true)
 
                         _likeState.value = LikeState.LikeActionSuccess(postId, true, likeResponse.id)
                     } else {
@@ -239,7 +242,28 @@ class PostViewModel(
     }
 
     /**
+     * Aggiorna il conteggio like di un post nella lista corrente e aggiorna lo stato
+     */
+    private fun updatePostLikeCount(postId: Int, isLikeAdded: Boolean) {
+        val currentState = _postState.value
+        if (currentState is PostState.Success) {
+            val updatedPosts = currentState.posts.map { post ->
+                if (post.id == postId) {
+                    val currentCount = post.likes_count ?: 0
+                    val newCount = if (isLikeAdded) currentCount + 1 else maxOf(0, currentCount - 1)
+                    post.copy(likes_count = newCount)
+                } else {
+                    post
+                }
+            }
+            currentPosts = updatedPosts
+            _postState.value = PostState.Success(updatedPosts)
+        }
+    }
+
+    /**
      * Carica i like per un post specifico.
+     * Ora aggiorna anche il conteggio nella lista dei post.
      */
     fun fetchPostLikes(postId: Int) {
         viewModelScope.launch {
@@ -248,11 +272,25 @@ class PostViewModel(
 
                 if (response.isSuccessful && response.body() != null) {
                     val likes = response.body()!!
-                    likesCountMap[postId] = likes.size
+                    val newCount = likes.size
 
-                    Log.d("PostViewModel", "Updated likes count for post $postId: ${likes.size}")
+                    Log.d("PostViewModel", "Updated likes count for post $postId: $newCount")
 
-                    // Aggiorna lo stato
+                    // Aggiorna il post nella lista corrente
+                    val currentState = _postState.value
+                    if (currentState is PostState.Success) {
+                        val updatedPosts = currentState.posts.map { post ->
+                            if (post.id == postId) {
+                                post.copy(likes_count = newCount)
+                            } else {
+                                post
+                            }
+                        }
+                        currentPosts = updatedPosts
+                        _postState.value = PostState.Success(updatedPosts)
+                    }
+
+                    // Aggiorna lo stato dei like
                     val currentLikeState = _likeState.value
                     if (currentLikeState is LikeState.Success) {
                         val updatedLikes = currentLikeState.likes.toMutableMap()
@@ -274,14 +312,19 @@ class PostViewModel(
      * Verifica se un post è piaciuto dall'utente.
      */
     fun isPostLiked(postId: Int): Boolean {
-        return postId in userLikedPosts
+        val isLiked = postId in userLikedPosts
+        Log.d("PostViewModel", "isPostLiked($postId) = $isLiked, userLikedPosts = ${userLikedPosts.joinToString()}")
+        return isLiked
     }
 
     /**
      * Ottiene il conteggio dei like per un post.
+     * Ora usa principalmente i dati dal modello Post.
      */
     fun getLikesCount(postId: Int): Int {
-        return likesCountMap[postId] ?: 0
+        // Prima prova a ottenere il conteggio dalla lista corrente dei post
+        val post = currentPosts.find { it.id == postId }
+        return post?.likes_count ?: 0
     }
 
     /**
@@ -297,6 +340,7 @@ class PostViewModel(
                     post
                 }
             }
+            currentPosts = updatedPosts
             _postState.value = PostState.Success(updatedPosts)
         }
     }
@@ -306,5 +350,27 @@ class PostViewModel(
      */
     fun resetState() {
         _postState.value = PostState.Idle
+    }
+
+    /**
+     * Resetta completamente tutti i dati dell'utente.
+     * Da chiamare quando l'utente fa logout o cambia account.
+     */
+    fun resetUserData() {
+        Log.d("PostViewModel", "Resetting all user data...")
+
+        // Reset degli stati
+        _postState.value = PostState.Idle
+        _likeState.value = LikeState.Idle
+
+        // Pulisce le cache dei like dell'utente
+        userLikedPosts.clear()
+        userLikeIdMap.clear()
+
+        // Reset della lista corrente e dell'ultimo gruppo
+        currentPosts = emptyList()
+        lastGroupId = null
+
+        Log.d("PostViewModel", "User data reset completed")
     }
 }

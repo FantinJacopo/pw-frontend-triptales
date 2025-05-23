@@ -1,6 +1,7 @@
 package com.triptales.app
 
 import android.os.Bundle
+import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.lifecycle.ViewModelProvider
@@ -25,58 +26,61 @@ import com.triptales.app.data.user.UserRepository
 import com.triptales.app.ui.theme.FrontendtriptalesTheme
 import com.triptales.app.viewmodel.*
 
-/**
- * Attività principale dell'app TripTales.
- * Si occupa di inizializzare le dipendenze, configurare la navigazione e gestire il ciclo di vita.
- */
 class MainActivity : ComponentActivity() {
-
-    // MLKitAnalyzer deve essere chiuso quando l'attività viene distrutta
-    private lateinit var mlKitAnalyzer: MLKitAnalyzer
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        // Inizializza MLKitAnalyzer all'avvio dell'app
-        mlKitAnalyzer = MLKitAnalyzer(applicationContext)
+        // Inizializza prima tutti i manager e repository
+        val tokenManager = TokenManager(this)
+        val locationManager = LocationManager(this)
+
+        // API e Repository
+        val authApi = RetrofitProvider.createUnauthenticated().create(AuthApi::class.java)
+        val authRepository = AuthRepository(authApi)
+
+        val retrofit = RetrofitProvider.create(tokenManager)
+        val groupApi = retrofit.create(TripGroupApi::class.java)
+        val groupRepository = TripGroupRepository(groupApi)
+
+        val postApi = retrofit.create(PostApi::class.java)
+        val postLikeApi = retrofit.create(PostLikeApi::class.java)
+        val mlKitAnalyzer = MLKitAnalyzer(this)
+        val postRepository = PostRepository(postApi, mlKitAnalyzer)
+        val postLikeRepository = PostLikeRepository(postLikeApi)
+
+        val userApi = retrofit.create(UserApi::class.java)
+        val userRepository = UserRepository(userApi)
+
+        val commentApi = retrofit.create(CommentApi::class.java)
+        val commentRepository = CommentRepository(commentApi)
+
+        val groupMembersRepository = GroupMembersRepository(groupApi)
+
+        // Factory per i ViewModel
+        val authViewModelFactory = AuthViewModelFactory(authRepository, tokenManager)
+        val groupViewModelFactory = GroupViewModelFactory(groupRepository)
+        val postViewModelFactory = PostViewModelFactory(postRepository, postLikeRepository)
+        val userViewModelFactory = UserViewModelFactory(userRepository)
+        val commentViewModelFactory = CommentViewModelFactory(commentRepository)
+        val membersViewModelFactory = GroupMembersViewModelFactory(groupMembersRepository)
+
+        // Inizializza i ViewModel DOPO aver creato le factory
+        val authViewModel = ViewModelProvider(this, authViewModelFactory)[AuthViewModel::class.java]
+        val groupViewModel = ViewModelProvider(this, groupViewModelFactory)[GroupViewModel::class.java]
+        val postViewModel = ViewModelProvider(this, postViewModelFactory)[PostViewModel::class.java]
+        val userViewModel = ViewModelProvider(this, userViewModelFactory)[UserViewModel::class.java]
+        val commentViewModel = ViewModelProvider(this, commentViewModelFactory)[CommentViewModel::class.java]
+        val membersViewModel = ViewModelProvider(this, membersViewModelFactory)[GroupMembersViewModel::class.java]
+
+        // IMPORTANTE: Imposta la callback per il reset dei dati utente DOPO l'inizializzazione
+        authViewModel.setUserDataResetCallback {
+            resetAllUserData(postViewModel, userViewModel, groupViewModel)
+        }
 
         setContent {
             FrontendtriptalesTheme {
                 val navController = rememberNavController()
-
-                // Gestori principali
-                val tokenManager = TokenManager(applicationContext)
-                val locationManager = LocationManager(applicationContext)
-
-                // Configura il client Retrofit con interceptor per l'autenticazione
-                val retrofit = RetrofitProvider.create(tokenManager)
-
-                // Inizializza le API
-                val authApi = retrofit.create(AuthApi::class.java)
-                val tripGroupApi = retrofit.create(TripGroupApi::class.java)
-                val postApi = retrofit.create(PostApi::class.java)
-                val userApi = retrofit.create(UserApi::class.java)
-                val commentApi = retrofit.create(CommentApi::class.java)
-                val postLikeApi = retrofit.create(PostLikeApi::class.java)
-
-                // Inizializza i repository
-                val authRepository = AuthRepository(authApi)
-                val tripGroupRepository = TripGroupRepository(tripGroupApi)
-                val postRepository = PostRepository(postApi, mlKitAnalyzer) // Passa MLKitAnalyzer
-                val userRepository = UserRepository(userApi)
-                val commentRepository = CommentRepository(commentApi)
-                val groupMembersRepository = GroupMembersRepository(tripGroupApi)
-                val postLikeRepository = PostLikeRepository(postLikeApi)
-
-                // Inizializza i ViewModel
-                val authViewModel = ViewModelProvider(this, AuthViewModelFactory(authRepository, tokenManager))[AuthViewModel::class.java]
-                val groupViewModel = ViewModelProvider(this, GroupViewModelFactory(tripGroupRepository))[GroupViewModel::class.java]
-                val postViewModel = ViewModelProvider(this, PostViewModelFactory(postRepository, postLikeRepository))[PostViewModel::class.java]
-                val userViewModel = ViewModelProvider(this, UserViewModelFactory(userRepository))[UserViewModel::class.java]
-                val commentViewModel = ViewModelProvider(this, CommentViewModelFactory(commentRepository))[CommentViewModel::class.java]
-                val membersViewModel = ViewModelProvider(this, GroupMembersViewModelFactory(groupMembersRepository))[GroupMembersViewModel::class.java]
-
-                // Configura la navigazione
                 NavGraph(
                     navController = navController,
                     authViewModel = authViewModel,
@@ -92,12 +96,26 @@ class MainActivity : ComponentActivity() {
         }
     }
 
-    override fun onDestroy() {
-        super.onDestroy()
+    /**
+     * Resetta tutti i dati dell'utente quando cambia account o fa logout
+     */
+    private fun resetAllUserData(
+        postViewModel: PostViewModel,
+        userViewModel: UserViewModel,
+        groupViewModel: GroupViewModel
+    ) {
+        Log.d("MainActivity", "Resetting all user data across ViewModels...")
 
-        // Rilascia le risorse ML Kit quando l'attività viene distrutta
-        if (::mlKitAnalyzer.isInitialized) {
-            mlKitAnalyzer.close()
-        }
+        // Reset del PostViewModel (like, posts, ecc.)
+        postViewModel.resetUserData()
+
+        // Reset del UserViewModel (cache profili, badge, ecc.)
+        userViewModel.clearAllCache()
+        userViewModel.resetAllStates()
+
+        // Reset del GroupViewModel se necessario
+        groupViewModel.resetState()
+
+        Log.d("MainActivity", "All user data reset completed")
     }
 }

@@ -14,8 +14,6 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ChatBubbleOutline
-import androidx.compose.material.icons.filled.Favorite
-import androidx.compose.material.icons.filled.FavoriteBorder
 import androidx.compose.material.icons.filled.LocationOn
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
@@ -36,6 +34,7 @@ import com.google.android.gms.maps.model.LatLng
 import com.triptales.app.data.location.LocationManager
 import com.triptales.app.data.post.Post
 import com.triptales.app.data.utils.DateUtils.formatPostDate
+import android.util.Log
 
 /**
  * Card component for displaying a post with ML Kit analysis results.
@@ -66,6 +65,9 @@ fun PostCard(
     userLocation: LatLng? = null,
     showMLKitResults: Boolean = true
 ) {
+    // Log per debug
+    Log.d("PostCard", "Rendering post ${post.id}: isLiked=$isLiked, likesCount=$likesCount")
+
     Card(
         modifier = modifier.fillMaxWidth(),
         elevation = CardDefaults.cardElevation(4.dp),
@@ -199,26 +201,15 @@ fun PostCard(
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                // Like button
-                Row(
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    IconButton(onClick = onLikeClick) {
-                        Icon(
-                            imageVector = if (isLiked) Icons.Default.Favorite else Icons.Default.FavoriteBorder,
-                            contentDescription = "Like",
-                            tint = if (isLiked) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.onSurfaceVariant
-                        )
+                // Like button usando il nuovo componente
+                LikeButton(
+                    isLiked = isLiked,
+                    likesCount = likesCount,
+                    onLikeClick = {
+                        Log.d("PostCard", "Like button clicked for post ${post.id}")
+                        onLikeClick()
                     }
-
-                    if (likesCount > 0) {
-                        Text(
-                            text = "$likesCount",
-                            style = MaterialTheme.typography.bodyMedium,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                    }
-                }
+                )
 
                 // Comment button
                 Row(

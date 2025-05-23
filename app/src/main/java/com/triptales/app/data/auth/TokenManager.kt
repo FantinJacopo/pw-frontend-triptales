@@ -9,6 +9,7 @@ import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
 import com.triptales.app.data.RetrofitProvider
 import com.triptales.app.data.utils.ApiUtils.safeApiCall
+import com.triptales.app.data.utils.UserPreferences
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
@@ -29,6 +30,43 @@ class TokenManager(private val context: Context) {
     // Mutex per evitare refresh concorrenti
     private val refreshMutex = Mutex()
     private var isRefreshing = false
+
+    private val userPreferences = UserPreferences(context)
+
+    /**
+     * Salva i token insieme all'ID dell'utente per tracciare i cambi di account
+     */
+    suspend fun saveTokens(accessToken: String, refreshToken: String, userId: Int? = null) {
+        userPreferences.saveString(UserPreferences.ACCESS_TOKEN_KEY, accessToken)
+        userPreferences.saveString(UserPreferences.REFRESH_TOKEN_KEY, refreshToken)
+
+        // Salva anche l'ID utente se fornito
+        userId?.let {
+            userPreferences.saveInt(UserPreferences.USER_ID_KEY, it)
+        }
+    }
+
+    /**
+     * Verifica se l'utente corrente è cambiato rispetto a quello precedente
+     */
+    suspend fun hasUserChanged(newUserId: Int): Boolean {
+        val previousUserId = userPreferences.getInt(UserPreferences.USER_ID_KEY).first()
+        return previousUserId != null && previousUserId != newUserId
+    }
+
+    /**
+     * Ottiene l'ID dell'utente corrente salvato
+     */
+    suspend fun getCurrentUserId(): Int? {
+        return userPreferences.getInt(UserPreferences.USER_ID_KEY).first()
+    }
+
+    /**
+     * Pulisce tutti i token e i dati utente
+     */
+    suspend fun clearTokens() {
+        userPreferences.clearUserSession()
+    }
 
     val accessToken: Flow<String?> = context.dataStore.data
         .map { prefs ->
@@ -54,13 +92,13 @@ class TokenManager(private val context: Context) {
         }
     }
 
-    suspend fun clearTokens() {
+    /*suspend fun clearTokens() {
         Log.d("TokenManager", "Clearing all tokens...")
         context.dataStore.edit { prefs ->
             prefs.remove(ACCESS_TOKEN_KEY)
             prefs.remove(REFRESH_TOKEN_KEY)
         }
-    }
+    }*/
 
     fun isTokenExpired(token: String?): Boolean {
         if (token.isNullOrBlank()) return true
