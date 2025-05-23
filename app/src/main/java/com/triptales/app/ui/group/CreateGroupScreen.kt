@@ -62,12 +62,15 @@ import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import coil.compose.rememberAsyncImagePainter
+import com.triptales.app.R
 import com.triptales.app.data.utils.ImageUtils.uriToFile
 import com.triptales.app.ui.components.ImagePickerWithCrop
 import com.triptales.app.ui.theme.FrontendtriptalesTheme
@@ -248,7 +251,6 @@ fun CreateGroupScreen(viewModel: GroupViewModel, navController: NavController) {
                                 modifier = Modifier.padding(24.dp),
                                 horizontalAlignment = Alignment.CenterHorizontally
                             ) {
-                                // Logo TripTales invece di emoji
                                 Card(
                                     modifier = Modifier.size(80.dp),
                                     shape = CircleShape,
@@ -261,11 +263,11 @@ fun CreateGroupScreen(viewModel: GroupViewModel, navController: NavController) {
                                         modifier = Modifier.fillMaxSize(),
                                         contentAlignment = Alignment.Center
                                     ) {
-                                        Icon(
-                                            imageVector = Icons.Default.Group,
-                                            contentDescription = "TripTales",
-                                            tint = MaterialTheme.colorScheme.onPrimary,
-                                            modifier = Modifier.size(40.dp)
+                                        Image(
+                                            painter = painterResource(id = R.drawable.ic_launcher), // nome del tuo file logo
+                                            contentDescription = stringResource(id = R.string.app_name) + "Logo",
+                                            modifier = Modifier.size(72.dp),
+                                            contentScale = ContentScale.Fit
                                         )
                                     }
                                 }

@@ -68,6 +68,7 @@ import com.triptales.app.ui.components.EnhancedBadgeSection
 import com.triptales.app.ui.theme.FrontendtriptalesTheme
 import com.triptales.app.ui.utils.UIUtils.ConfirmationDialog
 import com.triptales.app.ui.utils.UIUtils.rememberDialogState
+import com.triptales.app.viewmodel.AuthState
 import com.triptales.app.viewmodel.AuthViewModel
 import com.triptales.app.viewmodel.UserState
 import com.triptales.app.viewmodel.UserViewModel
@@ -99,7 +100,7 @@ fun ProfileScreen(
         // Osserva l'authState per la navigazione dopo il logout
         LaunchedEffect(authState) {
             when (authState) {
-                is com.triptales.app.viewmodel.AuthState.Unauthenticated -> {
+                is AuthState.Unauthenticated -> {
                     navController.navigate("login") {
                         popUpTo(0) { inclusive = true }
                         launchSingleTop = true

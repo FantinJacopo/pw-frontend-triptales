@@ -7,6 +7,7 @@ import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.scaleIn
 import androidx.compose.animation.slideInVertically
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
@@ -22,12 +23,15 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import com.triptales.app.ui.theme.FrontendtriptalesTheme
+import com.triptales.app.R
 import kotlinx.coroutines.delay
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -112,7 +116,7 @@ fun GroupActionScreen(navController: NavController) {
                                 modifier = Modifier.padding(32.dp),
                                 horizontalAlignment = Alignment.CenterHorizontally
                             ) {
-                                // Logo TripTales
+                                // Logo
                                 Card(
                                     modifier = Modifier.size(100.dp),
                                     shape = CircleShape,
@@ -125,11 +129,11 @@ fun GroupActionScreen(navController: NavController) {
                                         modifier = Modifier.fillMaxSize(),
                                         contentAlignment = Alignment.Center
                                     ) {
-                                        Icon(
-                                            imageVector = Icons.Default.Group,
-                                            contentDescription = "TripTales",
-                                            tint = MaterialTheme.colorScheme.onPrimary,
-                                            modifier = Modifier.size(50.dp)
+                                        Image(
+                                            painter = painterResource(id = R.drawable.ic_logo),
+                                            contentDescription = stringResource(id = R.string.app_name) + "Logo",
+                                            modifier = Modifier.size(72.dp),
+                                            contentScale = ContentScale.Fit
                                         )
                                     }
                                 }
@@ -404,7 +408,7 @@ fun GroupActionScreen(navController: NavController) {
                                 horizontalAlignment = Alignment.CenterHorizontally
                             ) {
                                 Text(
-                                    text = "✨ Come funziona TripTales?",
+                                    text = "✨ Come funziona" + stringResource(id = R.string.app_name) + "?",
                                     style = MaterialTheme.typography.titleMedium,
                                     fontWeight = FontWeight.Bold,
                                     color = MaterialTheme.colorScheme.onSurfaceVariant

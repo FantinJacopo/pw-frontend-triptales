@@ -20,9 +20,6 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.triptales.app.data.group.GroupMember
 import com.triptales.app.data.utils.DateUtils.formatJoinDate
-import java.text.SimpleDateFormat
-import java.util.Date
-import java.util.Locale
 
 @Composable
 fun MemberItem(

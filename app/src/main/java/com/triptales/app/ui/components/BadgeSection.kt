@@ -22,10 +22,11 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.foundation.lazy.items
+import com.triptales.app.viewmodel.BadgeState
 
 
 @Composable
-fun BadgeSection(badgeState: com.triptales.app.viewmodel.BadgeState) {
+fun BadgeSection(badgeState: BadgeState) {
     Column {
         Text(
             text = "🏆 Badge",
@@ -37,7 +38,7 @@ fun BadgeSection(badgeState: com.triptales.app.viewmodel.BadgeState) {
         Spacer(modifier = Modifier.height(16.dp))
 
         when (badgeState) {
-            is com.triptales.app.viewmodel.BadgeState.Loading -> {
+            is BadgeState.Loading -> {
                 Box(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -47,7 +48,7 @@ fun BadgeSection(badgeState: com.triptales.app.viewmodel.BadgeState) {
                     CircularProgressIndicator()
                 }
             }
-            is com.triptales.app.viewmodel.BadgeState.Success -> {
+            is BadgeState.Success -> {
                 val badges = badgeState.badges
                 if (badges.isEmpty()) {
                     Card(
@@ -98,7 +99,7 @@ fun BadgeSection(badgeState: com.triptales.app.viewmodel.BadgeState) {
                     }
                 }
             }
-            is com.triptales.app.viewmodel.BadgeState.Error -> {
+            is BadgeState.Error -> {
                 Card(
                     modifier = Modifier.fillMaxWidth(),
                     colors = CardDefaults.cardColors(

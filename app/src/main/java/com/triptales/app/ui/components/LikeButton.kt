@@ -38,7 +38,7 @@ import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.delay
 
 /**
- * Enhanced LikeButton component with modern TripTales design and smooth animations
+ * Enhanced LikeButton component with modern TripRoom design and smooth animations
  */
 @Composable
 fun LikeButton(
@@ -173,7 +173,7 @@ fun LikeButton(
 }
 
 /**
- * Formats like count with TripTales style abbreviations
+ * Formats like count with TripRoom style abbreviations
  */
 private fun formatLikeCount(count: Int): String {
     return when {

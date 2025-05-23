@@ -349,7 +349,7 @@ private suspend fun saveImageToStorage(context: Context, imageUrl: String) {
 
         // Genera un nome file basato su data e ora
         val timeStamp = SimpleDateFormat("yyyyMMdd_HHmmss", Locale.ITALIAN).format(Date())
-        val fileName = "TripTales_$timeStamp.jpg"
+        val fileName = "TripRoom_$timeStamp.jpg"
 
         withContext(Dispatchers.Main) {
             Toast.makeText(context, "Salvataggio in corso...", Toast.LENGTH_SHORT).show()
@@ -363,7 +363,7 @@ private suspend fun saveImageToStorage(context: Context, imageUrl: String) {
                 val contentValues = ContentValues().apply {
                     put(MediaStore.MediaColumns.DISPLAY_NAME, fileName)
                     put(MediaStore.MediaColumns.MIME_TYPE, "image/jpeg")
-                    put(MediaStore.MediaColumns.RELATIVE_PATH, Environment.DIRECTORY_PICTURES + "/TripTales")
+                    put(MediaStore.MediaColumns.RELATIVE_PATH, Environment.DIRECTORY_PICTURES + "/TripRoom")
                 }
 
                 context.contentResolver.also { resolver ->
@@ -377,7 +377,7 @@ private suspend fun saveImageToStorage(context: Context, imageUrl: String) {
             } else {
                 // Per versioni precedenti ad Android 10
                 val imagesDir = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES)
-                val tripTalesDir = File(imagesDir, "TripTales")
+                val tripTalesDir = File(imagesDir, "TripRoom")
                 if (!tripTalesDir.exists()) tripTalesDir.mkdirs()
 
                 val imageFile = File(tripTalesDir, fileName)

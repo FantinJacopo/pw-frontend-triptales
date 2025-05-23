@@ -221,7 +221,7 @@ fun GroupLeaderboardScreen(
                                         modifier = Modifier.padding(32.dp),
                                         horizontalAlignment = Alignment.CenterHorizontally
                                     ) {
-                                        // Logo TripTales per classifica vuota
+                                        // Logo
                                         Card(
                                             modifier = Modifier.size(80.dp),
                                             shape = CircleShape,

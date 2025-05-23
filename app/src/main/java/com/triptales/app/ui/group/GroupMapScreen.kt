@@ -197,7 +197,7 @@ fun GroupMapScreen(
                                                 modifier = Modifier.padding(32.dp),
                                                 horizontalAlignment = Alignment.CenterHorizontally
                                             ) {
-                                                // Logo TripTales per mappa vuota
+                                                // Logo per mappa vuota
                                                 Card(
                                                     modifier = Modifier.size(80.dp),
                                                     shape = CircleShape,

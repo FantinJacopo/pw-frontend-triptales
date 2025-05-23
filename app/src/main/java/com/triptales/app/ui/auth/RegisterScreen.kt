@@ -67,6 +67,7 @@ import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
@@ -75,6 +76,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import coil.compose.rememberAsyncImagePainter
+import com.triptales.app.R
 import com.triptales.app.data.utils.ImageUtils.uriToFile
 import com.triptales.app.data.utils.ValidationUtils.isValidEmail
 import com.triptales.app.data.utils.ValidationUtils.validateName
@@ -202,19 +204,14 @@ fun RegisterScreen(
                                 modifier = Modifier.fillMaxSize(),
                                 contentAlignment = Alignment.Center
                             ) {
-                                // Logo TripTales (usando icona viaggio invece di emoji)
                                 Column(
                                     horizontalAlignment = Alignment.CenterHorizontally
                                 ) {
-                                    Text(
-                                        text = "✈️",
-                                        fontSize = 40.sp
-                                    )
-                                    Text(
-                                        text = "TT",
-                                        style = MaterialTheme.typography.titleMedium,
-                                        fontWeight = FontWeight.ExtraBold,
-                                        color = MaterialTheme.colorScheme.onPrimaryContainer
+                                    Image(
+                                        painter = painterResource(id = R.drawable.ic_launcher), // nome del tuo file logo
+                                        contentDescription = "TripRoom Logo",
+                                        modifier = Modifier.size(72.dp),
+                                        contentScale = ContentScale.Fit
                                     )
                                 }
                             }
@@ -235,7 +232,7 @@ fun RegisterScreen(
                             horizontalAlignment = Alignment.CenterHorizontally
                         ) {
                             Text(
-                                text = "Benvenuto in TripTales",
+                                text = "Benvenuto in TripRoom",
                                 style = MaterialTheme.typography.headlineLarge,
                                 fontWeight = FontWeight.ExtraBold,
                                 color = MaterialTheme.colorScheme.onSurface,
@@ -669,7 +666,7 @@ fun RegisterScreen(
                                 horizontalAlignment = Alignment.CenterHorizontally
                             ) {
                                 Text(
-                                    text = "Hai già un account TripTales?",
+                                    text = "Hai già un account TripRoom?",
                                     style = MaterialTheme.typography.bodyMedium,
                                     color = MaterialTheme.colorScheme.onSurfaceVariant
                                 )
