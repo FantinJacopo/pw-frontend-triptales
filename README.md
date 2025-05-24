@@ -20,7 +20,7 @@ Sviluppata con **Jetpack Compose** e architettura **MVVM**, TripTales offre un'e
 <img src="screenshots/leaderboard.jpg" width="200">
 <img src="screenshots/permission_camera.jpg" width="200">
 <img src="screenshots/permission_position.jpg" width="200">
-<img src="screenshots/AppPreview.mp4" width="200">
+<img src="https://github.com/FantinJacopo/pw-frontend-triptales/releases/tag/AppPreview" width="200">
 
 
 ## 🏗️ Architettura MVVM
