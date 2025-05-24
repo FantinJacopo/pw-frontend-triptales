@@ -144,7 +144,7 @@ app/src/main/java/com/triptales/app/
 - Clustering automatico per post vicini
 - Navigazione tra i luoghi visitati
 
-### **🏆 Sistema Badge e Gamification**
+### **🏆 Sistema Badge**
 - Badge automatici per milestone (primo post, primo commento, ecc.)
 - Classifica like per gruppo
 - Profili utente con raccolta badge
