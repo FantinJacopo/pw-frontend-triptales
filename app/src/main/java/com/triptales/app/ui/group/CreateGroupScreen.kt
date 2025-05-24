@@ -264,7 +264,7 @@ fun CreateGroupScreen(viewModel: GroupViewModel, navController: NavController) {
                                         contentAlignment = Alignment.Center
                                     ) {
                                         Image(
-                                            painter = painterResource(id = R.drawable.ic_launcher), // nome del tuo file logo
+                                            painter = painterResource(id = R.drawable.ic_logo), // nome del tuo file logo
                                             contentDescription = stringResource(id = R.string.app_name) + "Logo",
                                             modifier = Modifier.size(72.dp),
                                             contentScale = ContentScale.Fit

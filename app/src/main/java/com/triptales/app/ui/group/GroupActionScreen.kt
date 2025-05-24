@@ -10,8 +10,10 @@ import androidx.compose.animation.slideInVertically
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Add
@@ -73,7 +75,8 @@ fun GroupActionScreen(navController: NavController) {
                 )
             }
         ) { paddingValues ->
-            Box(
+            // SOLUZIONE: Column scrollabile invece di Box fisso
+            Column(
                 modifier = Modifier
                     .fillMaxSize()
                     .background(
@@ -85,358 +88,356 @@ fun GroupActionScreen(navController: NavController) {
                             )
                         )
                     )
+                    .padding(paddingValues)
+                    .verticalScroll(rememberScrollState()) // Aggiungi scroll qui
+                    .padding(24.dp), // Padding interno dopo lo scroll
+                verticalArrangement = Arrangement.spacedBy(32.dp),
+                horizontalAlignment = Alignment.CenterHorizontally
             ) {
-                Column(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .padding(paddingValues)
-                        .padding(24.dp),
-                    verticalArrangement = Arrangement.spacedBy(32.dp),
-                    horizontalAlignment = Alignment.CenterHorizontally
-                ) {
-                    Spacer(modifier = Modifier.height(32.dp))
+                Spacer(modifier = Modifier.height(32.dp))
 
-                    // Header con logo e titolo
-                    AnimatedVisibility(
-                        visible = headerVisible,
-                        enter = slideInVertically(
-                            initialOffsetY = { -it },
-                            animationSpec = tween(800)
-                        ) + fadeIn()
+                // Header con logo e titolo
+                AnimatedVisibility(
+                    visible = headerVisible,
+                    enter = slideInVertically(
+                        initialOffsetY = { -it },
+                        animationSpec = tween(800)
+                    ) + fadeIn()
+                ) {
+                    Card(
+                        modifier = Modifier.fillMaxWidth(),
+                        colors = CardDefaults.cardColors(
+                            containerColor = MaterialTheme.colorScheme.primaryContainer
+                        ),
+                        shape = RoundedCornerShape(24.dp),
+                        elevation = CardDefaults.cardElevation(12.dp)
                     ) {
-                        Card(
-                            modifier = Modifier.fillMaxWidth(),
-                            colors = CardDefaults.cardColors(
-                                containerColor = MaterialTheme.colorScheme.primaryContainer
-                            ),
-                            shape = RoundedCornerShape(24.dp),
-                            elevation = CardDefaults.cardElevation(12.dp)
+                        Column(
+                            modifier = Modifier.padding(32.dp),
+                            horizontalAlignment = Alignment.CenterHorizontally
                         ) {
+                            // Logo - usa icona sicura
+                            Card(
+                                modifier = Modifier.size(100.dp),
+                                shape = CircleShape,
+                                colors = CardDefaults.cardColors(
+                                    containerColor = MaterialTheme.colorScheme.primary
+                                ),
+                                elevation = CardDefaults.cardElevation(8.dp)
+                            ) {
+                                Box(
+                                    modifier = Modifier.fillMaxSize(),
+                                    contentAlignment = Alignment.Center
+                                ) {
+                                    // Usa un'icona sicura invece del drawable
+                                    Icon(
+                                        imageVector = Icons.Default.Group,
+                                        contentDescription = stringResource(id = R.string.app_name) + " Logo",
+                                        modifier = Modifier.size(60.dp),
+                                        tint = MaterialTheme.colorScheme.onPrimary
+                                    )
+                                }
+                            }
+
+                            Spacer(modifier = Modifier.height(20.dp))
+
+                            Text(
+                                text = "Cosa vuoi fare?",
+                                style = MaterialTheme.typography.headlineLarge,
+                                fontWeight = FontWeight.Bold,
+                                textAlign = TextAlign.Center,
+                                color = MaterialTheme.colorScheme.onPrimaryContainer
+                            )
+
+                            Text(
+                                text = "Scegli un'opzione per iniziare la tua avventura",
+                                style = MaterialTheme.typography.bodyLarge,
+                                textAlign = TextAlign.Center,
+                                color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.8f),
+                                modifier = Modifier.padding(top = 8.dp)
+                            )
+                        }
+                    }
+                }
+
+                // Card principale per creare un nuovo gruppo
+                AnimatedVisibility(
+                    visible = cardsVisible,
+                    enter = scaleIn(
+                        animationSpec = spring(
+                            dampingRatio = Spring.DampingRatioMediumBouncy,
+                            stiffness = Spring.StiffnessLow
+                        )
+                    ) + slideInVertically(
+                        initialOffsetY = { it / 2 },
+                        animationSpec = tween(600)
+                    ) + fadeIn()
+                ) {
+                    Card(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(200.dp),
+                        onClick = { navController.navigate("createGroup") },
+                        colors = CardDefaults.cardColors(
+                            containerColor = MaterialTheme.colorScheme.primaryContainer
+                        ),
+                        shape = RoundedCornerShape(20.dp),
+                        elevation = CardDefaults.cardElevation(12.dp)
+                    ) {
+                        Box(
+                            modifier = Modifier.fillMaxSize()
+                        ) {
+                            // Background decorativo
+                            Box(
+                                modifier = Modifier
+                                    .size(150.dp)
+                                    .offset(x = 200.dp, y = (-30).dp)
+                                    .background(
+                                        MaterialTheme.colorScheme.primary.copy(alpha = 0.1f),
+                                        CircleShape
+                                    )
+                            )
+
                             Column(
-                                modifier = Modifier.padding(32.dp),
+                                modifier = Modifier
+                                    .fillMaxSize()
+                                    .padding(24.dp),
+                                verticalArrangement = Arrangement.Center,
                                 horizontalAlignment = Alignment.CenterHorizontally
                             ) {
-                                // Logo
                                 Card(
-                                    modifier = Modifier.size(100.dp),
+                                    modifier = Modifier.size(64.dp),
                                     shape = CircleShape,
                                     colors = CardDefaults.cardColors(
                                         containerColor = MaterialTheme.colorScheme.primary
                                     ),
-                                    elevation = CardDefaults.cardElevation(8.dp)
+                                    elevation = CardDefaults.cardElevation(6.dp)
                                 ) {
                                     Box(
                                         modifier = Modifier.fillMaxSize(),
                                         contentAlignment = Alignment.Center
                                     ) {
-                                        Image(
-                                            painter = painterResource(id = R.drawable.ic_logo),
-                                            contentDescription = stringResource(id = R.string.app_name) + "Logo",
-                                            modifier = Modifier.size(72.dp),
-                                            contentScale = ContentScale.Fit
+                                        Icon(
+                                            imageVector = Icons.Default.Add,
+                                            contentDescription = "Crea gruppo",
+                                            modifier = Modifier.size(32.dp),
+                                            tint = MaterialTheme.colorScheme.onPrimary
                                         )
                                     }
                                 }
 
-                                Spacer(modifier = Modifier.height(20.dp))
+                                Spacer(modifier = Modifier.height(16.dp))
 
                                 Text(
-                                    text = "Cosa vuoi fare?",
-                                    style = MaterialTheme.typography.headlineLarge,
+                                    text = "Crea un nuovo gruppo",
+                                    style = MaterialTheme.typography.titleLarge,
                                     fontWeight = FontWeight.Bold,
-                                    textAlign = TextAlign.Center,
-                                    color = MaterialTheme.colorScheme.onPrimaryContainer
+                                    color = MaterialTheme.colorScheme.onPrimaryContainer,
+                                    textAlign = TextAlign.Center
                                 )
 
                                 Text(
-                                    text = "Scegli un'opzione per iniziare la tua avventura",
-                                    style = MaterialTheme.typography.bodyLarge,
-                                    textAlign = TextAlign.Center,
+                                    text = "Organizza una gita e invita i tuoi amici",
+                                    style = MaterialTheme.typography.bodyMedium,
                                     color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.8f),
-                                    modifier = Modifier.padding(top = 8.dp)
+                                    textAlign = TextAlign.Center,
+                                    modifier = Modifier.padding(top = 4.dp)
                                 )
                             }
                         }
                     }
+                }
 
-                    // Card principale per creare un nuovo gruppo
-                    AnimatedVisibility(
-                        visible = cardsVisible,
-                        enter = scaleIn(
-                            animationSpec = spring(
-                                dampingRatio = Spring.DampingRatioMediumBouncy,
-                                stiffness = Spring.StiffnessLow
-                            )
-                        ) + slideInVertically(
-                            initialOffsetY = { it / 2 },
-                            animationSpec = tween(600)
-                        ) + fadeIn()
+                // Testo divisore
+                AnimatedVisibility(
+                    visible = cardsVisible,
+                    enter = fadeIn(animationSpec = tween(600, delayMillis = 200))
+                ) {
+                    Text(
+                        text = "oppure unisciti a un gruppo esistente",
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.Medium,
+                        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f),
+                        textAlign = TextAlign.Center
+                    )
+                }
+
+                // Column con due opzioni per unirsi a un gruppo (invece di Row)
+                AnimatedVisibility(
+                    visible = cardsVisible,
+                    enter = slideInVertically(
+                        initialOffsetY = { it / 2 },
+                        animationSpec = tween(600, delayMillis = 400)
+                    ) + fadeIn()
+                ) {
+                    Column(
+                        verticalArrangement = Arrangement.spacedBy(16.dp)
                     ) {
+                        // Card per scansione QR
                         Card(
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .height(200.dp),
-                            onClick = { navController.navigate("createGroup") },
+                                .height(140.dp),
+                            onClick = { navController.navigate("joinGroup") },
                             colors = CardDefaults.cardColors(
-                                containerColor = MaterialTheme.colorScheme.primaryContainer
+                                containerColor = MaterialTheme.colorScheme.secondaryContainer
                             ),
-                            shape = RoundedCornerShape(20.dp),
-                            elevation = CardDefaults.cardElevation(12.dp)
+                            shape = RoundedCornerShape(16.dp),
+                            elevation = CardDefaults.cardElevation(8.dp)
                         ) {
-                            Box(
-                                modifier = Modifier.fillMaxSize()
+                            Row(
+                                modifier = Modifier
+                                    .fillMaxSize()
+                                    .padding(20.dp),
+                                verticalAlignment = Alignment.CenterVertically
                             ) {
-                                // Background decorativo
-                                Box(
-                                    modifier = Modifier
-                                        .size(150.dp)
-                                        .offset(x = 200.dp, y = (-30).dp)
-                                        .background(
-                                            MaterialTheme.colorScheme.primary.copy(alpha = 0.1f),
-                                            CircleShape
-                                        )
-                                )
-
-                                Column(
-                                    modifier = Modifier
-                                        .fillMaxSize()
-                                        .padding(24.dp),
-                                    verticalArrangement = Arrangement.Center,
-                                    horizontalAlignment = Alignment.CenterHorizontally
+                                Card(
+                                    modifier = Modifier.size(56.dp),
+                                    shape = CircleShape,
+                                    colors = CardDefaults.cardColors(
+                                        containerColor = MaterialTheme.colorScheme.secondary
+                                    )
                                 ) {
-                                    Card(
-                                        modifier = Modifier.size(64.dp),
-                                        shape = CircleShape,
-                                        colors = CardDefaults.cardColors(
-                                            containerColor = MaterialTheme.colorScheme.primary
-                                        ),
-                                        elevation = CardDefaults.cardElevation(6.dp)
+                                    Box(
+                                        modifier = Modifier.fillMaxSize(),
+                                        contentAlignment = Alignment.Center
                                     ) {
-                                        Box(
-                                            modifier = Modifier.fillMaxSize(),
-                                            contentAlignment = Alignment.Center
-                                        ) {
-                                            Icon(
-                                                imageVector = Icons.Default.Add,
-                                                contentDescription = "Crea gruppo",
-                                                modifier = Modifier.size(32.dp),
-                                                tint = MaterialTheme.colorScheme.onPrimary
-                                            )
-                                        }
+                                        Icon(
+                                            imageVector = Icons.Default.QrCode,
+                                            contentDescription = "Scansiona QR",
+                                            modifier = Modifier.size(28.dp),
+                                            tint = MaterialTheme.colorScheme.onSecondary
+                                        )
                                     }
+                                }
 
-                                    Spacer(modifier = Modifier.height(16.dp))
+                                Spacer(modifier = Modifier.width(16.dp))
 
+                                Column(modifier = Modifier.weight(1f)) {
                                     Text(
-                                        text = "Crea un nuovo gruppo",
+                                        text = "Scansiona QR Code",
                                         style = MaterialTheme.typography.titleLarge,
                                         fontWeight = FontWeight.Bold,
-                                        color = MaterialTheme.colorScheme.onPrimaryContainer,
-                                        textAlign = TextAlign.Center
+                                        color = MaterialTheme.colorScheme.onSecondaryContainer
                                     )
-
                                     Text(
-                                        text = "Organizza una gita e invita i tuoi amici",
+                                        text = "Usa la fotocamera per scansionare il codice",
                                         style = MaterialTheme.typography.bodyMedium,
-                                        color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.8f),
-                                        textAlign = TextAlign.Center,
+                                        color = MaterialTheme.colorScheme.onSecondaryContainer.copy(alpha = 0.8f),
+                                        modifier = Modifier.padding(top = 4.dp)
+                                    )
+                                }
+                            }
+                        }
+
+                        // Card per inserimento codice manuale
+                        Card(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(140.dp),
+                            onClick = { navController.navigate("joinGroupByCode") },
+                            colors = CardDefaults.cardColors(
+                                containerColor = MaterialTheme.colorScheme.tertiaryContainer
+                            ),
+                            shape = RoundedCornerShape(16.dp),
+                            elevation = CardDefaults.cardElevation(8.dp)
+                        ) {
+                            Row(
+                                modifier = Modifier
+                                    .fillMaxSize()
+                                    .padding(20.dp),
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Card(
+                                    modifier = Modifier.size(56.dp),
+                                    shape = CircleShape,
+                                    colors = CardDefaults.cardColors(
+                                        containerColor = MaterialTheme.colorScheme.tertiary
+                                    )
+                                ) {
+                                    Box(
+                                        modifier = Modifier.fillMaxSize(),
+                                        contentAlignment = Alignment.Center
+                                    ) {
+                                        Icon(
+                                            imageVector = Icons.Default.Code,
+                                            contentDescription = "Inserisci codice",
+                                            modifier = Modifier.size(28.dp),
+                                            tint = MaterialTheme.colorScheme.onTertiary
+                                        )
+                                    }
+                                }
+
+                                Spacer(modifier = Modifier.width(16.dp))
+
+                                Column(modifier = Modifier.weight(1f)) {
+                                    Text(
+                                        text = "Inserisci codice",
+                                        style = MaterialTheme.typography.titleLarge,
+                                        fontWeight = FontWeight.Bold,
+                                        color = MaterialTheme.colorScheme.onTertiaryContainer
+                                    )
+                                    Text(
+                                        text = "Digita manualmente il codice del gruppo",
+                                        style = MaterialTheme.typography.bodyMedium,
+                                        color = MaterialTheme.colorScheme.onTertiaryContainer.copy(alpha = 0.8f),
                                         modifier = Modifier.padding(top = 4.dp)
                                     )
                                 }
                             }
                         }
                     }
+                }
 
-                    // Testo divisore
-                    AnimatedVisibility(
-                        visible = cardsVisible,
-                        enter = fadeIn(animationSpec = tween(600, delayMillis = 200))
-                    ) {
-                        Text(
-                            text = "oppure unisciti a un gruppo esistente",
-                            style = MaterialTheme.typography.titleMedium,
-                            fontWeight = FontWeight.Medium,
-                            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f),
-                            textAlign = TextAlign.Center
-                        )
-                    }
-
-                    // Row con due opzioni per unirsi a un gruppo
-                    AnimatedVisibility(
-                        visible = cardsVisible,
-                        enter = slideInVertically(
-                            initialOffsetY = { it / 2 },
-                            animationSpec = tween(600, delayMillis = 400)
-                        ) + fadeIn()
+                // Info card in basso
+                AnimatedVisibility(
+                    visible = cardsVisible,
+                    enter = slideInVertically(
+                        initialOffsetY = { it / 2 },
+                        animationSpec = tween(600, delayMillis = 600)
+                    ) + fadeIn()
+                ) {
+                    Card(
+                        modifier = Modifier.fillMaxWidth(),
+                        colors = CardDefaults.cardColors(
+                            containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.7f)
+                        ),
+                        shape = RoundedCornerShape(16.dp)
                     ) {
                         Column(
-                            verticalArrangement = Arrangement.spacedBy(16.dp)
+                            modifier = Modifier.padding(20.dp),
+                            horizontalAlignment = Alignment.CenterHorizontally
                         ) {
-                            // Card per scansione QR
-                            Card(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .height(140.dp),
-                                onClick = { navController.navigate("joinGroup") },
-                                colors = CardDefaults.cardColors(
-                                    containerColor = MaterialTheme.colorScheme.secondaryContainer
-                                ),
-                                shape = RoundedCornerShape(16.dp),
-                                elevation = CardDefaults.cardElevation(8.dp)
-                            ) {
-                                Row(
-                                    modifier = Modifier
-                                        .fillMaxSize()
-                                        .padding(20.dp),
-                                    verticalAlignment = Alignment.CenterVertically
-                                ) {
-                                    Card(
-                                        modifier = Modifier.size(56.dp),
-                                        shape = CircleShape,
-                                        colors = CardDefaults.cardColors(
-                                            containerColor = MaterialTheme.colorScheme.secondary
-                                        )
-                                    ) {
-                                        Box(
-                                            modifier = Modifier.fillMaxSize(),
-                                            contentAlignment = Alignment.Center
-                                        ) {
-                                            Icon(
-                                                imageVector = Icons.Default.QrCode,
-                                                contentDescription = "Scansiona QR",
-                                                modifier = Modifier.size(28.dp),
-                                                tint = MaterialTheme.colorScheme.onSecondary
-                                            )
-                                        }
-                                    }
+                            Text(
+                                text = "✨ Come funziona " + stringResource(id = R.string.app_name) + "?",
+                                style = MaterialTheme.typography.titleMedium,
+                                fontWeight = FontWeight.Bold,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
 
-                                    Spacer(modifier = Modifier.width(16.dp))
+                            Spacer(modifier = Modifier.height(12.dp))
 
-                                    Column(modifier = Modifier.weight(1f)) {
-                                        Text(
-                                            text = "Scansiona QR Code",
-                                            style = MaterialTheme.typography.titleLarge,
-                                            fontWeight = FontWeight.Bold,
-                                            color = MaterialTheme.colorScheme.onSecondaryContainer
-                                        )
-                                        Text(
-                                            text = "Usa la fotocamera per scansionare il codice",
-                                            style = MaterialTheme.typography.bodyMedium,
-                                            color = MaterialTheme.colorScheme.onSecondaryContainer.copy(alpha = 0.8f),
-                                            modifier = Modifier.padding(top = 4.dp)
-                                        )
-                                    }
-                                }
-                            }
+                            val features = listOf(
+                                "📸 Condividi foto e momenti speciali",
+                                "🗺️ Visualizza tutti i ricordi su una mappa",
+                                "💬 Commenta e interagisci con gli amici",
+                                "🏆 Guadagna badge per le tue attività"
+                            )
 
-                            // Card per inserimento codice manuale
-                            Card(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .height(140.dp),
-                                onClick = { navController.navigate("joinGroupByCode") },
-                                colors = CardDefaults.cardColors(
-                                    containerColor = MaterialTheme.colorScheme.tertiaryContainer
-                                ),
-                                shape = RoundedCornerShape(16.dp),
-                                elevation = CardDefaults.cardElevation(8.dp)
-                            ) {
-                                Row(
-                                    modifier = Modifier
-                                        .fillMaxSize()
-                                        .padding(20.dp),
-                                    verticalAlignment = Alignment.CenterVertically
-                                ) {
-                                    Card(
-                                        modifier = Modifier.size(56.dp),
-                                        shape = CircleShape,
-                                        colors = CardDefaults.cardColors(
-                                            containerColor = MaterialTheme.colorScheme.tertiary
-                                        )
-                                    ) {
-                                        Box(
-                                            modifier = Modifier.fillMaxSize(),
-                                            contentAlignment = Alignment.Center
-                                        ) {
-                                            Icon(
-                                                imageVector = Icons.Default.Code,
-                                                contentDescription = "Inserisci codice",
-                                                modifier = Modifier.size(28.dp),
-                                                tint = MaterialTheme.colorScheme.onTertiary
-                                            )
-                                        }
-                                    }
-
-                                    Spacer(modifier = Modifier.width(16.dp))
-
-                                    Column(modifier = Modifier.weight(1f)) {
-                                        Text(
-                                            text = "Inserisci codice",
-                                            style = MaterialTheme.typography.titleLarge,
-                                            fontWeight = FontWeight.Bold,
-                                            color = MaterialTheme.colorScheme.onTertiaryContainer
-                                        )
-                                        Text(
-                                            text = "Digita manualmente il codice del gruppo",
-                                            style = MaterialTheme.typography.bodyMedium,
-                                            color = MaterialTheme.colorScheme.onTertiaryContainer.copy(alpha = 0.8f),
-                                            modifier = Modifier.padding(top = 4.dp)
-                                        )
-                                    }
-                                }
-                            }
-                        }
-                    }
-
-                    // Info card in basso
-                    AnimatedVisibility(
-                        visible = cardsVisible,
-                        enter = slideInVertically(
-                            initialOffsetY = { it / 2 },
-                            animationSpec = tween(600, delayMillis = 600)
-                        ) + fadeIn()
-                    ) {
-                        Card(
-                            modifier = Modifier.fillMaxWidth(),
-                            colors = CardDefaults.cardColors(
-                                containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.7f)
-                            ),
-                            shape = RoundedCornerShape(16.dp)
-                        ) {
-                            Column(
-                                modifier = Modifier.padding(20.dp),
-                                horizontalAlignment = Alignment.CenterHorizontally
-                            ) {
+                            features.forEach { feature ->
                                 Text(
-                                    text = "✨ Come funziona" + stringResource(id = R.string.app_name) + "?",
-                                    style = MaterialTheme.typography.titleMedium,
-                                    fontWeight = FontWeight.Bold,
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                                    text = feature,
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.9f),
+                                    modifier = Modifier.padding(vertical = 2.dp)
                                 )
-
-                                Spacer(modifier = Modifier.height(12.dp))
-
-                                val features = listOf(
-                                    "📸 Condividi foto e momenti speciali",
-                                    "🗺️ Visualizza tutti i ricordi su una mappa",
-                                    "💬 Commenta e interagisci con gli amici",
-                                    "🏆 Guadagna badge per le tue attività"
-                                )
-
-                                features.forEach { feature ->
-                                    Text(
-                                        text = feature,
-                                        style = MaterialTheme.typography.bodyMedium,
-                                        color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.9f),
-                                        modifier = Modifier.padding(vertical = 2.dp)
-                                    )
-                                }
                             }
                         }
                     }
-
-                    Spacer(modifier = Modifier.height(16.dp))
                 }
+
+                // Spazio finale per garantire che l'ultimo elemento sia visibile
+                Spacer(modifier = Modifier.height(32.dp))
             }
         }
     }
