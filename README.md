@@ -179,14 +179,15 @@ app/src/main/java/com/triptales/app/
 ## 🚀 Istruzioni per l'Esecuzione
 
 ### **Prerequisiti**
-- Android Studio Hedgehog (2023.1.1) o superiore
+
+- Android Studio Merkaat
 - SDK Android 24+ (Android 7.0)
 - JDK 11 o superiore
 - Dispositivo Android o emulatore con Google Play Services
 
 ### **1. Configurazione Google Maps API**
 
-Per utilizzare le funzionalità di mappa, è necessario ottenere una chiave API Google Maps:
+Per utilizzare le funzionalità di mappa, è necessario ottenere una chiave API Google Maps, se non ne hai già una segui questi passaggi:
 
 1. Vai alla [Google Cloud Console](https://console.cloud.google.com/)
 2. Crea un nuovo progetto o seleziona uno esistente
@@ -197,12 +198,13 @@ Per utilizzare le funzionalità di mappa, è necessario ottenere una chiave API 
 4. Vai a "Credenziali" e crea una nuova chiave API
 5. Aggiungi la chiave nel file `gradle.properties` (locale):
 
-```properties
+```
 # File: gradle.properties (nella root del progetto)
 MAPS_API_KEY=your_google_maps_api_key_here
+
 ```
 
-6. Il file `build.gradle.kts` (app level) è già configurato per leggere la chiave:
+1. Il file `build.gradle.kts` (app level) è già configurato per leggere la chiave:
 
 ```kotlin
 android {
@@ -213,27 +215,25 @@ android {
 ```
 
 ### **2. Configurazione Backend**
-Assicurati che il backend Django sia in esecuzione. Modifica l'URL del server nel file:
+
+Assicurati che il backend Django sia in esecuzione. 
+
+Se non utilizzi ngrok o usi un url diverso da quello preimpostato modifica RetrofitProvider.kt
+
 ```kotlin
 // File: app/src/main/java/com/triptales/app/data/RetrofitProvider.kt
 private const val URL = "http://YOUR_BACKEND_IP:8000/api/"
-```
+// oppure
+private const val GROK_URL = "NGROK_URL/api/"
 
-### **3. Avvio dell'Applicazione**
-```bash
-# Clona il repository
-git clone https://github.com/username/pw-frontend-triptales.git
-cd pw-frontend-triptales
-
-# Apri il progetto in Android Studio
-# Sincronizza le dipendenze Gradle
-# Connetti un dispositivo Android o avvia un emulatore
-# Esegui l'app (Shift + F10)
+// N.B. cambiare USE_NGROK a false se non si usa ngrok
+private const val USE_NGROK = true;
 ```
 
 ## 📦 Creazione dell'APK
 
 ### **APK di Debug**
+
 ```bash
 # Da Android Studio
 Build > Build Bundle(s) / APK(s) > Build APK(s)
@@ -241,24 +241,29 @@ Build > Build Bundle(s) / APK(s) > Build APK(s)
 # Da terminale
 ./gradlew assembleDebug
 ```
+
 L'APK sarà generato in: `app/build/outputs/apk/debug/app-debug.apk`
 
 ### **APK di Release (Firmato)**
 
 1. **Generazione Keystore** (solo la prima volta):
+
 ```bash
 keytool -genkey -v -keystore triptales-release-key.keystore -keyalg RSA -keysize 2048 -validity 10000 -alias triptales
 ```
 
-2. **Configurazione nel file `keystore.properties`**:
-```properties
+1. **Configurazione nel file `keystore.properties`**:
+
+```
 storeFile=../triptales-release-key.keystore
 storePassword=your_store_password
 keyAlias=triptales
 keyPassword=your_key_password
+
 ```
 
-3. **Build Release**:
+1. **Build Release**:
+
 ```bash
 # Da Android Studio
 Build > Generate Signed Bundle / APK > APK > Next > Release
@@ -268,9 +273,11 @@ Build > Generate Signed Bundle / APK > APK > Next > Release
 ```
 
 ### **App Bundle (Raccomandato per Google Play)**
+
 ```bash
 ./gradlew bundleRelease
 ```
+
 Il bundle sarà generato in: `app/build/outputs/bundle/release/app-release.aab`
 
 ## 🛠️ Tecnologie Utilizzate
