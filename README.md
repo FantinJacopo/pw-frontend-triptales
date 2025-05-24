@@ -8,31 +8,18 @@ Sviluppata con **Jetpack Compose** e architettura **MVVM**, TripTales offre un'e
 
 ## 📸 Screenshots
 <img src="screenshots/login.jpg" width="200">
-
 <img src="screenshots/home.jpg" width="200">
-
 <img src="screenshots/group.jpg" width="200">
-
 <img src="screenshots/group_post.jpg" width="200">
-
 <img src="screenshots/group_map.jpg" width="200">
-
 <img src="screenshots/group_members.jpg" width="200">
-
 <img src="screenshots/ai_analisys.jpg" width="200">
-
 <img src="screenshots/ai_analisys_100.jpg" width="200">
-
 <img src="screenshots/create_post.jpg" width="200">
-
 <img src="screenshots/gallery_picker.jpg" width="200">
-
 <img src="screenshots/leaderboard.jpg" width="200">
-
 <img src="screenshots/permission_camera.jpg" width="200">
-
 <img src="screenshots/permission_position.jpg" width="200">
-
 <img src="screenshots/AppPreview.mp4" width="200">
 
 
