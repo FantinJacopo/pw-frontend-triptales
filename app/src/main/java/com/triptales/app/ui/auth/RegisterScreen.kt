@@ -208,7 +208,7 @@ fun RegisterScreen(
                                     horizontalAlignment = Alignment.CenterHorizontally
                                 ) {
                                     Image(
-                                        painter = painterResource(id = R.drawable.ic_launcher), // nome del tuo file logo
+                                        painter = painterResource(id = R.drawable.ic_logo),
                                         contentDescription = "TripRoom Logo",
                                         modifier = Modifier.size(72.dp),
                                         contentScale = ContentScale.Fit

@@ -130,11 +130,11 @@ fun GroupActionScreen(navController: NavController) {
                                     contentAlignment = Alignment.Center
                                 ) {
                                     // Usa un'icona sicura invece del drawable
-                                    Icon(
-                                        imageVector = Icons.Default.Group,
+                                    Image(
+                                        painter = painterResource(id = R.drawable.ic_logo),
                                         contentDescription = stringResource(id = R.string.app_name) + " Logo",
                                         modifier = Modifier.size(60.dp),
-                                        tint = MaterialTheme.colorScheme.onPrimary
+                                        contentScale = ContentScale.Fit
                                     )
                                 }
                             }
