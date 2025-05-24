@@ -7,20 +7,69 @@
 Sviluppata con **Jetpack Compose** e architettura **MVVM**, TripTales offre un'esperienza utente fluida e intuitiva per creare, condividere e scoprire i ricordi di viaggio insieme ai compagni di classe.
 
 ## 📸 Screenshots
-<img src="screenshots/login.jpg" width="200">
-<img src="screenshots/home.jpg" width="200">
-<img src="screenshots/group.jpg" width="200">
-<img src="screenshots/group_post.jpg" width="200">
-<img src="screenshots/group_map.jpg" width="200">
-<img src="screenshots/group_members.jpg" width="200">
-<img src="screenshots/ai_analisys.jpg" width="200">
-<img src="screenshots/ai_analisys_100.jpg" width="200">
-<img src="screenshots/create_post.jpg" width="200">
-<img src="screenshots/gallery_picker.jpg" width="200">
-<img src="screenshots/leaderboard.jpg" width="200">
-<img src="screenshots/permission_camera.jpg" width="200">
-<img src="screenshots/permission_position.jpg" width="200">
-<img src="https://github.com/FantinJacopo/pw-frontend-triptales/releases/tag/AppPreview" width="200">
+<table>
+  <tr>
+    <td align="center">
+      <img src="screenshots/login.jpg" width="180"><br>
+      <b>Login</b>
+    </td>
+    <td align="center">
+      <img src="screenshots/home.jpg" width="180"><br>
+      <b>Home</b>
+    </td>
+    <td align="center">
+      <img src="screenshots/group.jpg" width="180"><br>
+      <b>Group Screen</b>
+    </td>
+    <td align="center">
+      <img src="screenshots/group_post.jpg" width="180"><br>
+      <b>Group Posts</b>
+    </td>
+  </tr>
+  <tr>
+    <td align="center">
+      <img src="screenshots/group_map.jpg" width="180"><br>
+      <b>Map View</b>
+    </td>
+    <td align="center">
+      <img src="screenshots/group_members.jpg" width="180"><br>
+      <b>Members</b>
+    </td>
+    <td align="center">
+      <img src="screenshots/ai_analisys.jpg" width="180"><br>
+      <b>AI Analysis</b>
+    </td>
+    <td align="center">
+      <img src="screenshots/ai_analisys_100.jpg" width="180"><br>
+      <b>AI Progress</b>
+    </td>
+  </tr>
+  <tr>
+    <td align="center">
+      <img src="screenshots/create_post.jpg" width="180"><br>
+      <b>Create Post</b>
+    </td>
+    <td align="center">
+      <img src="screenshots/gallery_picker.jpg" width="180"><br>
+      <b>Gallery</b>
+    </td>
+    <td align="center">
+      <img src="screenshots/leaderboard.jpg" width="180"><br>
+      <b>Leaderboard</b>
+    </td>
+    <td align="center">
+      <img src="screenshots/permission_camera.jpg" width="180"><br>
+      <b>Camera Permission</b>
+    </td>
+  </tr>
+  <tr>
+    <td align="center">
+      <img src="screenshots/permission_position.jpg" width="180"><br>
+      <b>Location Permission</b>
+    </td>
+    <td colspan="3"></td>
+  </tr>
+</table>
 
 
 ## 🏗️ Architettura MVVM
