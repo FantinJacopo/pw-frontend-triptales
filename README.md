@@ -7,20 +7,20 @@
 Sviluppata con **Jetpack Compose** e architettura **MVVM**, TripTales offre un'esperienza utente fluida e intuitiva per creare, condividere e scoprire i ricordi di viaggio insieme ai compagni di classe.
 
 ## 📸 Screenshots
-![1748074760753.jpg](../../AppData/Local/Temp/1748074760753.jpg)
-![1748074760777.jpg](../../AppData/Local/Temp/1748074760777.jpg)
-![1748074760795.jpg](../../AppData/Local/Temp/1748074760795.jpg)
-![1748074760812.jpg](../../AppData/Local/Temp/1748074760812.jpg)
-![1748074760830.jpg](../../AppData/Local/Temp/1748074760830.jpg)
-![1748074760848.jpg](../../AppData/Local/Temp/1748074760848.jpg)
-![1748074760863.jpg](../../AppData/Local/Temp/1748074760863.jpg)
-![1748074760877.jpg](../../AppData/Local/Temp/1748074760877.jpg)
-![1748074760892.jpg](../../AppData/Local/Temp/1748074760892.jpg)
-![1748074760904.jpg](../../AppData/Local/Temp/1748074760904.jpg)
-![1748074760918.jpg](../../AppData/Local/Temp/1748074760918.jpg)
-![1748074760930.jpg](../../AppData/Local/Temp/1748074760930.jpg)
-![1748074760940.jpg](../../AppData/Local/Temp/1748074760940.jpg)
-
+![login.jpg](screenshots/login.jpg)
+![home.jpg](screenshots/home.jpg)
+![group.jpg](screenshots/group.jpg)
+![group_post.jpg](screenshots/group_post.jpg)
+![group_map.jpg](screenshots/group_map.jpg)
+![group_members.jpg](screenshots/group_members.jpg)
+![ai_analisys.jpg](screenshots/ai_analisys.jpg)
+![ai_analisys_100.jpg](screenshots/ai_analisys_100.jpg)
+![create_post.jpg](screenshots/create_post.jpg)
+![gallery_picker.jpg](screenshots/gallery_picker.jpg)
+![leaderboard.jpg](screenshots/leaderboard.jpg)
+![permission_camera.jpg](screenshots/permission_camera.jpg)
+![permission_position.jpg](screenshots/permission_position.jpg)
+[AppPreview.mp4](screenshots/AppPreview.mp4)
 
 ## 🏗️ Architettura MVVM
 
