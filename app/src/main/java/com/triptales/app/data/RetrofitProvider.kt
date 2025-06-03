@@ -17,8 +17,8 @@ import java.util.concurrent.TimeUnit
 object RetrofitProvider {
     private const val IP_ADDRESS = "192.168.1.20"
     private const val PORT = 8000
-    private const val GROK_URL = "https://shepherd-precious-reliably.ngrok-free.app/api/"
-    private const val USE_NGROK = true;
+    private const val GROK_URL = "http://costaalberto.duckdns.org:8001/api/"
+    private const val USE_NGROK = true
 
     private var URL = if (USE_NGROK) GROK_URL else "http://$IP_ADDRESS:$PORT/api/"
 
